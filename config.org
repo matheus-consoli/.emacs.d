@@ -1,0 +1,499 @@
+#+CAPTION: A 'purpled' screenshot of my emacs
+[[./img/screenshot.png]]
+
+
+* use packages
+** general
+   #+BEGIN_SRC emacs-lisp
+    (use-package general
+        :ensure t)
+   #+END_SRC
+** try
+   #+BEGIN_SRC emacs-lisp
+    (use-package try
+        :ensure t)
+   #+END_SRC
+** which-key
+   #+BEGIN_SRC emacs-lisp
+    (use-package which-key
+        :ensure t
+        :config (which-key-mode))
+   #+END_SRC
+** org bullets
+   #+BEGIN_SRC emacs-lisp
+    (use-package org-bullets
+        :ensure t
+        :init (setq org-bullets-bullet-list
+                    '("◉" "☢"  "☣" "⚛" "☠"))
+        :config (add-hook `org-mode-hook
+                        (lambda () (org-bullets-mode 1))))
+   #+END_SRC
+** dashboard
+   #+BEGIN_SRC emacs-lisp
+     (use-package dashboard
+       :ensure t
+       :config
+       (dashboard-setup-startup-hook)
+       (setq dashboard-startup-banner "~/.emacs.d/img/banner_epurple.png")
+       (setq dashboard-items '((recents . 5)
+			       (projects . 5)
+			       (agenda . 3)))
+       (setq dashboard-banner-logo-title "Happy Hacking!")
+       (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
+   #+END_SRC
+** evil mode
+   #+BEGIN_SRC emacs-lisp
+    (use-package evil
+        :ensure t)
+    (evil-mode t)
+   #+END_SRC
+** all the icons
+   #+BEGIN_SRC emacs-lisp
+    (use-package all-the-icons
+        :ensure t)
+   #+END_SRC
+** neotree
+   #+BEGIN_SRC emacs-lisp
+     (use-package neotree
+	 :ensure t)
+     (global-set-key (kbd "<f8>") 'neotree-toggle)
+     (global-set-key (kbd "<C-f8>") 'neotree-hidden-file-toggle)
+     (setq neo-smart-open t)
+     (evil-define-key 'normal neotree-mode-map (kbd "TAB") 'neotree-enter)
+     (evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
+     (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
+     (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter)
+   #+END_SRC
+** doom-themes
+   #+BEGIN_SRC emacs-lisp
+     (use-package doom-themes
+       :ensure t
+       :preface (defvar region-fg nil))
+     (require 'doom-themes)
+     (doom-themes-neotree-config)
+     (setq doom-neotree-enable-type-colors t)
+     (setq doom-neotree-enable-file-icons t)
+     (doom-themes-org-config)
+     (setq doom-themes-enable-bold t
+	     doom-themes-enable-italic t)
+   #+END_SRC
+** spaceline
+   #+BEGIN_SRC emacs-lisp
+     (use-package spaceline
+       :ensure t
+       :config
+       (require 'spaceline-config)
+       (setq spaceline-buffer-encoding-abbrev-p nil)
+       (setq spaceline-line-column-p nil)
+       (setq spaceline-line-p nil)
+       (setq powerline-default-separator (quote arrow))
+       (spaceline-spacemacs-theme)
+       (spaceline-helm-mode 1))
+   #+END_SRC
+** flycheck
+   #+BEGIN_SRC emacs-lisp
+     (use-package flycheck
+       :ensure t)
+   #+END_SRC
+** yasnippet
+   #+BEGIN_SRC emacs-lisp
+     (use-package yasnippet
+       :ensure t
+       :config
+       (use-package yasnippet-snippets
+         :ensure t)
+       (yas-reload-all))
+   #+END_SRC
+** company-mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package company
+       :ensure t
+       :config
+       (setq company-idle-delay 0)
+       (setq company-minimun-prefix-lenght 1)) ;; maybe 3?
+     (with-eval-after-load 'company
+       (define-key company-active-map (kbd "SPC") #'company-abort))
+   #+END_SRC
+** company-jedi
+   #+BEGIN_SRC emacs-lisp
+     (use-package company-jedi
+       :ensure t
+       :config
+       (require 'company)
+       (add-to-list 'company-backends 'company-jedi))
+     (defun python-mode-company-init ()
+       (setq-local company-backends '((company-jedi
+                                       company-etags
+                                       company-dabbrev-code))))
+     (use-package company-jedi
+       :ensure t
+       :config
+       (require 'company)
+       (add-hook 'python-mode-hook 'python-mode-company-init))
+   #+END_SRC
+** whitepaces-cleanup
+   #+BEGIN_SRC emacs-lisp
+    (use-package whitespace-cleanup-mode
+        :ensure t)
+   #+END_SRC
+** ({['"smartparens"']})
+   #+BEGIN_SRC emacs-lisp
+     (use-package smartparens
+         :ensure t)
+     (require 'smartparens-config)
+     (add-hook 'prog-mode #'smartparens-mode)
+     (add-hook 'org-mode #'smartparens-mode)
+   #+END_SRC
+** rainbow
+   #+BEGIN_SRC emacs-lisp
+    (use-package rainbow-mode
+        :ensure t)
+   #+END_SRC
+** rainbow delimiter
+   #+BEGIN_SRC emacs-lisp
+     (use-package rainbow-delimiters
+       :ensure t
+       :init
+       (add-hook 'prog-mode #'rainbow-delimiters-mode)
+       (add-hook 'org-mode #'rainbow-delimiters-mode))
+   #+END_SRC
+** helm
+   #+BEGIN_SRC emacs-lisp
+     (use-package helm
+       :ensure t
+       :bind
+       ("C-x C-f" . 'helm-find-files)
+       ("C-x C-b" . 'helm-buffers-list)
+       ("M-x" . 'helm-M-x)
+       :config
+       (setq helm-autoresize-max-height 0
+             helm-autoresize-min-height 40
+             helm-M-x-fuzzy-match t
+             helm-buffers-fuzzy-matching t
+             helm-recentf-fuzzy-match t
+             helm-semantic-fuzzy-match t
+             helm-imenu-fuzzy-match t
+             helm-split-window-in-side-p nil
+             helm-mode-to-line-cycle-in-source nil
+             helm-ff-search-library-in-sexp t
+             helm-scroll-amount 8
+             helm-echo-input-in-header-line t)
+       :init
+       (helm-mode 1))
+     (require 'helm-config)
+     (helm-autoresize-mode 1)
+   #+END_SRC
+** hlinum
+   #+BEGIN_SRC emacs-lisp
+    (use-package hlinum
+        :ensure t)
+    (hlinum-activate)
+    (global-hl-line-mode 1)
+    ;; (set-face-background 'hl-line "#3e4446")
+    (set-face-background 'highlight nil)
+   #+END_SRC
+** relative numbers
+   #+BEGIN_SRC emacs-lisp
+     (use-package linum-relative
+       :ensure t
+       :config
+       (setq linum-relative-current-symbol "")
+       (add-hook 'prog-mode-hook 'linum-relative-mode))
+   #+END_SRC
+** simpleclip
+   #+BEGIN_SRC emacs-lisp
+    (use-package simpleclip
+        :ensure t
+        :init (simpleclip-mode 1))
+   #+END_SRC
+
+** shell pop
+   #+BEGIN_SRC emacs-lisp
+     (use-package shell-pop
+       :ensure t
+       :config
+       (setq shell-pop-window-position "bottom")
+       (setq shell-pop-window-size 30)
+       (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term" (lambda nil (ansi-term shell-pop-term-shell))))))
+    (global-set-key (kbd "<f6>") 'shell-pop)
+   #+END_SRC
+** popup-kill-ring
+   #+BEGIN_SRC emacs-lisp
+     (use-package popup-kill-ring
+       :ensure t
+       :bind ("M-y" . popup-kill-ring))
+   #+END_SRC
+** async
+   #+BEGIN_SRC emacs-lisp
+    (use-package async
+        :ensure t
+        :init (dired-async-mode 1))
+   #+END_SRC
+** swiper
+    #+BEGIN_SRC emacs-lisp
+      (use-package swiper
+        :ensure t
+        :bind ("C-s" . 'swiper))
+    #+END_SRC
+** slime
+   #+BEGIN_SRC emacs-lisp
+     (use-package slime
+       :ensure t
+       :config
+       (setq inferior-lisp-program "/usr/bin/sbcl")
+       (setq slime-contribs '(slime-fancy)))
+   #+END_SRC
+** slime-company
+   #+BEGIN_SRC emacs-lisp
+     (use-package slime-company
+       :ensure t
+       :init
+       (require 'company)
+       (slime-setup '(slime-fancy slime-company)))
+   #+END_SRC
+** projectile
+   #+BEGIN_SRC emacs-lisp
+     (use-package projectile
+       :ensure t)
+   #+END_SRC
+** solaire
+   Change background color of windows
+   #+BEGIN_SRC emacs-lisp
+     (use-package solaire-mode
+	 :ensure t)
+     (add-hook 'after-change-major-mode-hook #'turn-on-solaire-mode)
+     (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
+     (setq solaire-mode-remap-modeline nil)
+     (solaire-mode t)
+     (solaire-mode-swap-bg)
+   #+END_SRC
+** diminish
+   #+BEGIN_SRC emacs-lisp
+     (use-package diminish
+       :ensure t)
+   #+END_SRC
+* theme
+  #+BEGIN_SRC emacs-lisp
+    (load-theme 'doom-dracula
+		:no-confirm)
+  #+END_SRC
+* basic configurations
+** frame name
+   #+BEGIN_SRC emacs-lisp
+    (setq frame-title-format " CONSOLI")
+   #+END_SRC
+** no freaking GUI stuff
+   #+BEGIN_SRC emacs-lisp
+    ;; no toolbar
+    (tool-bar-mode -1)
+
+    ;; no menubar
+    (menu-bar-mode -1)
+
+    ;; no scroll bar
+    (scroll-bar-mode -1)
+   #+END_SRC
+** yes or no
+   #+BEGIN_SRC emacs-lisp
+    (fset 'yes-or-no-p 'y-or-n-p)
+   #+END_SRC
+** welcome message
+    #+BEGIN_SRC emacs-lisp
+    (setq inhibit-startup-message t)
+   #+END_SRC
+** scratch message
+   #+BEGIN_SRC emacs-lisp
+     (setq initial-scratch-message nil)
+     (message " WELCOME TO EMACS!")
+   #+END_SRC
+** save last cursor place
+   #+BEGIN_SRC emacs-lisp
+    (save-place-mode 1)
+   #+END_SRC
+** line numbers everywhere
+   #+BEGIN_SRC emacs-lisp
+    (global-linum-mode 1)
+   #+END_SRC
+** Fill column
+   #+BEGIN_SRC emacs-lisp
+    (setq default-fill-column 80)
+   #+END_SRC
+** easy move around splits with S-ARROWS
+   #+BEGIN_SRC emacs-lisp
+    (windmove-default-keybindings)
+   #+END_SRC
+** ansi term
+   #+BEGIN_SRC emacs-lisp
+     (defvar my-term-shell "/bin/zsh")
+     (defadvice ansi-term (before force-zsh)
+       (interactive (list my-term-shell)))
+     (ad-activate 'ansi-term)
+     ;; (global-set-key (kbd "<f6>") 'ansi-term) ;; I use shell-pop now
+   #+END_SRC
+** pretty simbols
+   #+BEGIN_SRC emacs-lisp
+     (when window-system
+       (global-prettify-symbols-mode t))
+   #+END_SRC
+** scroll concervatively
+   #+BEGIN_SRC emacs-lisp
+     (setq scroll-concervatively 100)
+   #+END_SRC
+** no backup or auto-save
+   #+BEGIN_SRC emacs-lisp
+     (setq make-backup-file nil)
+     (setq auto-save-default nil)
+   #+END_SRC
+** clock
+   #+BEGIN_SRC emacs-lisp
+    (setq display-time-24hr-format t)
+    (setq display-time-format "%H:%M")
+    (display-time-mode 1)
+   #+END_SRC
+** subwords
+   #+BEGIN_SRC emacs-lisp
+     (global-subword-mode 1)
+   #+END_SRC
+** show parens
+   #+BEGIN_SRC emacs-lisp
+     (show-paren-mode 1)
+   #+END_SRC
+** maximum entries on the kill ring
+   #+BEGIN_SRC emacs-lisp
+     (setq kill-ring-max 100)
+   #+END_SRC
+* my functions
+** consoli/edit-init
+   #+BEGIN_SRC emacs-lisp
+     (defun consoli/edit-init ()
+         "Easy open init.el file."
+         (interactive)
+         (find-file "~/.emacs.d/config.org")
+         (message "Welcome back to configuration file!"))
+     (global-set-key (kbd "<S-f1>") 'consoli/edit-init)
+   #+END_SRC
+** consoli/kill-whitespaces
+   #+BEGIN_SRC emacs-lisp
+    (defun consoli/kill-whitespaces ()
+        (interactive)
+        (whitespace-cleanup)
+        (message "Whitespaces killed!"))
+
+    (global-set-key (kbd "<f9>") 'consoli/kill-whitespaces)
+   #+END_SRC
+** consoli/indent-context
+   #+BEGIN_SRC emacs-lisp
+    (defun consoli/indent-context ()
+        (interactive)
+        (save-excursion
+        (beginning-of-defun)
+        (set-mark-command nil)
+        (end-of-defun)
+        (indent-region (region-beginning) (region-end)))
+        (message "Indented!"))
+
+    (global-set-key (kbd "<f7>") 'consoli/indent-context)
+   #+END_SRC
+** consoli/indent-buffer
+   #+BEGIN_SRC emacs-lisp
+    (defun consoli/indent-buffer ()
+        (interactive)
+        (indent-region (point-min) (point-max))
+        (message "Buffer indented!"))
+
+    (global-set-key (kbd "<C-f7>") 'consoli/indent-buffer)
+   #+END_SRC
+** consoli/kill-current-buffer
+   #+BEGIN_SRC emacs-lisp
+    (defun consoli/kill-current-buffer ()
+        (interactive)
+        (kill-buffer (current-buffer)))
+    (global-set-key (kbd "C-x k") 'consoli/kill-current-buffer)
+   #+END_SRC
+** consoli/reload-config
+   #+BEGIN_SRC emacs-lisp
+     (defun consoli/reload-config ()
+       (interactive)
+       (message "Reloading configurations...")
+       (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
+     (global-set-key (kbd "C-c r") 'consoli/reload-config)
+   #+END_SRC
+* useful key-bindings
+** show whitespaces
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "<f10>") 'whitespace-mode)
+  #+END_SRC
+** linum mode toggle
+   #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "<f12>") 'linum-mode)
+   #+END_SRC
+** ibuffer
+   #+BEGIN_SRC emacs-lisp
+     (global-set-key (kbd "C-x b") 'ibuffer)
+   #+END_SRC
+* python
+** yasnippet
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'python-mode-hook 'yas-minor-mode)
+   #+END_SRC
+** flycheck
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'python-mode-hook 'flycheck-mode)
+   #+END_SRC
+** company
+   #+BEGIN_SRC emacs-lisp
+     (with-eval-after-load 'company
+       (add-hook 'python-mode-hook 'company-mode))
+     ;; take a look at `use-package/company-jedi' for more"
+   #+END_SRC
+* emacs-lisp
+** eldoc
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+  #+END_SRC
+** yasnippet
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'emacs-lisp-mode-hook 'yas-minor-mode)
+   #+END_SRC
+** company
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'emacs-lisp-mode-hook 'company-mode)
+     ;; take a look at `use-package/smile' and `use-package/slime-company' for more
+   #+END_SRC
+* org-config
+** commom settings
+   #+BEGIN_SRC emacs-lisp
+     (setq org-src-fontfy-natively t)
+     (setq org-src-tab-acts-natively t)
+     (setq org-export-with-smart-quotes t)
+     ;;(add-hook 'org-mode-hook 'org-indent-mode)
+   #+END_SRC
+** line wrapping
+   #+BEGIN_SRC emacs-lisp
+          (add-hook 'org-mode-hook
+                    '(lambda ()
+                       (visual-line-mode 1)))
+   #+END_SRC
+** emacs-lisp template
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'org-structure-template-alist
+                  '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+   #+END_SRC
+* daminish configurations
+  It need to be the last thing on config file
+#+BEGIN_SRC emacs-lisp
+  (diminish 'which-key-mode)
+  (diminish 'linum-relative-mode)
+  (diminish 'subword-mode)
+  (diminish 'rainbow-delimiters-mode)
+  (diminish 'rainbow-mode)
+  (diminish 'helm-mode)
+  (diminish 'undo-tree-mode)
+  (diminish 'visual-line-mode)
+  (diminish 'org-indent-mode)
+  (diminish 'whitespace-mode)
+  (diminish 'eldoc-mode)
+  (diminish 'yas-minor-mode)
+  (diminish 'company-mode)
+  (diminish 'page-break-lines-mode)
+#+END_SRC
