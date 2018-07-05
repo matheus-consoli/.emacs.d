@@ -19,7 +19,7 @@
   :ensure t
   :config
   (dashboard-setup-startup-hook)
-  (setq dashboard-startup-banner "~/.emacs.d/img/banner.png")
+  (setq dashboard-startup-banner "~/.emacs.d/img/banner_epurple.png")
   (setq dashboard-items '((recents . 5)
 			  (projects . 5)
 			  (agenda . 3)))
@@ -113,8 +113,7 @@
 (use-package rainbow-delimiters
   :ensure t
   :init
-  (add-hook 'prog-mode #'rainbow-delimiters-mode)
-  (add-hook 'org-mode #'rainbow-delimiters-mode))
+  (rainbow-delimiters-mode 1)) ;; global
 
 (use-package helm
   :ensure t
@@ -312,6 +311,8 @@
 (with-eval-after-load 'company
   (add-hook 'python-mode-hook 'company-mode))
 ;; take a look at `use-package/company-jedi' for more"
+
+(setq python-shell-interpreter "ipython")
 
 (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
 

@@ -154,8 +154,7 @@
      (use-package rainbow-delimiters
        :ensure t
        :init
-       (add-hook 'prog-mode #'rainbow-delimiters-mode)
-       (add-hook 'org-mode #'rainbow-delimiters-mode))
+       (rainbow-delimiters-mode 1)) ;; global
    #+END_SRC
 ** helm
    #+BEGIN_SRC emacs-lisp
@@ -445,6 +444,10 @@
      (with-eval-after-load 'company
        (add-hook 'python-mode-hook 'company-mode))
      ;; take a look at `use-package/company-jedi' for more"
+   #+END_SRC
+** ipython
+   #+BEGIN_SRC emacs-lisp
+     (setq python-shell-interpreter "ipython")
    #+END_SRC
 * emacs-lisp
 ** eldoc
