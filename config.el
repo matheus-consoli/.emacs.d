@@ -1,6 +1,37 @@
 (use-package general
     :ensure t)
 
+;; (use-package eshell
+;;   :init
+;;   (setq
+;;    eshell-scroll-to-bottom-on-input 'all
+;;    eshell-error-if-no-glob t
+;;    eshell-hist-ignoredups t
+;;    eshell-save-history-on-exit t
+;;    eshell-prefer-lisp-functions nil
+;;    eshell-destroy-buffer-when-process-dies t)
+;;   (add-hook 'eshell-mode-hook
+;; 	    (lambda ()
+;; 	      (add-to-list 'eshell-visual-commands "ssh")
+;; 	      (add-to-list 'eshell-visual-commands "tail")
+;; 	      (add-to-list 'eshell-visual-commands "top"))))
+
+(defun eshell/x ()
+  (insert "exit")
+  (eshell-send-input)
+  (delete-window))
+
+(setenv "PATH"
+	(concat
+	 "/usr/local/bin/:/usr/local/sbin:"
+	 (getenv "PATH")))
+
+(defun eshell-clear ()
+  "Clear the eshell buffer."
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (eshell-send-input)))
+
 (use-package try
     :ensure t)
 
@@ -23,6 +54,48 @@
 (use-package htmlize
   :ensure t)
 
+(use-package multi-term
+  :ensure t
+  :bind ("<f6>" . consoli/open-multi-term-here)
+  :config
+  (setq ;; multi-term-dedicated-window-height (lambda () (/ (window-total-height) 3))
+	multi-term-program "/bin/zsh")
+  (add-hook 'term-mode-hook
+	    (lambda ()
+	      (dolist
+		  (bind '(("C-y" . term-paste)
+			  ("C-<backspace>" . term-send-backward-kill-word)
+			  ("C-c C-c" . term-interrupt-subjob)
+			  ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
+			  ("C-s" . isearch-forward)
+			  ("C-r" . isearch-backward)))
+		(add-to-list 'term-bind-key-alist bind)))))
+
+(defun consoli/open-multi-term-here ()
+  (interactive)
+  (let* ((parent (if (buffer-file-name)
+		     (file-name-directory (buffer-file-name))
+		   default-directory))
+	 (height (/ (window-total-height) 3))
+	 (name (car (last (split-string parent "/" t)))))
+    (multi-term-dedicated-open)
+    (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
+    (linum-mode nil)))
+
+(defun last-term-mode-buffer (list-of-buffers)
+  "Returns the most recently used term-mode buffer."
+  (when list-of-buffers
+    (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
+	(car list-of-buffers) (last-term-mode-buffer (cdr list-of-buffers)))))
+
+(defun switch-to-term-mode-buffer ()
+  "Switch to the most recently used term-mode buffer, or create a new one."
+  (interactive)
+  (let ((buffer (last-term-mode-buffer (buffer-list))))
+    (if (not buffer)
+	(consoli/open-multi-term-here)
+      (switch-to-buffer buffer))))
+
 (use-package dashboard
   :ensure t
   :config
@@ -37,6 +110,8 @@
 (use-package evil
     :ensure t)
 (evil-mode t)
+
+(require 'font-lock)
 
 (use-package all-the-icons
     :ensure t)
@@ -106,6 +181,12 @@
   (require 'company)
   (add-hook 'python-mode-hook 'python-mode-company-init))
 
+(use-package company-quickhelp
+  :ensure t
+  :config (eval-after-load 'company
+            '(define-key company-active-map (kbd "C-c h") #'company-quickhelp-manual-begin)))
+(add-hook 'company-mode-hook #'company-quickhelp-mode)
+
 (use-package whitespace-cleanup-mode
     :ensure t)
 
@@ -119,9 +200,8 @@
     :ensure t)
 
 (use-package rainbow-delimiters
-  :ensure t
-  :init
-  (rainbow-delimiters-mode 1)) ;; global
+   :ensure t)
+(rainbow-delimiters-mode 1)
 
 (use-package helm
   :ensure t
@@ -164,14 +244,6 @@
     :ensure t
     :init (simpleclip-mode 1))
 
-(use-package shell-pop
-   :ensure t
-   :config
-   (setq shell-pop-window-position "bottom")
-   (setq shell-pop-window-size 30)
-   (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term" (lambda nil (ansi-term shell-pop-term-shell))))))
-(global-set-key (kbd "<f6>") 'shell-pop)
-
 (use-package popup-kill-ring
   :ensure t
   :bind ("M-y" . popup-kill-ring))
@@ -210,10 +282,17 @@
 (use-package diminish
   :ensure t)
 
+(use-package magit
+  :ensure t)
+
 (load-theme 'doom-dracula
 	    :no-confirm)
 
-(setq frame-title-format " CONSOLI")
+(prefer-coding-system 'utf-8)
+(set-language-environment "UTF-8")
+(set-default-coding-systems 'utf-8)
+
+(setq frame-title-format " CONSOLI")
 
 ;; no toolbar
 (tool-bar-mode -1)
@@ -224,11 +303,12 @@
 ;; no scroll bar
 (scroll-bar-mode -1)
 
-(fset 'yes-or-no-p 'y-or-n-p)
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq inhibit-startup-message t)
 
-(setq initial-scratch-message nil)
+(setq initial-scratch-message nil
+      inhibit-startup-echo-area-message t)
 (message " WELCOME TO EMACS!")
 
 (save-place-mode 1)
@@ -248,9 +328,17 @@
 (when window-system
   (global-prettify-symbols-mode t))
 
-(setq scroll-concervatively 100)
+(setq scroll-conservatively 9999
+      scroll-preserve-screen-position t
+      scroll-margin 5)
 
-(setq make-backup-file nil)
+(setq backup-directory-alist '(("." "~/.emacs.d/backups/")))
+(setq backup-by-copying t)
+(setq delete-old-versions t) 
+(setq kept-new-versions 3)
+(setq kept-old-versions 0)
+(setq version-control t)
+
 (setq auto-save-default nil)
 
 (setq display-time-24hr-format t)
@@ -259,9 +347,23 @@
 
 (global-subword-mode 1)
 
+(require 'paren)
+(set-face-foreground 'show-paren-match "#00BFFF")
+(set-face-background 'show-paren-match (face-background 'default))
+(set-face-attribute 'show-paren-match nil :weight 'extra-bold)
 (show-paren-mode 1)
 
 (setq kill-ring-max 100)
+
+(setq tls-checktrust t)
+
+;;(set-frame-parameter (selected-frame) 'alpha '(85 80))
+;;(add-to-list 'default-frame-alist '(alpha 85 80))
+
+(global-auto-revert-mode 1)
+
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
 
 (defun consoli/edit-init ()
     "Easy open init.el file."
@@ -296,8 +398,8 @@
 (global-set-key (kbd "<C-f7>") 'consoli/indent-buffer)
 
 (defun consoli/kill-current-buffer ()
-    (interactive)
-    (kill-buffer (current-buffer)))
+  (interactive)
+  (kill-buffer (current-buffer)))
 (global-set-key (kbd "C-x k") 'consoli/kill-current-buffer)
 
 (defun consoli/reload-config ()
@@ -305,6 +407,39 @@
   (message "Reloading configurations...")
   (org-babel-load-file (expand-file-name "~/.emacs.d/config.org")))
 (global-set-key (kbd "C-c r") 'consoli/reload-config)
+
+(defun consoli/infer-indentation-style ()
+  "If our souce file use tabs, we use tabs, if spaces, spaces.
+And if neither, we use the current indent-tabs-mode"
+  (let ((space-count (how-many "^ " (point-min) (point-max)))
+	(tab-count (how-many "^\t" (point-min) (point-max))))
+    (if (> space-count tab-count) (setq indent-tabs-mode nil))
+    (if (> tab-count space-count) (setq indent-tabs-mode t))))
+(add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
+
+(defun consoli/set-buffer-to-unix-format ()
+  (interactive)
+  (set-buffer-file-coding-system 'undecided-unix nil))
+
+(defun consoli/set-buffer-to-unix-format ()
+  (interactive)
+  (set-buffer-file-coding-system 'undecided-dos nil))
+
+(defun consoli/insert-line-bellow ()
+  (interactive)
+  (let ((current-point (point)))
+    (move-end-of-line 1)
+    (open-line 1)
+    (goto-char current-point)))
+
+(defun consoli/insert-line-above ()
+  (interactive)
+  (let ((current-point (point)))
+    (move-beginning-of-line 1)
+    (newline-and-indent)
+    (indent-according-to-mode)
+    (goto-char current-point)
+    (forward-char)))
 
 (global-set-key (kbd "<f10>") 'whitespace-mode)
 
@@ -340,6 +475,9 @@
 
 (add-to-list 'org-structure-template-alist
              '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+
+(add-to-list 'org-structure-template-alist
+             '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
 
 (diminish 'which-key-mode)
 (diminish 'linum-relative-mode)

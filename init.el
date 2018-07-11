@@ -25,7 +25,7 @@
     ("f0dc4ddca147f3c7b1c7397141b888562a48d9888f1595d69572db73be99a024" "1c082c9b84449e54af757bcae23617d11f563fc9f33a832a8a2813c4d7dfb652" "93a0885d5f46d2aeac12bf6be1754faa7d5e28b27926b8aa812840fe7d0b7983" "151bde695af0b0e69c3846500f58d9a0ca8cb2d447da68d7fbf4154dcf818ebc" "d1b4990bd599f5e2186c3f75769a2c5334063e9e541e37514942c27975700370" "b35a14c7d94c1f411890d45edfb9dc1bd61c5becd5c326790b51df6ebf60f402" "3a3de615f80a0e8706208f0a71bbcc7cc3816988f971b6d237223b6731f91605" "9d9fda57c476672acd8c6efeb9dc801abea906634575ad2c7688d055878e69d6" "bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" default)))
  '(package-selected-packages
    (quote
-    (htmlize ox-reveal spacemacs-theme shell-pop spacelin yasnippet whitespace-cleanup-mode which-key visual-regexp-steroids use-package try spaceline-all-the-icons solaire-mode smartparens simpleclip rainbow-mode rainbow-delimiters org-bullets org neotree hlinum helm general evil doom-themes)))
+    (font-lock+ company-quickhelp multi-term htmlize ox-reveal spacemacs-theme spacelin yasnippet whitespace-cleanup-mode which-key visual-regexp-steroids use-package try spaceline-all-the-icons solaire-mode smartparens simpleclip rainbow-mode rainbow-delimiters org-bullets org neotree hlinum helm general evil doom-themes)))
  '(shell-pop-universal-key "<f6>"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
