@@ -27,12 +27,12 @@
      ;;           (add-to-list 'eshell-visual-commands "top"))))
    #+END_SRC
 *** closing eshell
-   #+BEGIN_SRC emacs-lisp
-     (defun eshell/x ()
-       (insert "exit")
-       (eshell-send-input)
-       (delete-window))
-   #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (defun eshell/x ()
+        (insert "exit")
+        (eshell-send-input)
+        (delete-window))
+    #+END_SRC
 *** set up the correct path
     #+BEGIN_SRC emacs-lisp
       (setenv "PATH"
@@ -88,17 +88,17 @@
        :bind ("<f6>" . consoli/open-multi-term-here)
        :config
        (setq ;; multi-term-dedicated-window-height (lambda () (/ (window-total-height) 3))
-         multi-term-program "/bin/zsh")
+        multi-term-program "/bin/zsh")
        (add-hook 'term-mode-hook
-         (lambda ()
-           (dolist
-               (bind '(("C-y" . term-paste)
-                   ("C-<backspace>" . term-send-backward-kill-word)
-                   ("C-c C-c" . term-interrupt-subjob)
-                   ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
-                   ("C-s" . isearch-forward)
-                   ("C-r" . isearch-backward)))
-             (add-to-list 'term-bind-key-alist bind)))))
+                 (lambda ()
+                   (dolist
+                       (bind '(("C-y" . term-paste)
+                               ("C-<backspace>" . term-send-backward-kill-word)
+                               ("C-c C-c" . term-interrupt-subjob)
+                               ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
+                               ("C-s" . isearch-forward)
+                               ("C-r" . isearch-backward)))
+                     (add-to-list 'term-bind-key-alist bind)))))
    #+END_SRC
 *** open multi-term in current dir
     #+BEGIN_SRC emacs-lisp
@@ -121,16 +121,18 @@
           (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
               (car list-of-buffers)
             (last-term-mode-buffer (cdr list-of-buffers)))))
+
+      (setq multi-term-dedicated-close-back-to-open-buffer t)
     #+END_SRC
 *** switch-to-term-mode-buffer
     #+BEGIN_SRC emacs-lisp
       (defun switch-to-term-mode-buffer ()
-    "Switch to the most recently used term-mode buffer, or create a new one."
-    (interactive)
-    (let ((buffer (last-term-mode-buffer (buffer-list))))
-      (if (not buffer)
-          (consoli/open-multi-term-here)
-        (switch-to-buffer buffer))))
+        "Switch to the most recently used term-mode buffer, or create a new one."
+        (interactive)
+        (let ((buffer (last-term-mode-buffer (buffer-list))))
+          (if (not buffer)
+              (consoli/open-multi-term-here)
+            (multi-term-dedicated-toggle))))
     #+END_SRC
 ** dashboard
    #+BEGIN_SRC emacs-lisp
@@ -140,16 +142,16 @@
        (dashboard-setup-startup-hook)
        (setq dashboard-startup-banner "~/.emacs.d/img/banner_epurple.png")
        (setq dashboard-items '((recents . 5)
-                   (projects . 5)
-                   (agenda . 3)))
+                               (projects . 5)
+                               (agenda . 3)))
        (setq dashboard-banner-logo-title "Happy Hacking!")
        (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
    #+END_SRC
 ** evil mode
    #+BEGIN_SRC emacs-lisp
-    (use-package evil
-        :ensure t)
-    (evil-mode t)
+     (use-package evil
+       :ensure t)
+     (evil-mode t)
    #+END_SRC
 ** lock-font-plus
    #+BEGIN_SRC emacs-lisp
@@ -158,12 +160,12 @@
 ** all the icons
    #+BEGIN_SRC emacs-lisp
      (use-package all-the-icons
-         :ensure t)
+       :ensure t)
    #+END_SRC
 ** neotree
    #+BEGIN_SRC emacs-lisp
      (use-package neotree
-     :ensure t)
+       :ensure t)
      (global-set-key (kbd "<f8>") 'neotree-toggle)
      (global-set-key (kbd "<C-f8>") 'neotree-hidden-file-toggle)
      (setq neo-smart-open t)
@@ -183,7 +185,7 @@
      (setq doom-neotree-enable-file-icons t)
      (doom-themes-org-config)
      (setq doom-themes-enable-bold t
-         doom-themes-enable-italic t)
+           doom-themes-enable-italic t)
    #+END_SRC
 ** spaceline
    #+BEGIN_SRC emacs-lisp
@@ -267,7 +269,7 @@
 ** smartparens
    #+BEGIN_SRC emacs-lisp
      (use-package smartparens
-         :ensure t)
+       :ensure t)
      (require 'smartparens-config)
      (add-hook 'prog-mode #'smartparens-mode)
      (add-hook 'org-mode #'smartparens-mode)
@@ -275,8 +277,8 @@
    #+END_SRC
 ** rainbow
    #+BEGIN_SRC emacs-lisp
-    (use-package rainbow-mode
-        :ensure t)
+     (use-package rainbow-mode
+       :ensure t)
    #+END_SRC
 ** rainbow delimiter
    #+BEGIN_SRC emacs-lisp
@@ -312,12 +314,12 @@
    #+END_SRC
 ** hlinum
    #+BEGIN_SRC emacs-lisp
-    (use-package hlinum
-        :ensure t)
-    (hlinum-activate)
-    (global-hl-line-mode 1)
-    ;; (set-face-background 'hl-line "#3e4446")
-    (set-face-background 'highlight nil)
+     (use-package hlinum
+       :ensure t)
+     (hlinum-activate)
+     (global-hl-line-mode 1)
+     ;; (set-face-background 'hl-line "#3e4446")
+     (set-face-background 'highlight nil)
    #+END_SRC
 ** relative numbers
    #+BEGIN_SRC emacs-lisp
@@ -329,9 +331,9 @@
    #+END_SRC
 ** simpleclip
    #+BEGIN_SRC emacs-lisp
-    (use-package simpleclip
-        :ensure t
-        :init (simpleclip-mode 1))
+     (use-package simpleclip
+       :ensure t
+       :init (simpleclip-mode 1))
    #+END_SRC 
 ** popup-kill-ring
    #+BEGIN_SRC emacs-lisp
@@ -341,16 +343,16 @@
    #+END_SRC
 ** async
    #+BEGIN_SRC emacs-lisp
-    (use-package async
-        :ensure t
-        :init (dired-async-mode 1))
+     (use-package async
+       :ensure t
+       :init (dired-async-mode 1))
    #+END_SRC
 ** swiper
-    #+BEGIN_SRC emacs-lisp
-      (use-package swiper
-        :ensure t
-        :bind ("C-s" . 'swiper))
-    #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (use-package swiper
+       :ensure t
+       :bind ("C-s" . 'swiper))
+   #+END_SRC
 ** slime
    #+BEGIN_SRC emacs-lisp
      (use-package slime
@@ -376,7 +378,7 @@
    Change background color of windows
    #+BEGIN_SRC emacs-lisp
      (use-package solaire-mode
-     :ensure t)
+       :ensure t)
      (add-hook 'after-change-major-mode-hook #'turn-on-solaire-mode)
      (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
      (setq solaire-mode-remap-modeline nil)
@@ -418,44 +420,44 @@
    #+END_SRC
 ** frame name
    #+BEGIN_SRC emacs-lisp
-    (setq frame-title-format " CONSOLI")
+     (setq frame-title-format " CONSOLI")
    #+END_SRC
 ** no freaking GUI stuff
    #+BEGIN_SRC emacs-lisp
-    ;; no toolbar
-    (tool-bar-mode -1)
+     ;; no toolbar
+     (tool-bar-mode -1)
 
-    ;; no menubar
-    (menu-bar-mode -1)
+     ;; no menubar
+     (menu-bar-mode -1)
 
-    ;; no scroll bar
-    (scroll-bar-mode -1)
+     ;; no scroll bar
+     (scroll-bar-mode -1)
    #+END_SRC
 ** yes or no
    #+BEGIN_SRC emacs-lisp
-    (defalias 'yes-or-no-p 'y-or-n-p)
+     (defalias 'yes-or-no-p 'y-or-n-p)
    #+END_SRC
 ** welcome message
-    #+BEGIN_SRC emacs-lisp
-    (setq inhibit-startup-message t)
+   #+BEGIN_SRC emacs-lisp
+     (setq inhibit-startup-message t)
    #+END_SRC
 ** scratch message
    #+BEGIN_SRC emacs-lisp
      (setq initial-scratch-message nil
-       inhibit-startup-echo-area-message t)
+           inhibit-startup-echo-area-message t)
      (message " WELCOME TO EMACS!")
    #+END_SRC
 ** save last cursor place
    #+BEGIN_SRC emacs-lisp
-    (save-place-mode 1)
+     (save-place-mode 1)
    #+END_SRC
 ** line numbers everywhere
    #+BEGIN_SRC emacs-lisp
-    (global-linum-mode 1)
+     (global-linum-mode 1)
    #+END_SRC
 ** fill column
    #+BEGIN_SRC emacs-lisp
-    (setq default-fill-column 80)
+     (setq default-fill-column 80)
    #+END_SRC
 ** ansi term
    #+BEGIN_SRC emacs-lisp
@@ -473,8 +475,8 @@
 ** scroll
    #+BEGIN_SRC emacs-lisp
      (setq scroll-conservatively 9999
-       scroll-preserve-screen-position t
-       scroll-margin 5)
+           scroll-preserve-screen-position t
+           scroll-margin 5)
    #+END_SRC
 ** backup files
    #+BEGIN_SRC emacs-lisp
@@ -482,7 +484,7 @@
        (concat user-emacs-directory "backups"))
 
      (if (not (file-exists-p consoli/backup_dir))
-              (make-directory consoli/backup_dir t))
+         (make-directory consoli/backup_dir t))
 
      (setq backup-directory-alist
            `(("." . ,consoli/backup_dir)))
@@ -499,9 +501,9 @@
    #+END_SRC
 ** clock
    #+BEGIN_SRC emacs-lisp
-    (setq display-time-24hr-format t)
-    (setq display-time-format "%H:%M")
-    (display-time-mode 1)
+     (setq display-time-24hr-format t)
+     (setq display-time-format "%H:%M")
+     (display-time-mode 1)
    #+END_SRC
 ** subwords
    #+BEGIN_SRC emacs-lisp
@@ -545,42 +547,42 @@
 ** consoli/edit-init
    #+BEGIN_SRC emacs-lisp
      (defun consoli/edit-init ()
-         "Easy open init.el file."
-         (interactive)
-         (find-file "~/.emacs.d/config.org")
-         (message "Welcome back to configuration file!"))
+       "Easy open init.el file."
+       (interactive)
+       (find-file "~/.emacs.d/config.org")
+       (message "Welcome back to configuration file!"))
      (global-set-key (kbd "<S-f1>") 'consoli/edit-init)
    #+END_SRC
 ** consoli/kill-whitespaces
    #+BEGIN_SRC emacs-lisp
-    (defun consoli/kill-whitespaces ()
-        (interactive)
-        (whitespace-cleanup)
-        (message "Whitespaces killed!"))
+     (defun consoli/kill-whitespaces ()
+       (interactive)
+       (whitespace-cleanup)
+       (message "Whitespaces killed!"))
 
-    (global-set-key (kbd "<f9>") 'consoli/kill-whitespaces)
+     (global-set-key (kbd "<f9>") 'consoli/kill-whitespaces)
    #+END_SRC
 ** consoli/indent-context
    #+BEGIN_SRC emacs-lisp
-    (defun consoli/indent-context ()
-        (interactive)
-        (save-excursion
-        (beginning-of-defun)
-        (set-mark-command nil)
-        (end-of-defun)
-        (indent-region (region-beginning) (region-end)))
-        (message "Indented!"))
+     (defun consoli/indent-context ()
+       (interactive)
+       (save-excursion
+         (beginning-of-defun)
+         (set-mark-command nil)
+         (end-of-defun)
+         (indent-region (region-beginning) (region-end)))
+       (message "Indented!"))
 
-    (global-set-key (kbd "<f7>") 'consoli/indent-context)
+     (global-set-key (kbd "<f7>") 'consoli/indent-context)
    #+END_SRC
 ** consoli/indent-buffer
    #+BEGIN_SRC emacs-lisp
-    (defun consoli/indent-buffer ()
-        (interactive)
-        (indent-region (point-min) (point-max))
-        (message "Buffer indented!"))
+     (defun consoli/indent-buffer ()
+       (interactive)
+       (indent-region (point-min) (point-max))
+       (message "Buffer indented!"))
 
-    (global-set-key (kbd "<C-f7>") 'consoli/indent-buffer)
+     (global-set-key (kbd "<C-f7>") 'consoli/indent-buffer)
    #+END_SRC
 ** consoli/kill-current-buffer
    #+BEGIN_SRC emacs-lisp
@@ -603,9 +605,9 @@
        "If our souce file use tabs, we use tabs, if spaces, spaces.
      And if neither, we use the current indent-tabs-mode"
        (let ((space-count (how-many "^ " (point-min) (point-max)))
-         (tab-count (how-many "^\t" (point-min) (point-max))))
-     (if (> space-count tab-count) (setq indent-tabs-mode nil))
-     (if (> tab-count space-count) (setq indent-tabs-mode t))))
+             (tab-count (how-many "^\t" (point-min) (point-max))))
+         (if (> space-count tab-count) (setq indent-tabs-mode nil))
+         (if (> tab-count space-count) (setq indent-tabs-mode t))))
      (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
    #+END_SRC
 ** consoli/set-buffer-to-unix-format
@@ -625,29 +627,29 @@
      (defun consoli/insert-line-bellow ()
        (interactive)
        (let ((current-point (point)))
-     (move-end-of-line 1)
-     (open-line 1)
-     (goto-char current-point)))
+         (move-end-of-line 1)
+         (open-line 1)
+         (goto-char current-point)))
    #+END_SRC
 ** consoli/insert-line-above
    #+BEGIN_SRC emacs-lisp
      (defun consoli/insert-line-above ()
        (interactive)
        (let ((current-point (point)))
-     (move-beginning-of-line 1)
-     (newline-and-indent)
-     (indent-according-to-mode)
-     (goto-char current-point)
-     (forward-char)))
+         (move-beginning-of-line 1)
+         (newline-and-indent)
+         (indent-according-to-mode)
+         (goto-char current-point)
+         (forward-char)))
    #+END_SRC
 * Useful key-bindings
 ** show whitespaces
-  #+BEGIN_SRC emacs-lisp
-    (global-set-key (kbd "<f10>") 'whitespace-mode)
-  #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (global-set-key (kbd "<f10>") 'whitespace-mode)
+   #+END_SRC
 ** linum mode toggle
    #+BEGIN_SRC emacs-lisp
-    (global-set-key (kbd "<f12>") 'linum-mode)
+     (global-set-key (kbd "<f12>") 'linum-mode)
    #+END_SRC
 ** ibuffer
    #+BEGIN_SRC emacs-lisp
@@ -674,9 +676,9 @@
    #+END_SRC
 * Emacs-lisp
 ** eldoc
-  #+BEGIN_SRC emacs-lisp
-    (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
-  #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+   #+END_SRC
 ** yasnippet
    #+BEGIN_SRC emacs-lisp
      (add-hook 'emacs-lisp-mode-hook 'yas-minor-mode)
@@ -696,9 +698,9 @@
    #+END_SRC
 ** line wrapping
    #+BEGIN_SRC emacs-lisp
-          (add-hook 'org-mode-hook
-                    '(lambda ()
-                       (visual-line-mode 1)))
+     (add-hook 'org-mode-hook
+               '(lambda ()
+                  (visual-line-mode 1)))
    #+END_SRC
 ** emacs-lisp template
    #+BEGIN_SRC emacs-lisp

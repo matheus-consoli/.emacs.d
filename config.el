@@ -72,21 +72,22 @@
         (add-to-list 'term-bind-key-alist bind)))))
 
 (defun consoli/open-multi-term-here ()
-(interactive)
-(let* ((parent (if (buffer-file-name)
-           (file-name-directory (buffer-file-name))
-         default-directory))
-       (height (/ (window-total-height) 3))
-       (name (car (last (split-string parent "/" t)))))
-  (multi-term-dedicated-open)
-  (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
-  (linum-mode nil)))
+  (interactive)
+  (let* ((parent (if (buffer-file-name)
+                     (file-name-directory (buffer-file-name))
+                   default-directory))
+         (height (/ (window-total-height) 3))
+         (name (car (last (split-string parent "/" t)))))
+    (multi-term-dedicated-open)
+    (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
+    (linum-mode -1)))
 
 (defun last-term-mode-buffer (list-of-buffers)
-"Returns the most recently used term-mode buffer."
-(when list-of-buffers
-  (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
-      (car list-of-buffers) (last-term-mode-buffer (cdr list-of-buffers)))))
+  "Returns the most recently used term-mode buffer."
+  (when list-of-buffers
+    (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
+        (car list-of-buffers)
+      (last-term-mode-buffer (cdr list-of-buffers)))))
 
 (defun switch-to-term-mode-buffer ()
 "Switch to the most recently used term-mode buffer, or create a new one."
