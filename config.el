@@ -11,10 +11,10 @@
 ;;    eshell-prefer-lisp-functions nil
 ;;    eshell-destroy-buffer-when-process-dies t)
 ;;   (add-hook 'eshell-mode-hook
-;; 	    (lambda ()
-;; 	      (add-to-list 'eshell-visual-commands "ssh")
-;; 	      (add-to-list 'eshell-visual-commands "tail")
-;; 	      (add-to-list 'eshell-visual-commands "top"))))
+;;         (lambda ()
+;;           (add-to-list 'eshell-visual-commands "ssh")
+;;           (add-to-list 'eshell-visual-commands "tail")
+;;           (add-to-list 'eshell-visual-commands "top"))))
 
 (defun eshell/x ()
   (insert "exit")
@@ -22,15 +22,15 @@
   (delete-window))
 
 (setenv "PATH"
-	(concat
-	 "/usr/local/bin/:/usr/local/sbin:"
-	 (getenv "PATH")))
+    (concat
+     "/usr/local/bin/:/usr/local/sbin:"
+     (getenv "PATH")))
 
 (defun eshell-clear ()
-  "Clear the eshell buffer."
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (eshell-send-input)))
+"Clear the eshell buffer."
+(let ((inhibit-read-only t))
+  (erase-buffer)
+  (eshell-send-input)))
 
 (use-package try
     :ensure t)
@@ -48,8 +48,8 @@
 
 (use-package ox-reveal
   :ensure ox-reveal)
-(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
-(setq org-reveal-mathjax t)
+  (setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+  (setq org-reveal-mathjax t)
 
 (use-package htmlize
   :ensure t)
@@ -59,42 +59,42 @@
   :bind ("<f6>" . consoli/open-multi-term-here)
   :config
   (setq ;; multi-term-dedicated-window-height (lambda () (/ (window-total-height) 3))
-	multi-term-program "/bin/zsh")
+    multi-term-program "/bin/zsh")
   (add-hook 'term-mode-hook
-	    (lambda ()
-	      (dolist
-		  (bind '(("C-y" . term-paste)
-			  ("C-<backspace>" . term-send-backward-kill-word)
-			  ("C-c C-c" . term-interrupt-subjob)
-			  ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
-			  ("C-s" . isearch-forward)
-			  ("C-r" . isearch-backward)))
-		(add-to-list 'term-bind-key-alist bind)))))
+    (lambda ()
+      (dolist
+          (bind '(("C-y" . term-paste)
+              ("C-<backspace>" . term-send-backward-kill-word)
+              ("C-c C-c" . term-interrupt-subjob)
+              ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
+              ("C-s" . isearch-forward)
+              ("C-r" . isearch-backward)))
+        (add-to-list 'term-bind-key-alist bind)))))
 
 (defun consoli/open-multi-term-here ()
-  (interactive)
-  (let* ((parent (if (buffer-file-name)
-		     (file-name-directory (buffer-file-name))
-		   default-directory))
-	 (height (/ (window-total-height) 3))
-	 (name (car (last (split-string parent "/" t)))))
-    (multi-term-dedicated-open)
-    (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
-    (linum-mode nil)))
+(interactive)
+(let* ((parent (if (buffer-file-name)
+           (file-name-directory (buffer-file-name))
+         default-directory))
+       (height (/ (window-total-height) 3))
+       (name (car (last (split-string parent "/" t)))))
+  (multi-term-dedicated-open)
+  (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
+  (linum-mode nil)))
 
 (defun last-term-mode-buffer (list-of-buffers)
-  "Returns the most recently used term-mode buffer."
-  (when list-of-buffers
-    (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
-	(car list-of-buffers) (last-term-mode-buffer (cdr list-of-buffers)))))
+"Returns the most recently used term-mode buffer."
+(when list-of-buffers
+  (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
+      (car list-of-buffers) (last-term-mode-buffer (cdr list-of-buffers)))))
 
 (defun switch-to-term-mode-buffer ()
-  "Switch to the most recently used term-mode buffer, or create a new one."
-  (interactive)
-  (let ((buffer (last-term-mode-buffer (buffer-list))))
-    (if (not buffer)
-	(consoli/open-multi-term-here)
-      (switch-to-buffer buffer))))
+"Switch to the most recently used term-mode buffer, or create a new one."
+(interactive)
+(let ((buffer (last-term-mode-buffer (buffer-list))))
+  (if (not buffer)
+      (consoli/open-multi-term-here)
+    (switch-to-buffer buffer))))
 
 (use-package dashboard
   :ensure t
@@ -102,8 +102,8 @@
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner "~/.emacs.d/img/banner_epurple.png")
   (setq dashboard-items '((recents . 5)
-			  (projects . 5)
-			  (agenda . 3)))
+              (projects . 5)
+              (agenda . 3)))
   (setq dashboard-banner-logo-title "Happy Hacking!")
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
 
@@ -117,7 +117,7 @@
     :ensure t)
 
 (use-package neotree
-    :ensure t)
+:ensure t)
 (global-set-key (kbd "<f8>") 'neotree-toggle)
 (global-set-key (kbd "<C-f8>") 'neotree-hidden-file-toggle)
 (setq neo-smart-open t)
@@ -135,7 +135,7 @@
 (setq doom-neotree-enable-file-icons t)
 (doom-themes-org-config)
 (setq doom-themes-enable-bold t
-	doom-themes-enable-italic t)
+    doom-themes-enable-italic t)
 
 (use-package spaceline
   :ensure t
@@ -150,6 +150,11 @@
 
 (use-package flycheck
   :ensure t)
+
+(use-package elpy
+  :ensure t)
+(setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "-i  --simple-prompt")
 
 (use-package yasnippet
   :ensure t
@@ -187,6 +192,9 @@
             '(define-key company-active-map (kbd "C-c h") #'company-quickhelp-manual-begin)))
 (add-hook 'company-mode-hook #'company-quickhelp-mode)
 
+(use-package ein
+  :ensure t)
+
 (use-package whitespace-cleanup-mode
     :ensure t)
 
@@ -195,13 +203,14 @@
 (require 'smartparens-config)
 (add-hook 'prog-mode #'smartparens-mode)
 (add-hook 'org-mode #'smartparens-mode)
+(smartparens-global-mode t)
 
 (use-package rainbow-mode
     :ensure t)
 
 (use-package rainbow-delimiters
-   :ensure t)
-(rainbow-delimiters-mode 1)
+  :ensure t
+  :config (rainbow-delimiters-mode 1))
 
 (use-package helm
   :ensure t
@@ -272,7 +281,7 @@
   :ensure t)
 
 (use-package solaire-mode
-    :ensure t)
+:ensure t)
 (add-hook 'after-change-major-mode-hook #'turn-on-solaire-mode)
 (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
 (setq solaire-mode-remap-modeline nil)
@@ -285,8 +294,17 @@
 (use-package magit
   :ensure t)
 
+(use-package nyan-mode
+  :ensure t
+  :init
+  (setq nyan-animate-nyancat t
+        nyan-wavy-trail t
+        mode-line-format (list
+                          '(:eval (list (nyan-create)))))
+  (nyan-mode t))
+
 (load-theme 'doom-dracula
-	    :no-confirm)
+    :no-confirm)
 
 (prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
@@ -308,7 +326,7 @@
 (setq inhibit-startup-message t)
 
 (setq initial-scratch-message nil
-      inhibit-startup-echo-area-message t)
+  inhibit-startup-echo-area-message t)
 (message " WELCOME TO EMACS!")
 
 (save-place-mode 1)
@@ -316,8 +334,6 @@
 (global-linum-mode 1)
 
 (setq default-fill-column 80)
-
-(windmove-default-keybindings)
 
 (defvar my-term-shell "/bin/zsh")
 (defadvice ansi-term (before force-zsh)
@@ -329,14 +345,22 @@
   (global-prettify-symbols-mode t))
 
 (setq scroll-conservatively 9999
-      scroll-preserve-screen-position t
-      scroll-margin 5)
+  scroll-preserve-screen-position t
+  scroll-margin 5)
 
-(setq backup-directory-alist '(("." "~/.emacs.d/backups/")))
+(defvar consoli/backup_dir
+  (concat user-emacs-directory "backups"))
+
+(if (not (file-exists-p consoli/backup_dir))
+         (make-directory consoli/backup_dir t))
+
+(setq backup-directory-alist
+      `(("." . ,consoli/backup_dir)))
+
 (setq backup-by-copying t)
-(setq delete-old-versions t) 
+(setq delete-old-versions t)
 (setq kept-new-versions 3)
-(setq kept-old-versions 0)
+(setq kept-old-versions 2)
 (setq version-control t)
 
 (setq auto-save-default nil)
@@ -364,6 +388,8 @@
 
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
+
+(windmove-default-keybindings)
 
 (defun consoli/edit-init ()
     "Easy open init.el file."
@@ -412,9 +438,9 @@
   "If our souce file use tabs, we use tabs, if spaces, spaces.
 And if neither, we use the current indent-tabs-mode"
   (let ((space-count (how-many "^ " (point-min) (point-max)))
-	(tab-count (how-many "^\t" (point-min) (point-max))))
-    (if (> space-count tab-count) (setq indent-tabs-mode nil))
-    (if (> tab-count space-count) (setq indent-tabs-mode t))))
+    (tab-count (how-many "^\t" (point-min) (point-max))))
+(if (> space-count tab-count) (setq indent-tabs-mode nil))
+(if (> tab-count space-count) (setq indent-tabs-mode t))))
 (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
 
 (defun consoli/set-buffer-to-unix-format ()
@@ -428,18 +454,18 @@ And if neither, we use the current indent-tabs-mode"
 (defun consoli/insert-line-bellow ()
   (interactive)
   (let ((current-point (point)))
-    (move-end-of-line 1)
-    (open-line 1)
-    (goto-char current-point)))
+(move-end-of-line 1)
+(open-line 1)
+(goto-char current-point)))
 
 (defun consoli/insert-line-above ()
   (interactive)
   (let ((current-point (point)))
-    (move-beginning-of-line 1)
-    (newline-and-indent)
-    (indent-according-to-mode)
-    (goto-char current-point)
-    (forward-char)))
+(move-beginning-of-line 1)
+(newline-and-indent)
+(indent-according-to-mode)
+(goto-char current-point)
+(forward-char)))
 
 (global-set-key (kbd "<f10>") 'whitespace-mode)
 
