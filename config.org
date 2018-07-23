@@ -228,8 +228,8 @@
        :config
        (setq company-idle-delay 0)
        (setq company-minimun-prefix-lenght 1)) ;; maybe 3?
-     (with-eval-after-load 'company
-       (define-key company-active-map (kbd "SPC") #'company-abort))
+     ;; (with-eval-after-load 'company
+       ;; (define-key company-active-map (kbd "SPC") #'company-abort))
    #+END_SRC
 ** company-jedi
    #+BEGIN_SRC emacs-lisp
@@ -255,11 +255,6 @@
        :config (eval-after-load 'company
                  '(define-key company-active-map (kbd "C-c h") #'company-quickhelp-manual-begin)))
      (add-hook 'company-mode-hook #'company-quickhelp-mode)
-   #+END_SRC
-** ein
-   #+BEGIN_SRC emacs-lisp
-     (use-package ein
-       :ensure t)
    #+END_SRC
 ** whitepaces-cleanup
    #+BEGIN_SRC emacs-lisp
@@ -405,6 +400,12 @@
              mode-line-format (list
                                '(:eval (list (nyan-create)))))
        (nyan-mode t))
+   #+END_SRC
+** auto-highlight
+   #+BEGIN_SRC emacs-lisp
+     (use-package auto-highlight-symbol
+       :ensure t
+       :init (global-auto-highlight-symbol-mode))
    #+END_SRC
 * Theme
   #+BEGIN_SRC emacs-lisp
@@ -729,6 +730,8 @@
   (diminish 'yas-minor-mode)
   (diminish 'company-mode)
   (diminish 'page-break-lines-mode)
+  (diminish 'highlight-indentation-mode)
+  (diminish 'smartparens-mode)
 #+END_SRC
 
 

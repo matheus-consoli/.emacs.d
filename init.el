@@ -33,6 +33,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:inherit nil :stipple nil :background "#282a36" :foreground "#f8f8f2" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 113 :width normal :foundry "GOOG" :family "Knack Nerd Font Mono"))))
+ '(ahs-definition-face ((t (:background "dark orange" :foreground "black"))))
+ '(ahs-face ((t (:background "orange" :foreground "black"))))
+ '(ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
  '(mode-line ((t (:background "#483D8B" :box nil))))
  '(mode-line-highlight ((t (:background "#483DAB"))))
  '(powerline-active1 ((t (:inherit mode-line :background "#242555" :foreground "white"))))
@@ -42,4 +45,5 @@
  '(spaceline-evil-normal ((t (:background "#8A2BE2" :foreground "#3E3D31" :inherit (quote mode-line)))))
  '(spaceline-evil-replace ((t (:background "#6A5ACD" :foreground "#3E3D31" :inherit (quote mode-line)))))
  '(spaceline-highlight-face ((t (:background "#6A5ACD" :foreground "#E6E6FA" :inherit (quote mode-line)))))
- '(spaceline-unmodified ((t (:background "#6A5ACD" :foreground "#3E3D31" :inherit (quote mode-line))))))
+ '(spaceline-unmodified ((t (:background "#6A5ACD" :foreground "#3E3D31" :inherit (quote mode-line)))))
+ '(vcursor ((t (:background "indigo" :underline t)))))

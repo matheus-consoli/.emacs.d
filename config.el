@@ -59,17 +59,17 @@
   :bind ("<f6>" . consoli/open-multi-term-here)
   :config
   (setq ;; multi-term-dedicated-window-height (lambda () (/ (window-total-height) 3))
-    multi-term-program "/bin/zsh")
+   multi-term-program "/bin/zsh")
   (add-hook 'term-mode-hook
-    (lambda ()
-      (dolist
-          (bind '(("C-y" . term-paste)
-              ("C-<backspace>" . term-send-backward-kill-word)
-              ("C-c C-c" . term-interrupt-subjob)
-              ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
-              ("C-s" . isearch-forward)
-              ("C-r" . isearch-backward)))
-        (add-to-list 'term-bind-key-alist bind)))))
+            (lambda ()
+              (dolist
+                  (bind '(("C-y" . term-paste)
+                          ("C-<backspace>" . term-send-backward-kill-word)
+                          ("C-c C-c" . term-interrupt-subjob)
+                          ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
+                          ("C-s" . isearch-forward)
+                          ("C-r" . isearch-backward)))
+                (add-to-list 'term-bind-key-alist bind)))))
 
 (defun consoli/open-multi-term-here ()
   (interactive)
@@ -89,13 +89,15 @@
         (car list-of-buffers)
       (last-term-mode-buffer (cdr list-of-buffers)))))
 
+(setq multi-term-dedicated-close-back-to-open-buffer t)
+
 (defun switch-to-term-mode-buffer ()
-"Switch to the most recently used term-mode buffer, or create a new one."
-(interactive)
-(let ((buffer (last-term-mode-buffer (buffer-list))))
-  (if (not buffer)
-      (consoli/open-multi-term-here)
-    (switch-to-buffer buffer))))
+  "Switch to the most recently used term-mode buffer, or create a new one."
+  (interactive)
+  (let ((buffer (last-term-mode-buffer (buffer-list))))
+    (if (not buffer)
+        (consoli/open-multi-term-here)
+      (multi-term-dedicated-toggle))))
 
 (use-package dashboard
   :ensure t
@@ -103,22 +105,22 @@
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner "~/.emacs.d/img/banner_epurple.png")
   (setq dashboard-items '((recents . 5)
-              (projects . 5)
-              (agenda . 3)))
+                          (projects . 5)
+                          (agenda . 3)))
   (setq dashboard-banner-logo-title "Happy Hacking!")
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
 
 (use-package evil
-    :ensure t)
+  :ensure t)
 (evil-mode t)
 
 (require 'font-lock)
 
 (use-package all-the-icons
-    :ensure t)
+  :ensure t)
 
 (use-package neotree
-:ensure t)
+  :ensure t)
 (global-set-key (kbd "<f8>") 'neotree-toggle)
 (global-set-key (kbd "<C-f8>") 'neotree-hidden-file-toggle)
 (setq neo-smart-open t)
@@ -136,7 +138,7 @@
 (setq doom-neotree-enable-file-icons t)
 (doom-themes-org-config)
 (setq doom-themes-enable-bold t
-    doom-themes-enable-italic t)
+      doom-themes-enable-italic t)
 
 (use-package spaceline
   :ensure t
@@ -169,8 +171,8 @@
   :config
   (setq company-idle-delay 0)
   (setq company-minimun-prefix-lenght 1)) ;; maybe 3?
-(with-eval-after-load 'company
-  (define-key company-active-map (kbd "SPC") #'company-abort))
+;; (with-eval-after-load 'company
+  ;; (define-key company-active-map (kbd "SPC") #'company-abort))
 
 (use-package company-jedi
   :ensure t
@@ -193,21 +195,18 @@
             '(define-key company-active-map (kbd "C-c h") #'company-quickhelp-manual-begin)))
 (add-hook 'company-mode-hook #'company-quickhelp-mode)
 
-(use-package ein
-  :ensure t)
-
 (use-package whitespace-cleanup-mode
     :ensure t)
 
 (use-package smartparens
-    :ensure t)
+  :ensure t)
 (require 'smartparens-config)
 (add-hook 'prog-mode #'smartparens-mode)
 (add-hook 'org-mode #'smartparens-mode)
 (smartparens-global-mode t)
 
 (use-package rainbow-mode
-    :ensure t)
+  :ensure t)
 
 (use-package rainbow-delimiters
   :ensure t
@@ -238,7 +237,7 @@
 (helm-autoresize-mode 1)
 
 (use-package hlinum
-    :ensure t)
+  :ensure t)
 (hlinum-activate)
 (global-hl-line-mode 1)
 ;; (set-face-background 'hl-line "#3e4446")
@@ -251,16 +250,16 @@
   (add-hook 'prog-mode-hook 'linum-relative-mode))
 
 (use-package simpleclip
-    :ensure t
-    :init (simpleclip-mode 1))
+  :ensure t
+  :init (simpleclip-mode 1))
 
 (use-package popup-kill-ring
   :ensure t
   :bind ("M-y" . popup-kill-ring))
 
 (use-package async
-    :ensure t
-    :init (dired-async-mode 1))
+  :ensure t
+  :init (dired-async-mode 1))
 
 (use-package swiper
   :ensure t
@@ -282,7 +281,7 @@
   :ensure t)
 
 (use-package solaire-mode
-:ensure t)
+  :ensure t)
 (add-hook 'after-change-major-mode-hook #'turn-on-solaire-mode)
 (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
 (setq solaire-mode-remap-modeline nil)
@@ -303,6 +302,10 @@
         mode-line-format (list
                           '(:eval (list (nyan-create)))))
   (nyan-mode t))
+
+(use-package auto-highlight-symbol
+  :ensure t
+  :init (global-auto-highlight-symbol-mode))
 
 (load-theme 'doom-dracula
     :no-confirm)
@@ -327,7 +330,7 @@
 (setq inhibit-startup-message t)
 
 (setq initial-scratch-message nil
-  inhibit-startup-echo-area-message t)
+      inhibit-startup-echo-area-message t)
 (message " WELCOME TO EMACS!")
 
 (save-place-mode 1)
@@ -346,14 +349,14 @@
   (global-prettify-symbols-mode t))
 
 (setq scroll-conservatively 9999
-  scroll-preserve-screen-position t
-  scroll-margin 5)
+      scroll-preserve-screen-position t
+      scroll-margin 5)
 
 (defvar consoli/backup_dir
   (concat user-emacs-directory "backups"))
 
 (if (not (file-exists-p consoli/backup_dir))
-         (make-directory consoli/backup_dir t))
+    (make-directory consoli/backup_dir t))
 
 (setq backup-directory-alist
       `(("." . ,consoli/backup_dir)))
@@ -393,34 +396,34 @@
 (windmove-default-keybindings)
 
 (defun consoli/edit-init ()
-    "Easy open init.el file."
-    (interactive)
-    (find-file "~/.emacs.d/config.org")
-    (message "Welcome back to configuration file!"))
+  "Easy open init.el file."
+  (interactive)
+  (find-file "~/.emacs.d/config.org")
+  (message "Welcome back to configuration file!"))
 (global-set-key (kbd "<S-f1>") 'consoli/edit-init)
 
 (defun consoli/kill-whitespaces ()
-    (interactive)
-    (whitespace-cleanup)
-    (message "Whitespaces killed!"))
+  (interactive)
+  (whitespace-cleanup)
+  (message "Whitespaces killed!"))
 
 (global-set-key (kbd "<f9>") 'consoli/kill-whitespaces)
 
 (defun consoli/indent-context ()
-    (interactive)
-    (save-excursion
+  (interactive)
+  (save-excursion
     (beginning-of-defun)
     (set-mark-command nil)
     (end-of-defun)
     (indent-region (region-beginning) (region-end)))
-    (message "Indented!"))
+  (message "Indented!"))
 
 (global-set-key (kbd "<f7>") 'consoli/indent-context)
 
 (defun consoli/indent-buffer ()
-    (interactive)
-    (indent-region (point-min) (point-max))
-    (message "Buffer indented!"))
+  (interactive)
+  (indent-region (point-min) (point-max))
+  (message "Buffer indented!"))
 
 (global-set-key (kbd "<C-f7>") 'consoli/indent-buffer)
 
@@ -439,9 +442,9 @@
   "If our souce file use tabs, we use tabs, if spaces, spaces.
 And if neither, we use the current indent-tabs-mode"
   (let ((space-count (how-many "^ " (point-min) (point-max)))
-    (tab-count (how-many "^\t" (point-min) (point-max))))
-(if (> space-count tab-count) (setq indent-tabs-mode nil))
-(if (> tab-count space-count) (setq indent-tabs-mode t))))
+        (tab-count (how-many "^\t" (point-min) (point-max))))
+    (if (> space-count tab-count) (setq indent-tabs-mode nil))
+    (if (> tab-count space-count) (setq indent-tabs-mode t))))
 (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
 
 (defun consoli/set-buffer-to-unix-format ()
@@ -455,18 +458,18 @@ And if neither, we use the current indent-tabs-mode"
 (defun consoli/insert-line-bellow ()
   (interactive)
   (let ((current-point (point)))
-(move-end-of-line 1)
-(open-line 1)
-(goto-char current-point)))
+    (move-end-of-line 1)
+    (open-line 1)
+    (goto-char current-point)))
 
 (defun consoli/insert-line-above ()
   (interactive)
   (let ((current-point (point)))
-(move-beginning-of-line 1)
-(newline-and-indent)
-(indent-according-to-mode)
-(goto-char current-point)
-(forward-char)))
+    (move-beginning-of-line 1)
+    (newline-and-indent)
+    (indent-according-to-mode)
+    (goto-char current-point)
+    (forward-char)))
 
 (global-set-key (kbd "<f10>") 'whitespace-mode)
 
@@ -520,3 +523,5 @@ And if neither, we use the current indent-tabs-mode"
 (diminish 'yas-minor-mode)
 (diminish 'company-mode)
 (diminish 'page-break-lines-mode)
+(diminish 'highlight-indentation-mode)
+(diminish 'smartparens-mode)
