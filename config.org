@@ -144,8 +144,7 @@
        (setq dashboard-items '((recents . 5)
                                (projects . 5)
                                (agenda . 3)))
-       (setq dashboard-banner-logo-title "Happy Hacking!")
-       (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
+       (setq dashboard-banner-logo-title "Happy Hacking!"))
    #+END_SRC
 ** evil mode
    #+BEGIN_SRC emacs-lisp
@@ -227,9 +226,8 @@
        :ensure t
        :config
        (setq company-idle-delay 0)
-       (setq company-minimun-prefix-lenght 1)) ;; maybe 3?
-     ;; (with-eval-after-load 'company
-       ;; (define-key company-active-map (kbd "SPC") #'company-abort))
+       (setq company-minimun-prefix-lenght 1)
+       (setq company-tooltip-align-annotations t)) ;; maybe 3?
    #+END_SRC
 ** company-jedi
    #+BEGIN_SRC emacs-lisp
@@ -367,7 +365,9 @@
 ** projectile
    #+BEGIN_SRC emacs-lisp
      (use-package projectile
-       :ensure t)
+       :ensure t
+       :config (projectile-global-mode))
+     (setq projectile-completion-system 'helm)
    #+END_SRC
 ** solaire
    Change background color of windows
@@ -406,6 +406,17 @@
      (use-package auto-highlight-symbol
        :ensure t
        :init (global-auto-highlight-symbol-mode))
+   #+END_SRC
+** dump jump
+   #+BEGIN_SRC emacs-lisp
+     (use-package dumb-jump
+       :ensure t
+       :bind (("M-g o" . dumb-jump-go-other-window)
+              ("<C-return>" . dumb-jump-go)
+              ("<C-tab>" . dumb-jump-back)
+              ("M-g x" . dumb-jump-prefer-external)
+              ("M-g z" . dumb-jump-go-prefer-external-other-window))
+       :config (setq dumb-jump-selector 'helm))
    #+END_SRC
 * Theme
   #+BEGIN_SRC emacs-lisp
@@ -452,9 +463,20 @@
    #+BEGIN_SRC emacs-lisp
      (save-place-mode 1)
    #+END_SRC
-** line numbers everywhere
+** line numbers
    #+BEGIN_SRC emacs-lisp
-     (global-linum-mode 1)
+     (setq consoli/modes-to-disable-linum-mode
+           (list 'org-mode
+                 'helm-mode
+                 'dashboard-mode
+                 'term-mode
+                 'custom-mode
+                 'magit-mode))
+
+     (add-hook 'after-change-major-mode-hook
+               '(lambda ()
+                  (linum-mode (if (member major-mode consoli/modes-to-disable-linum-mode)
+                                  0 1))))
    #+END_SRC
 ** fill column
    #+BEGIN_SRC emacs-lisp
@@ -688,6 +710,39 @@
    #+BEGIN_SRC emacs-lisp
      (add-hook 'emacs-lisp-mode-hook 'company-mode)
      ;; take a look at `use-package/smile' and `use-package/slime-company' for more
+   #+END_SRC
+* Rust
+** Rust mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package rust-mode
+       :ensure t
+       :config (setq rust-format-on-save t))
+   #+END_SRC
+** Cargo
+   #+BEGIN_SRC emacs-lisp
+     (use-package cargo
+       :ensure t)
+     (add-hook 'rust-mode-hook 'cargo-minor-mode)
+   #+END_SRC
+** Flycheck-rust
+   #+BEGIN_SRC emacs-lisp
+     (use-package flycheck-rust
+       :ensure t)
+     (when (eq major-mode 'rust-mode)
+       (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+   #+END_SRC
+** Racer
+   #+BEGIN_SRC emacs-lisp
+     (use-package racer
+       :ensure t)
+     (setq racer-cmd "/usr/bin/racer")
+     (setq racer-rust-src-path "/home/consoli/.rust-source/rust/src")
+   #+END_SRC
+** Hooks
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'rust-mode-hook #'racer-mode)
+     (add-hook 'racer-mode-hook #'eldoc-mode)
+     (add-hook 'racer-mode-hook #'company-mode)
    #+END_SRC
 * Org-config
 ** commom settings

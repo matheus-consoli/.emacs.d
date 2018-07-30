@@ -107,8 +107,7 @@
   (setq dashboard-items '((recents . 5)
                           (projects . 5)
                           (agenda . 3)))
-  (setq dashboard-banner-logo-title "Happy Hacking!")
-  (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))))
+  (setq dashboard-banner-logo-title "Happy Hacking!"))
 
 (use-package evil
   :ensure t)
@@ -170,9 +169,8 @@
   :ensure t
   :config
   (setq company-idle-delay 0)
-  (setq company-minimun-prefix-lenght 1)) ;; maybe 3?
-;; (with-eval-after-load 'company
-  ;; (define-key company-active-map (kbd "SPC") #'company-abort))
+  (setq company-minimun-prefix-lenght 1)
+  (setq company-tooltip-align-annotations t)) ;; maybe 3?
 
 (use-package company-jedi
   :ensure t
@@ -278,7 +276,9 @@
   (slime-setup '(slime-fancy slime-company)))
 
 (use-package projectile
-  :ensure t)
+  :ensure t
+  :config (projectile-global-mode))
+(setq projectile-completion-system 'helm)
 
 (use-package solaire-mode
   :ensure t)
@@ -306,6 +306,15 @@
 (use-package auto-highlight-symbol
   :ensure t
   :init (global-auto-highlight-symbol-mode))
+
+(use-package dumb-jump
+  :ensure t
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("<C-return>" . dumb-jump-go)
+         ("<C-tab>" . dumb-jump-back)
+         ("M-g x" . dumb-jump-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :config (setq dumb-jump-selector 'helm))
 
 (load-theme 'doom-dracula
     :no-confirm)
@@ -335,7 +344,17 @@
 
 (save-place-mode 1)
 
-(global-linum-mode 1)
+(setq consoli/modes-to-disable-linum-mode
+      (list 'org-mode
+            'helm-mode
+            'dashboard-mode
+            'term-mode
+            'custom-mode))
+
+(add-hook 'after-change-major-mode-hook
+          '(lambda ()
+             (linum-mode (if (member major-mode consoli/modes-to-disable-linum-mode)
+                             0 1))))
 
 (setq default-fill-column 80)
 
@@ -493,6 +512,28 @@ And if neither, we use the current indent-tabs-mode"
 
 (add-hook 'emacs-lisp-mode-hook 'company-mode)
 ;; take a look at `use-package/smile' and `use-package/slime-company' for more
+
+(use-package rust-mode
+  :ensure t
+  :config (setq rust-format-on-save t))
+
+(use-package cargo
+  :ensure t)
+(add-hook 'rust-mode-hook 'cargo-minor-mode)
+
+(use-package flycheck-rust
+  :ensure t)
+(when (eq major-mode 'rust-mode)
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+
+(use-package racer
+  :ensure t)
+(setq racer-cmd "/usr/bin/racer")
+(setq racer-rust-src-path "/home/consoli/.rust-source/rust/src")
+
+(add-hook 'rust-mode-hook #'racer-mode)
+(add-hook 'racer-mode-hook #'eldoc-mode)
+(add-hook 'racer-mode-hook #'company-mode)
 
 (setq org-src-fontfy-natively t)
 (setq org-src-tab-acts-natively t)
