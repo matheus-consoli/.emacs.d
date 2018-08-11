@@ -319,6 +319,42 @@
 (load-theme 'doom-dracula
     :no-confirm)
 
+;; (when (window-system)
+;;   (set-frame-font "Fira Code"))
+;; (let ((alist '((33 . ".\\(?:\\(?:==\\|!!\\)\\|[!=]\\)")
+;;                (35 . ".\\(?:###\\|##\\|_(\\|[#(?[_{]\\)")
+;;                (36 . ".\\(?:>\\)")
+;;                (37 . ".\\(?:\\(?:%%\\)\\|%\\)")
+;;                (38 . ".\\(?:\\(?:&&\\)\\|&\\)")
+;;                (42 . ".\\(?:\\(?:\\*\\*/\\)\\|\\(?:\\*[*/]\\)\\|[*/>]\\)")
+;;                (43 . ".\\(?:\\(?:\\+\\+\\)\\|[+>]\\)")
+;;                (45 . ".\\(?:\\(?:-[>-]\\|<<\\|>>\\)\\|[<>}~-]\\)")
+;;                (46 . ".\\(?:\\(?:\\.[.<]\\)\\|[.=-]\\)")
+;;                (47 . ".\\(?:\\(?:\\*\\*\\|//\\|==\\)\\|[*/=>]\\)")
+;;                (48 . ".\\(?:x[a-zA-Z]\\)")
+;;                (58 . ".\\(?:::\\|[:=]\\)")
+;;                (59 . ".\\(?:;;\\|;\\)")
+;;                (60 . ".\\(?:\\(?:!--\\)\\|\\(?:~~\\|->\\|\\$>\\|\\*>\\|\\+>\\|--\\|<[<=-]\\|=[<=>]\\||>\\)\\|[*$+~/<=>|-]\\)")
+;;                (61 . ".\\(?:\\(?:/=\\|:=\\|<<\\|=[=>]\\|>>\\)\\|[<=>~]\\)")
+;;                (62 . ".\\(?:\\(?:=>\\|>[=>-]\\)\\|[=>-]\\)")
+;;                (63 . ".\\(?:\\(\\?\\?\\)\\|[:=?]\\)")
+;;                (91 . ".\\(?:]\\)")
+;;                (92 . ".\\(?:\\(?:\\\\\\\\\\)\\|\\\\\\)")
+;;                (94 . ".\\(?:=\\)")
+;;                (119 . ".\\(?:ww\\)")
+;;                (123 . ".\\(?:-\\)")
+;;                (124 . ".\\(?:\\(?:|[=|]\\)\\|[=>|]\\)")
+;;                (126 . ".\\(?:~>\\|~~\\|[>=@~-]\\)")
+;;                )
+;;              ))
+;;   (dolist (char-regexp alist)
+;;     (set-char-table-range composition-function-table (car char-regexp)
+;;                           `([,(cdr char-regexp) 0 font-shape-gstring]))))
+
+(add-hook 'helm-major-mode-hook
+          (lambda ()
+            (setq auto-composition-mode nil)))
+
 (prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
@@ -349,7 +385,9 @@
             'helm-mode
             'dashboard-mode
             'term-mode
-            'custom-mode))
+            'custom-mode
+            'magit-mode
+            'package-menu-mode))
 
 (add-hook 'after-change-major-mode-hook
           '(lambda ()
@@ -490,6 +528,22 @@ And if neither, we use the current indent-tabs-mode"
     (goto-char current-point)
     (forward-char)))
 
+(defun consoli/smart-newline ()
+  "Add two newlines and put the cursor at the right indentation
+between them if a newline is attempted when the cursor is between
+two curly braces, otherwise do a regular newline and indent"
+  (interactive)
+  (if (or
+       (and (equal (char-before) 123) ; {
+            (equal (char-after) 125)) ; }
+       (and (equal (char-before) 40)  ; (
+            (equal (char-after) 41))) ; )
+      (progn (newline-and-indent)
+             (split-line)
+             (indent-for-tab-command))
+(newline-and-indent)))
+(global-set-key (kbd "RET") 'consoli/smart-newline)
+
 (global-set-key (kbd "<f10>") 'whitespace-mode)
 
 (global-set-key (kbd "<f12>") 'linum-mode)
@@ -535,6 +589,15 @@ And if neither, we use the current indent-tabs-mode"
 (add-hook 'racer-mode-hook #'eldoc-mode)
 (add-hook 'racer-mode-hook #'company-mode)
 
+(use-package meghanada
+  :ensure t)
+
+(add-hook 'java-mode-hook
+          (lambda ()
+            (meghanada-mode t)
+            (setq c-basic-offset 2)
+            (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
+
 (setq org-src-fontfy-natively t)
 (setq org-src-tab-acts-natively t)
 (setq org-export-with-smart-quotes t)
@@ -566,3 +629,4 @@ And if neither, we use the current indent-tabs-mode"
 (diminish 'page-break-lines-mode)
 (diminish 'highlight-indentation-mode)
 (diminish 'smartparens-mode)
+(diminish 'auto-highlight-symbol-mode)
