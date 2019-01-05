@@ -56,48 +56,18 @@
 
 (use-package multi-term
   :ensure t
-  :bind ("<f6>" . consoli/open-multi-term-here)
-  :config
-  (setq ;; multi-term-dedicated-window-height (lambda () (/ (window-total-height) 3))
-   multi-term-program "/bin/zsh")
+  :bind ("<f6>" . multi-term-dedicated-toggle)
+  :config (setq multi-term-program "/bin/zsh"
+                multi-term-dedicated-close-back-to-open-buffer-p t)
   (add-hook 'term-mode-hook
             (lambda ()
               (dolist
                   (bind '(("C-y" . term-paste)
                           ("C-<backspace>" . term-send-backward-kill-word)
                           ("C-c C-c" . term-interrupt-subjob)
-                          ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
                           ("C-s" . isearch-forward)
                           ("C-r" . isearch-backward)))
                 (add-to-list 'term-bind-key-alist bind)))))
-
-(defun consoli/open-multi-term-here ()
-  (interactive)
-  (let* ((parent (if (buffer-file-name)
-                     (file-name-directory (buffer-file-name))
-                   default-directory))
-         (height (/ (window-total-height) 3))
-         (name (car (last (split-string parent "/" t)))))
-    (multi-term-dedicated-open)
-    (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
-    (linum-mode -1)))
-
-(defun last-term-mode-buffer (list-of-buffers)
-  "Returns the most recently used term-mode buffer."
-  (when list-of-buffers
-    (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
-        (car list-of-buffers)
-      (last-term-mode-buffer (cdr list-of-buffers)))))
-
-(setq multi-term-dedicated-close-back-to-open-buffer t)
-
-(defun switch-to-term-mode-buffer ()
-  "Switch to the most recently used term-mode buffer, or create a new one."
-  (interactive)
-  (let ((buffer (last-term-mode-buffer (buffer-list))))
-    (if (not buffer)
-        (consoli/open-multi-term-here)
-      (multi-term-dedicated-toggle))))
 
 (use-package dashboard
   :ensure t
@@ -112,6 +82,11 @@
 (use-package evil
   :ensure t)
 (evil-mode t)
+(setq evil-insert-state-tag "INSERT"
+      evil-normal-state-tag "NORMAL"
+      evil-visual-state-tag "VISUAL"
+      evil-replace-state-tag "REPLACE"
+      evil-emacs-state-tag "EMACS")
 
 (require 'font-lock)
 
@@ -146,12 +121,35 @@
   (setq spaceline-buffer-encoding-abbrev-p nil)
   (setq spaceline-line-column-p nil)
   (setq spaceline-line-p nil)
+  ;;(setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state)
   (setq powerline-default-separator (quote arrow))
   (spaceline-spacemacs-theme)
   (spaceline-helm-mode 1))
 
+(use-package fancy-battery
+  :ensure t
+  :config (setq fancy-battery-show-percentage t))
+(add-hook 'after-init-hook #'fancy-battery-mode)
+
+(use-package quick-peek
+:ensure t)
+
 (use-package flycheck
-  :ensure t)
+  :ensure t
+  :config (global-flycheck-mode))
+
+(use-package flycheck-inline
+  :ensure t
+  :config (setq flycheck-inline-display-function
+                (lambda (msg pos)
+                  (let* ((ov (quick-peek-overlay-ensure-at pos))
+                         (contents (quick-peek-overlay-contents ov)))
+                    (setf (quick-peek-overlay-contents ov)
+                          (concat contents (when contents "\n") msg))
+                    (quick-peek-update ov)))
+                flycheck-inline-clear-function #'quick-peek-hide))
+(with-eval-after-load 'flycheck
+  (add-hook 'flycheck-mode-hook #'turn-on-flycheck-inline))
 
 (use-package elpy
   :ensure t)
@@ -208,7 +206,8 @@
 
 (use-package rainbow-delimiters
   :ensure t
-  :config (rainbow-delimiters-mode 1))
+  :config (rainbow-delimiters-mode t))
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 
 (use-package helm
   :ensure t
@@ -239,13 +238,13 @@
 (hlinum-activate)
 (global-hl-line-mode 1)
 ;; (set-face-background 'hl-line "#3e4446")
-(set-face-background 'highlight nil)
+(set-face-background 'hl-line "#1e2029")
+;; (set-face-background 'highlight nil)
 
 (use-package linum-relative
   :ensure t
   :config
-  (setq linum-relative-current-symbol "")
-  (add-hook 'prog-mode-hook 'linum-relative-mode))
+  (setq linum-relative-current-symbol ""))
 
 (use-package simpleclip
   :ensure t
@@ -253,10 +252,11 @@
 
 (use-package popup-kill-ring
   :ensure t
-  :bind ("M-y" . popup-kill-ring))
+  :bind ("C-M-z" . popup-kill-ring))
 
 (use-package async
   :ensure t
+  :config (async-bytecomp-package-mode 1)
   :init (dired-async-mode 1))
 
 (use-package swiper
@@ -277,8 +277,9 @@
 
 (use-package projectile
   :ensure t
-  :config (projectile-global-mode))
-(setq projectile-completion-system 'helm)
+  :config (projectile-global-mode)
+  (setq projectile-mode-line-function '(lambda () (format "P[%s]" (projectile-project-name))))
+  (setq projectile-completion-system 'helm))
 
 (use-package solaire-mode
   :ensure t)
@@ -293,6 +294,21 @@
 
 (use-package magit
   :ensure t)
+
+(use-package fringe-helper
+  :ensure t)
+
+(use-package git-gutter-fringe+
+  :ensure t)
+(setq git-gutter-fr+-side 'right-fringe) ;; left side is for flycheck
+(set-face-foreground 'git-gutter-fr+-modified "#e77818")
+(set-face-background 'git-gutter-fr+-modified "#e77818")
+(set-face-foreground 'git-gutter-fr+-deleted "#a20417")
+(set-face-background 'git-gutter-fr+-deleted "#a20417")
+(set-face-foreground 'git-gutter-fr+-added "#007144")
+(set-face-background 'git-gutter-fr+-added "#007144")
+(setq-default right-fringe-width 5)
+(setq-default left-fringe-width 20)
 
 (use-package nyan-mode
   :ensure t
@@ -321,14 +337,45 @@
 (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
 (add-hook 'LaTeX-mode-hook 'flyspell-mode)
 
+(use-package auctex
+  :defer t
+  :ensure t)
+
+(use-package company-auctex
+  :ensure t)
+
 (use-package pdf-tools
+  :ensure t
+  ;; :config (pdf-tools-install)
+  )
+
+(use-package org-pdfview
+  :ensure t)
+
+(use-package flyspell-popup
+  :ensure t)
+(add-hook 'flyspell-mode-hook #'flyspell-popup-auto-correct-mode)
+(define-key flyspell-mode-map (kbd "C-;") #'flyspell-popup-correct)
+
+(use-package fzf
+  :ensure t)
+
+(use-package paradox
+  :ensure t
+  :config (paradox-enable))
+
+(use-package toml-mode
   :ensure t)
 
 (load-theme 'doom-dracula
-    :no-confirm)
+            :no-confirm)
 
-(set-default-coding-systems 'utf-8)
+(set-default-font "Fira Code 13")
+
+(prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
+(set-default-coding-systems 'utf-8)
+
 (add-hook 'after-make-frame-functions (lambda (frame) (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")))
 ;; This works when using emacs without server/client
 (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")
@@ -461,10 +508,6 @@
 (add-hook 'prog-mode-hook
           #'add-fira-code-symbol-keywords)
 
-(prefer-coding-system 'utf-8)
-(set-language-environment "UTF-8")
-(set-default-coding-systems 'utf-8)
-
 (setq frame-title-format "CONSOLI")
 
 ;; no toolbar
@@ -482,7 +525,7 @@
 
 (setq initial-scratch-message nil
       inhibit-startup-echo-area-message t)
-(message " WELCOME TO EMACS!")
+(message "WELCOME TO EMACS!")
 
 (save-place-mode 1)
 
@@ -494,7 +537,8 @@
             'custom-mode
             'magit-mode
             'package-menu-mode
-            'doc-view-mode))
+            'doc-view-mode
+            'pdf-view-mode))
 
 (add-hook 'after-change-major-mode-hook
           '(lambda ()
@@ -547,10 +591,9 @@
 
 (setq kill-ring-max 100)
 
-(setq tls-checktrust t)
+(setq linum-format " %4d \u2502")
 
-;;(set-frame-parameter (selected-frame) 'alpha '(85 80))
-;;(add-to-list 'default-frame-alist '(alpha 85 80))
+(setq tls-checktrust t)
 
 (global-auto-revert-mode 1)
 
@@ -603,9 +646,9 @@
 (global-set-key (kbd "C-c r") 'consoli/reload-config)
 
 (defun consoli/infer-indentation-style ()
-  "If our souce file use tabs, we use tabs, if spaces, spaces.
+"If our souce file use tabs, we use tabs, if spaces, spaces.
 And if neither, we use the current indent-tabs-mode"
-  (let ((space-count (how-many "^ " (point-min) (point-max)))
+(let ((space-count (how-many "^ " (point-min) (point-max)))
         (tab-count (how-many "^\t" (point-min) (point-max))))
     (if (> space-count tab-count) (setq indent-tabs-mode nil))
     (if (> tab-count space-count) (setq indent-tabs-mode t))))
@@ -651,6 +694,24 @@ two curly braces, otherwise do a regular newline and indent"
 (newline-and-indent)))
 (global-set-key (kbd "RET") 'consoli/smart-newline)
 
+(defun consoli/create-scratch-buffer ()
+  "Create a scratch buffer"
+  (interactive)
+  (switch-to-buffer (get-buffer-create "*scratch*"))
+  (lisp-interaction-mode))
+(global-set-key (kbd "<C-f12>") 'consoli/create-scratch-buffer)
+
+(defun consoli/linum-update-window-scale-fix (win)
+  "Fix linum for scaled text."
+  (set-window-margins win
+                      (ceiling (* (if (boundp 'text-scale-mode-step)
+                                      (expt text-scale-mode-step
+                                            text-scale-mode-amount) 1)
+                                  (if (car (window-margins))
+                                      (car (window-margins)) 1)
+                                  ))))
+(advice-add #'linum-update-window :after #'consoli/linum-update-window-scale-fix)
+
 (global-set-key (kbd "<f10>") 'whitespace-mode)
 
 (global-set-key (kbd "<f12>") 'linum-mode)
@@ -675,8 +736,10 @@ two curly braces, otherwise do a regular newline and indent"
 ;; take a look at `use-package/smile' and `use-package/slime-company' for more
 
 (use-package rust-mode
-  :ensure t
-  :config (setq rust-format-on-save t))
+:ensure t
+:config (setq rust-format-on-save t))
+(define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
+(setq company-tooltip-align-annotations t)
 
 (use-package cargo
   :ensure t)
@@ -684,41 +747,43 @@ two curly braces, otherwise do a regular newline and indent"
 
 (use-package flycheck-rust
   :ensure t)
-(when (eq major-mode 'rust-mode)
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 
 (use-package racer
   :ensure t)
-(setq racer-cmd "/usr/bin/racer")
-(setq racer-rust-src-path "/home/consoli/.rust-source/rust/src")
+(setq racer-cmd "~/.cargo/bin/racer")
+(setq racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src")
+
+(use-package rust-auto-use
+  :ensure t)
+
+(use-package ob-rust
+  :ensure t)
 
 (add-hook 'rust-mode-hook #'racer-mode)
 (add-hook 'racer-mode-hook #'eldoc-mode)
 (add-hook 'racer-mode-hook #'company-mode)
+(add-hook 'rust-mode #'flycheck-rust-setup)
 
-(use-package meghanada
+(use-package haskell-mode
   :ensure t)
-
-(add-hook 'java-mode-hook
-          (lambda ()
-            (meghanada-mode t)
-            (setq c-basic-offset 2)
-            (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
 
 (setq org-src-fontfy-natively t)
 (setq org-src-tab-acts-natively t)
 (setq org-export-with-smart-quotes t)
-;;(add-hook 'org-mode-hook 'org-indent-mode)
+(add-hook 'org-mode-hook 'org-indent-mode)
 
 (add-hook 'org-mode-hook
           '(lambda ()
              (visual-line-mode 1)))
 
 (add-to-list 'org-structure-template-alist
-             '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+            '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
 
 (add-to-list 'org-structure-template-alist
-             '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+             '("hs" "#+BEGIN_SRC haskell\n?\n#+END_SRC"))
+
+(add-to-list 'org-structure-template-alist
+            '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
 
 (diminish 'which-key-mode)
 (diminish 'linum-relative-mode)
@@ -733,7 +798,11 @@ two curly braces, otherwise do a regular newline and indent"
 (diminish 'eldoc-mode)
 (diminish 'yas-minor-mode)
 (diminish 'company-mode)
+(diminish 'python-mode)
 (diminish 'page-break-lines-mode)
 (diminish 'highlight-indentation-mode)
 (diminish 'smartparens-mode)
 (diminish 'auto-highlight-symbol-mode)
+(diminish 'racer-mode)
+(diminish 'cargo-minor-mode)
+(diminish 'flycheck-mode)

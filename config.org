@@ -3,13 +3,13 @@
 
 
 * Use packages
-** general
+** General
    #+BEGIN_SRC emacs-lisp
     (use-package general
         :ensure t)
    #+END_SRC
-** eshell
-   I get this stuf on [[http:www.howardism.org/Technical/Emacs/eshell-fun.html][Eschewing Zshell for Emacs Shell]] post and this [[https:github.com/howardabrams/dot-files/blob/master/emacs-eshell.org][github repo]].
+** [UNUSED] Eshell
+   i get this stuf on [[http:www.howardism.org/Technical/Emacs/eshell-fun.html][Eschewing Zshell for Emacs Shell]] post and this [[https:github.com/howardabrams/dot-files/blob/master/emacs-eshell.org][github repo]].
    #+BEGIN_SRC emacs-lisp
      ;; (use-package eshell
      ;;   :init
@@ -48,18 +48,18 @@
       (erase-buffer)
       (eshell-send-input)))
     #+END_SRC
-** try
+** Try
    #+BEGIN_SRC emacs-lisp
     (use-package try
         :ensure t)
    #+END_SRC
-** which-key
+** Which-key
    #+BEGIN_SRC emacs-lisp
     (use-package which-key
         :ensure t
         :config (which-key-mode))
    #+END_SRC
-** org bullets
+** Org bullets
    #+BEGIN_SRC emacs-lisp
     (use-package org-bullets
         :ensure t
@@ -68,7 +68,7 @@
         :config (add-hook `org-mode-hook
                         (lambda () (org-bullets-mode 1))))
    #+END_SRC
-** org export
+** Org export
 *** ox-reveal
     #+BEGIN_SRC emacs-lisp
       (use-package ox-reveal
@@ -81,60 +81,24 @@
       (use-package htmlize
         :ensure t)
     #+END_SRC
-** multi-term
+** Multi-term
    #+BEGIN_SRC emacs-lisp
      (use-package multi-term
        :ensure t
-       :bind ("<f6>" . consoli/open-multi-term-here)
-       :config
-       (setq ;; multi-term-dedicated-window-height (lambda () (/ (window-total-height) 3))
-        multi-term-program "/bin/zsh")
+       :bind ("<f6>" . multi-term-dedicated-toggle)
+       :config (setq multi-term-program "/bin/zsh"
+                     multi-term-dedicated-close-back-to-open-buffer-p t)
        (add-hook 'term-mode-hook
                  (lambda ()
                    (dolist
                        (bind '(("C-y" . term-paste)
                                ("C-<backspace>" . term-send-backward-kill-word)
                                ("C-c C-c" . term-interrupt-subjob)
-                               ("C-l" . (lambda () (let ((inhibit-read-only t)) (erase-buffer) (term-send-input))))
                                ("C-s" . isearch-forward)
                                ("C-r" . isearch-backward)))
                      (add-to-list 'term-bind-key-alist bind)))))
    #+END_SRC
-*** open multi-term in current dir
-    #+BEGIN_SRC emacs-lisp
-      (defun consoli/open-multi-term-here ()
-        (interactive)
-        (let* ((parent (if (buffer-file-name)
-                           (file-name-directory (buffer-file-name))
-                         default-directory))
-               (height (/ (window-total-height) 3))
-               (name (car (last (split-string parent "/" t)))))
-          (multi-term-dedicated-open)
-          (switch-to-buffer-other-window (multi-term-dedicated-get-buffer-name))
-          (linum-mode -1)))
-    #+END_SRC
-*** last-term-mode-buffer
-    #+BEGIN_SRC emacs-lisp
-      (defun last-term-mode-buffer (list-of-buffers)
-        "Returns the most recently used term-mode buffer."
-        (when list-of-buffers
-          (if (eq 'term-mode (with-current-buffer (car list-of-buffers) major-mode))
-              (car list-of-buffers)
-            (last-term-mode-buffer (cdr list-of-buffers)))))
-
-      (setq multi-term-dedicated-close-back-to-open-buffer t)
-    #+END_SRC
-*** switch-to-term-mode-buffer
-    #+BEGIN_SRC emacs-lisp
-      (defun switch-to-term-mode-buffer ()
-        "Switch to the most recently used term-mode buffer, or create a new one."
-        (interactive)
-        (let ((buffer (last-term-mode-buffer (buffer-list))))
-          (if (not buffer)
-              (consoli/open-multi-term-here)
-            (multi-term-dedicated-toggle))))
-    #+END_SRC
-** dashboard
+** Dashboard
    #+BEGIN_SRC emacs-lisp
      (use-package dashboard
        :ensure t
@@ -146,22 +110,27 @@
                                (agenda . 3)))
        (setq dashboard-banner-logo-title "Happy Hacking!"))
    #+END_SRC
-** evil mode
+** Evil mode
    #+BEGIN_SRC emacs-lisp
      (use-package evil
        :ensure t)
      (evil-mode t)
+     (setq evil-insert-state-tag "INSERT"
+           evil-normal-state-tag "NORMAL"
+           evil-visual-state-tag "VISUAL"
+           evil-replace-state-tag "REPLACE"
+           evil-emacs-state-tag "EMACS")
    #+END_SRC
-** lock-font-plus
+** Lock-font-plus
    #+BEGIN_SRC emacs-lisp
      (require 'font-lock)
    #+END_SRC
-** all the icons
+** All the icons
    #+BEGIN_SRC emacs-lisp
      (use-package all-the-icons
        :ensure t)
    #+END_SRC
-** neotree
+** Neotree
    #+BEGIN_SRC emacs-lisp
      (use-package neotree
        :ensure t)
@@ -173,7 +142,7 @@
      (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
      (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter)
    #+END_SRC
-** doom-themes
+** Doom-themes
    #+BEGIN_SRC emacs-lisp
      (use-package doom-themes
        :ensure t
@@ -186,7 +155,7 @@
      (setq doom-themes-enable-bold t
            doom-themes-enable-italic t)
    #+END_SRC
-** spaceline
+** Spaceline
    #+BEGIN_SRC emacs-lisp
      (use-package spaceline
        :ensure t
@@ -195,23 +164,54 @@
        (setq spaceline-buffer-encoding-abbrev-p nil)
        (setq spaceline-line-column-p nil)
        (setq spaceline-line-p nil)
+       ;;(setq spaceline-highlight-face-func 'spaceline-highlight-face-evil-state)
        (setq powerline-default-separator (quote arrow))
        (spaceline-spacemacs-theme)
        (spaceline-helm-mode 1))
    #+END_SRC
-** flycheck
+** Fancy-Battery
+#+BEGIN_SRC emacs-lisp
+  (use-package fancy-battery
+    :ensure t
+    :config (setq fancy-battery-show-percentage t))
+  (add-hook 'after-init-hook #'fancy-battery-mode)
+#+END_SRC
+** Quick Peek
+   Used to better display errors with flycheck-inline
+#+BEGIN_SRC emacs-lisp
+    (use-package quick-peek
+    :ensure t)
+#+END_SRC
+** Flycheck
    #+BEGIN_SRC emacs-lisp
      (use-package flycheck
-       :ensure t)
+       :ensure t
+       :config (global-flycheck-mode))
    #+END_SRC
-** elpy
+** Flycheck-inline
+   Displays flycheck-messages inline.
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck-inline
+    :ensure t
+    :config (setq flycheck-inline-display-function
+                  (lambda (msg pos)
+                    (let* ((ov (quick-peek-overlay-ensure-at pos))
+                           (contents (quick-peek-overlay-contents ov)))
+                      (setf (quick-peek-overlay-contents ov)
+                            (concat contents (when contents "\n") msg))
+                      (quick-peek-update ov)))
+                  flycheck-inline-clear-function #'quick-peek-hide))
+  (with-eval-after-load 'flycheck
+    (add-hook 'flycheck-mode-hook #'turn-on-flycheck-inline))
+#+END_SRC
+** Elpy
    #+BEGIN_SRC emacs-lisp
      (use-package elpy
        :ensure t)
      (setq python-shell-interpreter "ipython"
            python-shell-interpreter-args "-i  --simple-prompt")
    #+END_SRC
-** yasnippet
+** Yasnippet
    #+BEGIN_SRC emacs-lisp
      (use-package yasnippet
        :ensure t
@@ -220,7 +220,7 @@
          :ensure t)
        (yas-reload-all))
    #+END_SRC
-** company-mode
+** Company-mode
    #+BEGIN_SRC emacs-lisp
      (use-package company
        :ensure t
@@ -229,7 +229,7 @@
        (setq company-minimun-prefix-lenght 1)
        (setq company-tooltip-align-annotations t)) ;; maybe 3?
    #+END_SRC
-** company-jedi
+** Company-jedi
    #+BEGIN_SRC emacs-lisp
      (use-package company-jedi
        :ensure t
@@ -246,7 +246,7 @@
        (require 'company)
        (add-hook 'python-mode-hook 'python-mode-company-init))
    #+END_SRC
-** company-quickhelp
+** Company-quickhelp
    #+BEGIN_SRC emacs-lisp
      (use-package company-quickhelp
        :ensure t
@@ -254,12 +254,12 @@
                  '(define-key company-active-map (kbd "C-c h") #'company-quickhelp-manual-begin)))
      (add-hook 'company-mode-hook #'company-quickhelp-mode)
    #+END_SRC
-** whitepaces-cleanup
+** Whitepaces-cleanup
    #+BEGIN_SRC emacs-lisp
     (use-package whitespace-cleanup-mode
         :ensure t)
    #+END_SRC
-** smartparens
+** Smartparens
    #+BEGIN_SRC emacs-lisp
      (use-package smartparens
        :ensure t)
@@ -268,18 +268,19 @@
      (add-hook 'org-mode #'smartparens-mode)
      (smartparens-global-mode t)
    #+END_SRC
-** rainbow
+** Rainbow
    #+BEGIN_SRC emacs-lisp
      (use-package rainbow-mode
        :ensure t)
    #+END_SRC
-** rainbow delimiter
+** Rainbow delimiter
    #+BEGIN_SRC emacs-lisp
      (use-package rainbow-delimiters
        :ensure t
-       :config (rainbow-delimiters-mode 1))
+       :config (rainbow-delimiters-mode t))
+     (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
    #+END_SRC
-** helm
+** Helm
    #+BEGIN_SRC emacs-lisp
      (use-package helm
        :ensure t
@@ -305,48 +306,49 @@
      (require 'helm-config)
      (helm-autoresize-mode 1)
    #+END_SRC
-** hlinum
+** Hlinum
    #+BEGIN_SRC emacs-lisp
      (use-package hlinum
        :ensure t)
      (hlinum-activate)
      (global-hl-line-mode 1)
      ;; (set-face-background 'hl-line "#3e4446")
-     (set-face-background 'highlight nil)
+     (set-face-background 'hl-line "#1e2029")
+     ;; (set-face-background 'highlight nil)
    #+END_SRC
-** relative numbers
+** Relative numbers
    #+BEGIN_SRC emacs-lisp
      (use-package linum-relative
        :ensure t
        :config
-       (setq linum-relative-current-symbol "")
-       (add-hook 'prog-mode-hook 'linum-relative-mode))
+       (setq linum-relative-current-symbol ""))
    #+END_SRC
-** simpleclip
+** Simpleclip
    #+BEGIN_SRC emacs-lisp
      (use-package simpleclip
        :ensure t
        :init (simpleclip-mode 1))
-   #+END_SRC 
-** popup-kill-ring
+   #+END_SRC
+** Popup-kill-ring
    #+BEGIN_SRC emacs-lisp
      (use-package popup-kill-ring
        :ensure t
-       :bind ("M-y" . popup-kill-ring))
+       :bind ("C-M-z" . popup-kill-ring))
    #+END_SRC
-** async
+** Async
    #+BEGIN_SRC emacs-lisp
      (use-package async
        :ensure t
+       :config (async-bytecomp-package-mode 1)
        :init (dired-async-mode 1))
    #+END_SRC
-** swiper
+** Swiper
    #+BEGIN_SRC emacs-lisp
      (use-package swiper
        :ensure t
        :bind ("C-s" . 'swiper))
    #+END_SRC
-** slime
+** Slime
    #+BEGIN_SRC emacs-lisp
      (use-package slime
        :ensure t
@@ -354,7 +356,7 @@
        (setq inferior-lisp-program "/usr/bin/sbcl")
        (setq slime-contribs '(slime-fancy)))
    #+END_SRC
-** slime-company
+** Slime-company
    #+BEGIN_SRC emacs-lisp
      (use-package slime-company
        :ensure t
@@ -362,15 +364,16 @@
        (require 'company)
        (slime-setup '(slime-fancy slime-company)))
    #+END_SRC
-** projectile
+** Projectile
    #+BEGIN_SRC emacs-lisp
      (use-package projectile
        :ensure t
-       :config (projectile-global-mode))
-     (setq projectile-completion-system 'helm)
+       :config (projectile-global-mode)
+       (setq projectile-mode-line-function '(lambda () (format "P[%s]" (projectile-project-name))))
+       (setq projectile-completion-system 'helm))
    #+END_SRC
-** solaire
-   Change background color of windows
+** Solaire
+   change background color of windows
    #+BEGIN_SRC emacs-lisp
      (use-package solaire-mode
        :ensure t)
@@ -380,17 +383,36 @@
      (solaire-mode t)
      (solaire-mode-swap-bg)
    #+END_SRC
-** diminish
+** Diminish
    #+BEGIN_SRC emacs-lisp
      (use-package diminish
        :ensure t)
    #+END_SRC
-** magit
+** Magit
    #+BEGIN_SRC emacs-lisp
      (use-package magit
        :ensure t)
    #+END_SRC
-** nyan
+** Fringe Helper
+#+BEGIN_SRC emacs-lisp
+  (use-package fringe-helper
+    :ensure t)
+#+END_SRC
+** Git Gutter
+#+BEGIN_SRC emacs-lisp
+  (use-package git-gutter-fringe+
+    :ensure t)
+  (setq git-gutter-fr+-side 'right-fringe) ;; left side is for flycheck
+  (set-face-foreground 'git-gutter-fr+-modified "#e77818")
+  (set-face-background 'git-gutter-fr+-modified "#e77818")
+  (set-face-foreground 'git-gutter-fr+-deleted "#a20417")
+  (set-face-background 'git-gutter-fr+-deleted "#a20417")
+  (set-face-foreground 'git-gutter-fr+-added "#007144")
+  (set-face-background 'git-gutter-fr+-added "#007144")
+  (setq-default right-fringe-width 5)
+  (setq-default left-fringe-width 20)
+#+END_SRC
+** Nyan
    #+BEGIN_SRC emacs-lisp
      (use-package nyan-mode
        :ensure t
@@ -401,13 +423,13 @@
                                '(:eval (list (nyan-create)))))
        (nyan-mode t))
    #+END_SRC
-** auto-highlight
+** Auto-highlight
    #+BEGIN_SRC emacs-lisp
      (use-package auto-highlight-symbol
        :ensure t
        :init (global-auto-highlight-symbol-mode))
    #+END_SRC
-** dump jump
+** Dump jump
    #+BEGIN_SRC emacs-lisp
      (use-package dumb-jump
        :ensure t
@@ -425,22 +447,71 @@
      (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
      (add-hook 'LaTeX-mode-hook 'flyspell-mode)
    #+END_SRC
+** Auctex
+   #+BEGIN_SRC emacs-lisp
+     (use-package auctex
+       :defer t
+       :ensure t)
+   #+END_SRC
+** Company Auctex
+#+BEGIN_SRC emacs-lisp
+  (use-package company-auctex
+    :ensure t)
+#+END_SRC
 ** PDF-Tools
    #+BEGIN_SRC emacs-lisp
      (use-package pdf-tools
+       :ensure t
+       ;; :config (pdf-tools-install)
+       )
+
+     (use-package org-pdfview
+       :ensure t)
+   #+END_SRC
+** Flyspell
+   #+BEGIN_SRC emacs-lisp
+     (use-package flyspell-popup
+       :ensure t)
+     (add-hook 'flyspell-mode-hook #'flyspell-popup-auto-correct-mode)
+     (define-key flyspell-mode-map (kbd "C-;") #'flyspell-popup-correct)
+   #+END_SRC
+** Fzf
+Fzf fuzzy finder frontend for emacs.
+#+BEGIN_SRC emacs-lisp
+  (use-package fzf
+    :ensure t)
+#+END_SRC
+** Paradox
+   Great improvements for package menu.
+#+BEGIN_SRC emacs-lisp
+  (use-package paradox
+    :ensure t
+    :config (paradox-enable))
+#+END_SRC
+** Toml Mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package toml-mode
        :ensure t)
    #+END_SRC
 * Theme
   #+BEGIN_SRC emacs-lisp
     (load-theme 'doom-dracula
-        :no-confirm)
+                :no-confirm)
   #+END_SRC
 * Basic configurations
+** Font
+#+BEGIN_SRC emacs-lisp
+  (set-default-font "Fira Code 13")
+#+END_SRC
+** encoding
+   #+BEGIN_SRC emacs-lisp
+     (prefer-coding-system 'utf-8)
+     (set-language-environment "UTF-8")
+     (set-default-coding-systems 'utf-8)
+   #+END_SRC
 ** Fira Code
     https://github.com/tonsky/FiraCode/wiki/Emacs-instructions
    #+BEGIN_SRC emacs-lisp
-     (set-default-coding-systems 'utf-8)
-     (set-language-environment "UTF-8")
      (add-hook 'after-make-frame-functions (lambda (frame) (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")))
      ;; This works when using emacs without server/client
      (set-fontset-font t '(#Xe100 . #Xe16f) "Fira Code Symbol")
@@ -573,13 +644,7 @@
      (add-hook 'prog-mode-hook
                #'add-fira-code-symbol-keywords)
    #+END_SRC
-** encoding
-   #+BEGIN_SRC emacs-lisp
-     (prefer-coding-system 'utf-8)
-     (set-language-environment "UTF-8")
-     (set-default-coding-systems 'utf-8)
-   #+END_SRC
-** frame name
+** Frame name
    #+BEGIN_SRC emacs-lisp
      (setq frame-title-format "CONSOLI")
    #+END_SRC
@@ -606,7 +671,7 @@
    #+BEGIN_SRC emacs-lisp
      (setq initial-scratch-message nil
            inhibit-startup-echo-area-message t)
-     (message " WELCOME TO EMACS!")
+     (message "WELCOME TO EMACS!")
    #+END_SRC
 ** save last cursor place
    #+BEGIN_SRC emacs-lisp
@@ -622,7 +687,8 @@
                  'custom-mode
                  'magit-mode
                  'package-menu-mode
-                 'doc-view-mode))
+                 'doc-view-mode
+                 'pdf-view-mode))
 
      (add-hook 'after-change-major-mode-hook
                '(lambda ()
@@ -695,14 +761,13 @@
    #+BEGIN_SRC emacs-lisp
      (setq kill-ring-max 100)
    #+END_SRC
+** Linum mode separator
+#+BEGIN_SRC emacs-lisp
+  (setq linum-format " %4d \u2502")
+#+END_SRC
 ** use only tls connections
    #+BEGIN_SRC emacs-lisp
      (setq tls-checktrust t)
-   #+END_SRC
-** transparency
-   #+BEGIN_SRC emacs-lisp
-     ;;(set-frame-parameter (selected-frame) 'alpha '(85 80))
-     ;;(add-to-list 'default-frame-alist '(alpha 85 80))
    #+END_SRC
 ** auto revert mode
    #+BEGIN_SRC emacs-lisp
@@ -774,16 +839,16 @@
      (global-set-key (kbd "C-c r") 'consoli/reload-config)
    #+END_SRC
 ** consoli/infer-indentation-style
-   #+BEGIN_SRC emacs-lisp
-     (defun consoli/infer-indentation-style ()
-       "If our souce file use tabs, we use tabs, if spaces, spaces.
-     And if neither, we use the current indent-tabs-mode"
-       (let ((space-count (how-many "^ " (point-min) (point-max)))
-             (tab-count (how-many "^\t" (point-min) (point-max))))
-         (if (> space-count tab-count) (setq indent-tabs-mode nil))
-         (if (> tab-count space-count) (setq indent-tabs-mode t))))
-     (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+    (defun consoli/infer-indentation-style ()
+    "If our souce file use tabs, we use tabs, if spaces, spaces.
+    And if neither, we use the current indent-tabs-mode"
+    (let ((space-count (how-many "^ " (point-min) (point-max)))
+            (tab-count (how-many "^\t" (point-min) (point-max))))
+        (if (> space-count tab-count) (setq indent-tabs-mode nil))
+        (if (> tab-count space-count) (setq indent-tabs-mode t))))
+    (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
+#+END_SRC
 ** consoli/set-buffer-to-unix-format
    #+BEGIN_SRC emacs-lisp
      (defun consoli/set-buffer-to-unix-format ()
@@ -835,16 +900,39 @@
      (newline-and-indent)))
      (global-set-key (kbd "RET") 'consoli/smart-newline)
    #+END_SRC
+** consoli/create-scratch-buffer
+   #+BEGIN_SRC emacs-lisp
+     (defun consoli/create-scratch-buffer ()
+       "Create a scratch buffer"
+       (interactive)
+       (switch-to-buffer (get-buffer-create "*scratch*"))
+       (lisp-interaction-mode))
+     (global-set-key (kbd "<C-f12>") 'consoli/create-scratch-buffer)
+   #+END_SRC
+** consoli/linum-update-window-scale-fix
+https://www.emacswiki.org/emacs/LineNumbers
+#+BEGIN_SRC emacs-lisp
+  (defun consoli/linum-update-window-scale-fix (win)
+    "Fix linum for scaled text."
+    (set-window-margins win
+                        (ceiling (* (if (boundp 'text-scale-mode-step)
+                                        (expt text-scale-mode-step
+                                              text-scale-mode-amount) 1)
+                                    (if (car (window-margins))
+                                        (car (window-margins)) 1)
+                                    ))))
+  (advice-add #'linum-update-window :after #'consoli/linum-update-window-scale-fix)
+#+END_SRC
 * Useful key-bindings
-** show whitespaces
+** Show whitespaces
    #+BEGIN_SRC emacs-lisp
      (global-set-key (kbd "<f10>") 'whitespace-mode)
    #+END_SRC
-** linum mode toggle
+** Linum mode toggle
    #+BEGIN_SRC emacs-lisp
      (global-set-key (kbd "<f12>") 'linum-mode)
    #+END_SRC
-** ibuffer
+** iBuffer
    #+BEGIN_SRC emacs-lisp
      (global-set-key (kbd "C-x b") 'ibuffer)
    #+END_SRC
@@ -883,11 +971,13 @@
    #+END_SRC
 * Rust
 ** Rust mode
-   #+BEGIN_SRC emacs-lisp
-     (use-package rust-mode
-       :ensure t
-       :config (setq rust-format-on-save t))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package rust-mode
+  :ensure t
+  :config (setq rust-format-on-save t))
+  (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
+  (setq company-tooltip-align-annotations t)
+#+END_SRC
 ** Cargo
    #+BEGIN_SRC emacs-lisp
      (use-package cargo
@@ -898,62 +988,71 @@
    #+BEGIN_SRC emacs-lisp
      (use-package flycheck-rust
        :ensure t)
-     (when (eq major-mode 'rust-mode)
-       (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
    #+END_SRC
 ** Racer
    #+BEGIN_SRC emacs-lisp
      (use-package racer
        :ensure t)
-     (setq racer-cmd "/usr/bin/racer")
-     (setq racer-rust-src-path "/home/consoli/.rust-source/rust/src")
+     (setq racer-cmd "~/.cargo/bin/racer")
+     (setq racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src")
    #+END_SRC
+** Auto-use
+Auto handle use statemants.
+#+BEGIN_SRC emacs-lisp
+  (use-package rust-auto-use
+    :ensure t)
+#+END_SRC
+** Ob-Rust
+Org-Babel support for Rust.
+#+BEGIN_SRC emacs-lisp
+  (use-package ob-rust
+    :ensure t)
+#+END_SRC
 ** Hooks
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'rust-mode-hook #'racer-mode)
-     (add-hook 'racer-mode-hook #'eldoc-mode)
-     (add-hook 'racer-mode-hook #'company-mode)
-   #+END_SRC
-* Java
-** Meghanada
-   #+BEGIN_SRC emacs-lisp
-     (use-package meghanada
-       :ensure t)
-
-     (add-hook 'java-mode-hook
-               (lambda ()
-                 (meghanada-mode t)
-                 (setq c-basic-offset 2)
-                 (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
-   #+END_SRC
-* Ispell
-  =Importante:= necessário ter o pacote /aspell-pt-br/ instalado.
-
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'rust-mode-hook #'racer-mode)
+  (add-hook 'racer-mode-hook #'eldoc-mode)
+  (add-hook 'racer-mode-hook #'company-mode)
+  (add-hook 'rust-mode #'flycheck-rust-setup)
+#+END_SRC
+* Haskell
+I'm current learning Haskell from the Erik Meijer course, Functional Programming Fundamentals, so lets setup some enviroment.
+** Haskell mode
+First, the haskell mode.
+#+BEGIN_SRC emacs-lisp
+  (use-package haskell-mode
+    :ensure t)
+#+END_SRC
 * Org-config
-** commom settings
+** Commom settings
    #+BEGIN_SRC emacs-lisp
      (setq org-src-fontfy-natively t)
      (setq org-src-tab-acts-natively t)
      (setq org-export-with-smart-quotes t)
-     ;;(add-hook 'org-mode-hook 'org-indent-mode)
+     (add-hook 'org-mode-hook 'org-indent-mode)
    #+END_SRC
-** line wrapping
+** Line wrapping
    #+BEGIN_SRC emacs-lisp
      (add-hook 'org-mode-hook
                '(lambda ()
                   (visual-line-mode 1)))
    #+END_SRC
-** emacs-lisp template
-   #+BEGIN_SRC emacs-lisp
-     (add-to-list 'org-structure-template-alist
-                  '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
-   #+END_SRC
-** python template
-   #+BEGIN_SRC emacs-lisp
-     (add-to-list 'org-structure-template-alist
-                  '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
-   #+END_SRC
-* Daminish configurations
+** Emacs-lisp template
+#+BEGIN_SRC emacs-lisp
+    (add-to-list 'org-structure-template-alist
+                '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+#+END_SRC
+** Haskell template
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '("hs" "#+BEGIN_SRC haskell\n?\n#+END_SRC"))
+#+END_SRC
+** Python template
+#+BEGIN_SRC emacs-lisp
+    (add-to-list 'org-structure-template-alist
+                '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+#+END_SRC
+* Diminish configurations
   It need to be the last thing on config file
 #+BEGIN_SRC emacs-lisp
   (diminish 'which-key-mode)
@@ -969,16 +1068,19 @@
   (diminish 'eldoc-mode)
   (diminish 'yas-minor-mode)
   (diminish 'company-mode)
+  (diminish 'python-mode)
   (diminish 'page-break-lines-mode)
   (diminish 'highlight-indentation-mode)
   (diminish 'smartparens-mode)
   (diminish 'auto-highlight-symbol-mode)
+  (diminish 'racer-mode)
+  (diminish 'cargo-minor-mode)
+  (diminish 'flycheck-mode)
 #+END_SRC
 
 
 * TODOS
-** TODO write some documentation
-** TODO improve multi-shell configuration
-** TODO use symbols in daminish
-** TODO configure a Java Environment
-** TODO fix all-the-icons bug (some icons have wrong names)
+- TODO write some documentation
+- TODO improve multi-shell configuration
+- TODO use symbols in daminish
+- TODO fix all-the-icons bug (wrong named icons)
