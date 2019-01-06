@@ -1,6 +1,11 @@
 #+CAPTION: A 'purpled' screenshot of my emacs
 [[./img/screenshot.png]]
 
+#+CAPTION: Nice code completion.
+[[./img/screenshot-code-completion.png]]
+
+#+CAPTION: REALLY NICE error messages.
+[[./img/screenshot-flycheck.png]]
 
 * Use packages
 ** General
@@ -409,8 +414,8 @@
   (set-face-background 'git-gutter-fr+-deleted "#a20417")
   (set-face-foreground 'git-gutter-fr+-added "#007144")
   (set-face-background 'git-gutter-fr+-added "#007144")
-  (setq-default right-fringe-width 5)
-  (setq-default left-fringe-width 20)
+  (setq-default right-fringe-width 10)
+  (global-git-gutter+-mode)
 #+END_SRC
 ** Nyan
    #+BEGIN_SRC emacs-lisp
@@ -982,12 +987,6 @@ https://www.emacswiki.org/emacs/LineNumbers
    #+BEGIN_SRC emacs-lisp
      (use-package cargo
        :ensure t)
-     (add-hook 'rust-mode-hook 'cargo-minor-mode)
-   #+END_SRC
-** Flycheck-rust
-   #+BEGIN_SRC emacs-lisp
-     (use-package flycheck-rust
-       :ensure t)
    #+END_SRC
 ** Racer
    #+BEGIN_SRC emacs-lisp
@@ -995,6 +994,11 @@ https://www.emacswiki.org/emacs/LineNumbers
        :ensure t)
      (setq racer-cmd "~/.cargo/bin/racer")
      (setq racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src")
+   #+END_SRC
+** Flycheck-rust
+   #+BEGIN_SRC emacs-lisp
+     (use-package flycheck-rust
+       :ensure t)
    #+END_SRC
 ** Auto-use
 Auto handle use statemants.
@@ -1011,9 +1015,12 @@ Org-Babel support for Rust.
 ** Hooks
 #+BEGIN_SRC emacs-lisp
   (add-hook 'rust-mode-hook #'racer-mode)
+  (add-hook 'rust-mode-hook 'cargo-minor-mode)
   (add-hook 'racer-mode-hook #'eldoc-mode)
   (add-hook 'racer-mode-hook #'company-mode)
-  (add-hook 'rust-mode #'flycheck-rust-setup)
+  (with-eval-after-load 'rust-mode
+    (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+  (add-hook 'rust-mode 'flycheck-rust-setup)
 #+END_SRC
 * Haskell
 I'm current learning Haskell from the Erik Meijer course, Functional Programming Fundamentals, so lets setup some enviroment.
@@ -1029,7 +1036,7 @@ First, the haskell mode.
      (setq org-src-fontfy-natively t)
      (setq org-src-tab-acts-natively t)
      (setq org-export-with-smart-quotes t)
-     (add-hook 'org-mode-hook 'org-indent-mode)
+     ;; (add-hook 'org-mode-hook 'org-indent-mode)
    #+END_SRC
 ** Line wrapping
    #+BEGIN_SRC emacs-lisp
@@ -1076,6 +1083,7 @@ First, the haskell mode.
   (diminish 'racer-mode)
   (diminish 'cargo-minor-mode)
   (diminish 'flycheck-mode)
+  (diminish 'git-gutter+-mode)
 #+END_SRC
 
 

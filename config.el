@@ -307,8 +307,8 @@
 (set-face-background 'git-gutter-fr+-deleted "#a20417")
 (set-face-foreground 'git-gutter-fr+-added "#007144")
 (set-face-background 'git-gutter-fr+-added "#007144")
-(setq-default right-fringe-width 5)
-(setq-default left-fringe-width 20)
+(setq-default right-fringe-width 10)
+(global-git-gutter+-mode)
 
 (use-package nyan-mode
   :ensure t
@@ -743,15 +743,14 @@ two curly braces, otherwise do a regular newline and indent"
 
 (use-package cargo
   :ensure t)
-(add-hook 'rust-mode-hook 'cargo-minor-mode)
-
-(use-package flycheck-rust
-  :ensure t)
 
 (use-package racer
   :ensure t)
 (setq racer-cmd "~/.cargo/bin/racer")
 (setq racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src")
+
+(use-package flycheck-rust
+  :ensure t)
 
 (use-package rust-auto-use
   :ensure t)
@@ -760,9 +759,12 @@ two curly braces, otherwise do a regular newline and indent"
   :ensure t)
 
 (add-hook 'rust-mode-hook #'racer-mode)
+(add-hook 'rust-mode-hook 'cargo-minor-mode)
 (add-hook 'racer-mode-hook #'eldoc-mode)
 (add-hook 'racer-mode-hook #'company-mode)
-(add-hook 'rust-mode #'flycheck-rust-setup)
+(with-eval-after-load 'rust-mode
+  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+(add-hook 'rust-mode 'flycheck-rust-setup)
 
 (use-package haskell-mode
   :ensure t)
@@ -770,7 +772,7 @@ two curly braces, otherwise do a regular newline and indent"
 (setq org-src-fontfy-natively t)
 (setq org-src-tab-acts-natively t)
 (setq org-export-with-smart-quotes t)
-(add-hook 'org-mode-hook 'org-indent-mode)
+;; (add-hook 'org-mode-hook 'org-indent-mode)
 
 (add-hook 'org-mode-hook
           '(lambda ()
@@ -806,3 +808,4 @@ two curly braces, otherwise do a regular newline and indent"
 (diminish 'racer-mode)
 (diminish 'cargo-minor-mode)
 (diminish 'flycheck-mode)
+(diminish 'git-gutter+-mode)
