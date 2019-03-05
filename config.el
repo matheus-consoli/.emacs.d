@@ -48,8 +48,8 @@
 
 (use-package ox-reveal
   :ensure ox-reveal)
-  (setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
-  (setq org-reveal-mathjax t)
+(setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+(setq org-reveal-mathjax t)
 
 (use-package htmlize
   :ensure t)
@@ -98,6 +98,7 @@
 (global-set-key (kbd "<f8>") 'neotree-toggle)
 (global-set-key (kbd "<C-f8>") 'neotree-hidden-file-toggle)
 (setq neo-smart-open t)
+(setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 (evil-define-key 'normal neotree-mode-map (kbd "TAB") 'neotree-enter)
 (evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
 (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
@@ -108,11 +109,19 @@
   :preface (defvar region-fg nil))
 (require 'doom-themes)
 (doom-themes-neotree-config)
-(setq doom-neotree-enable-type-colors t)
-(setq doom-neotree-enable-file-icons t)
+(setq
+ doom-neotree-file-icons 't
+ doom-neotree-enable-file-icons t
+ doom-neotree-enable-open-chevron-icons t
+ doom-neotree-enable-closed-chevron-icons t
+ doom-neotree-enable-type-colors t
+ doom-neotree-hidden-file-face t
+ doom-neotree-data-file-face t
+ doom-neotree-enable-folder-icons t
+ doom-themes-enable-bold t
+ doom-themes-enable-italic t
+ doom-neotree-project-size 1.1)
 (doom-themes-org-config)
-(setq doom-themes-enable-bold t
-      doom-themes-enable-italic t)
 
 (use-package spaceline
   :ensure t
@@ -227,7 +236,8 @@
         helm-mode-to-line-cycle-in-source nil
         helm-ff-search-library-in-sexp t
         helm-scroll-amount 8
-        helm-echo-input-in-header-line t)
+        helm-echo-input-in-header-line t
+        helm-ff-skip-boring-files t)
   :init
   (helm-mode 1))
 (require 'helm-config)
@@ -367,10 +377,38 @@
 (use-package toml-mode
   :ensure t)
 
+(use-package comment-tags
+  :ensure t
+  :config (setq comment-tags-keymap-prefix (kbd "C-c t"))
+  (setq comment-tags-keyword-faces
+        `(("TODO" . ,(list :weight 'bold :foreground "#FE2200"))
+          ("FIXME" . ,(list :weight 'bold :foreground "#D11D1D"))
+          ("BUG" . ,(list :weight 'bold :foreground "#FF070E" ))
+          ("INFO" . ,(list :weight 'bold :foreground "#08051B"))
+          ("HACK" . ,(list :weight 'bold :foreground "#00FF00"))
+          ("EXAMPLE" . ,(list :weight 'bold :foreground "#008EB3"))))
+  (setq comment-tags-comment-start-only t
+        comment-tags-require-colon t
+        comment-tags-case-sensitive t
+        comment-tags-show-faces t
+        comment-tags-lighter nil)
+  :hook prog-mode-hook)
+
+(use-package highlight-indent-guides
+  :ensure t
+  :config
+  (setq highlight-indent-guides-method 'character
+        highlight-indent-guides-character ?\┆
+        highlight-indent-guides-auto-enabled t
+        highlight-indent-guides-delay 0
+        highlight-indent-guides-responsive 'stack))
+(add-hook 'prog-mode 'highlight-indent-guides-mode)
+
 (load-theme 'doom-dracula
             :no-confirm)
 
 (set-default-font "Fira Code 13")
+(visible-mode t) ;; for fira code glyphs
 
 (prefer-coding-system 'utf-8)
 (set-language-environment "UTF-8")
@@ -710,7 +748,7 @@ two curly braces, otherwise do a regular newline and indent"
                                   (if (car (window-margins))
                                       (car (window-margins)) 1)
                                   ))))
-(advice-add #'linum-update-window :after #'consoli/linum-update-window-scale-fix)
+;; (advice-add #'linum-update-window :after #'consoli/linum-update-window-scale-fix)
 
 (global-set-key (kbd "<f10>") 'whitespace-mode)
 
@@ -765,27 +803,60 @@ two curly braces, otherwise do a regular newline and indent"
 (with-eval-after-load 'rust-mode
   (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
 (add-hook 'rust-mode 'flycheck-rust-setup)
+(add-hook 'rust-mode #'yas-minor-mode)
 
 (use-package haskell-mode
   :ensure t)
 
+(use-package web-mode
+  :ensure t)
+(use-package js2-mode
+  :ensure t)
+(use-package js2-refactor
+  :ensure t)
+(use-package xref-js2
+  :ensure t)
+(use-package js-import
+  :ensure t)
+(use-package react-snippets
+  :ensure t)
+(use-package npm-mode
+  :ensure t)
+(use-package tern
+  :ensure t)
+(use-package company-tern
+  :ensure t
+  :config (setq company-tern-meta-as-single-line t))
+(add-to-list 'company-backends 'company-tern)
+
+(add-hook 'js-mode-hook 'js2-mode)
+(add-hook 'js2-mode-hook 'js2-refactor-mode)
+(add-hook 'js2-mode-hook 'xref-js2)
+(add-hook 'js2-mode-hook 'tern-mode)
+(add-hook 'js2-mode-hook 'company-mode)
+(add-hook 'tern-mode 'company-tern)
+
 (setq org-src-fontfy-natively t)
-(setq org-src-tab-acts-natively t)
+(setq org-src-tab-acts-natively nil)
 (setq org-export-with-smart-quotes t)
-;; (add-hook 'org-mode-hook 'org-indent-mode)
+(setq org-adapt-indentation nil)
+(add-hook 'org-mode-hook 'org-indent-mode)
 
 (add-hook 'org-mode-hook
           '(lambda ()
              (visual-line-mode 1)))
 
 (add-to-list 'org-structure-template-alist
-            '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+             '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
 
 (add-to-list 'org-structure-template-alist
              '("hs" "#+BEGIN_SRC haskell\n?\n#+END_SRC"))
 
 (add-to-list 'org-structure-template-alist
-            '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+             '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+
+(add-to-list 'org-structure-template-alist
+             '("rs" "#+BEGIN_SRC rust\n?\n#+END_SRC"))
 
 (diminish 'which-key-mode)
 (diminish 'linum-relative-mode)

@@ -78,8 +78,8 @@
     #+BEGIN_SRC emacs-lisp
       (use-package ox-reveal
         :ensure ox-reveal)
-        (setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
-        (setq org-reveal-mathjax t)
+      (setq org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+      (setq org-reveal-mathjax t)
     #+END_SRC
 *** HTML
     #+BEGIN_SRC emacs-lisp
@@ -127,9 +127,9 @@
            evil-emacs-state-tag "EMACS")
    #+END_SRC
 ** Lock-font-plus
-   #+BEGIN_SRC emacs-lisp
-     (require 'font-lock)
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (require 'font-lock)
+#+END_SRC
 ** All the icons
    #+BEGIN_SRC emacs-lisp
      (use-package all-the-icons
@@ -142,6 +142,7 @@
      (global-set-key (kbd "<f8>") 'neotree-toggle)
      (global-set-key (kbd "<C-f8>") 'neotree-hidden-file-toggle)
      (setq neo-smart-open t)
+     (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
      (evil-define-key 'normal neotree-mode-map (kbd "TAB") 'neotree-enter)
      (evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
      (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
@@ -154,11 +155,19 @@
        :preface (defvar region-fg nil))
      (require 'doom-themes)
      (doom-themes-neotree-config)
-     (setq doom-neotree-enable-type-colors t)
-     (setq doom-neotree-enable-file-icons t)
+     (setq
+      doom-neotree-file-icons 't
+      doom-neotree-enable-file-icons t
+      doom-neotree-enable-open-chevron-icons t
+      doom-neotree-enable-closed-chevron-icons t
+      doom-neotree-enable-type-colors t
+      doom-neotree-hidden-file-face t
+      doom-neotree-data-file-face t
+      doom-neotree-enable-folder-icons t
+      doom-themes-enable-bold t
+      doom-themes-enable-italic t
+      doom-neotree-project-size 1.1)
      (doom-themes-org-config)
-     (setq doom-themes-enable-bold t
-           doom-themes-enable-italic t)
    #+END_SRC
 ** Spaceline
    #+BEGIN_SRC emacs-lisp
@@ -305,7 +314,8 @@
              helm-mode-to-line-cycle-in-source nil
              helm-ff-search-library-in-sexp t
              helm-scroll-amount 8
-             helm-echo-input-in-header-line t)
+             helm-echo-input-in-header-line t
+             helm-ff-skip-boring-files t)
        :init
        (helm-mode 1))
      (require 'helm-config)
@@ -498,6 +508,37 @@ Fzf fuzzy finder frontend for emacs.
      (use-package toml-mode
        :ensure t)
    #+END_SRC
+** Comment Tags
+#+BEGIN_SRC emacs-lisp
+    (use-package comment-tags
+      :ensure t
+      :config (setq comment-tags-keymap-prefix (kbd "C-c t"))
+      (setq comment-tags-keyword-faces
+            `(("TODO" . ,(list :weight 'bold :foreground "#FE2200"))
+              ("FIXME" . ,(list :weight 'bold :foreground "#D11D1D"))
+              ("BUG" . ,(list :weight 'bold :foreground "#FF070E" ))
+              ("INFO" . ,(list :weight 'bold :foreground "#08051B"))
+              ("HACK" . ,(list :weight 'bold :foreground "#00FF00"))
+              ("EXAMPLE" . ,(list :weight 'bold :foreground "#008EB3"))))
+      (setq comment-tags-comment-start-only t
+            comment-tags-require-colon t
+            comment-tags-case-sensitive t
+            comment-tags-show-faces t
+            comment-tags-lighter nil)
+      :hook prog-mode-hook)
+#+END_SRC
+** Highlight Indent Guides
+#+BEGIN_SRC emacs-lisp
+  (use-package highlight-indent-guides
+    :ensure t
+    :config
+    (setq highlight-indent-guides-method 'character
+          highlight-indent-guides-character ?\┆
+          highlight-indent-guides-auto-enabled t
+          highlight-indent-guides-delay 0
+          highlight-indent-guides-responsive 'stack))
+  (add-hook 'prog-mode 'highlight-indent-guides-mode)
+#+END_SRC
 * Theme
   #+BEGIN_SRC emacs-lisp
     (load-theme 'doom-dracula
@@ -507,6 +548,7 @@ Fzf fuzzy finder frontend for emacs.
 ** Font
 #+BEGIN_SRC emacs-lisp
   (set-default-font "Fira Code 13")
+  (visible-mode t) ;; for fira code glyphs
 #+END_SRC
 ** encoding
    #+BEGIN_SRC emacs-lisp
@@ -926,7 +968,7 @@ https://www.emacswiki.org/emacs/LineNumbers
                                     (if (car (window-margins))
                                         (car (window-margins)) 1)
                                     ))))
-  (advice-add #'linum-update-window :after #'consoli/linum-update-window-scale-fix)
+  ;; (advice-add #'linum-update-window :after #'consoli/linum-update-window-scale-fix)
 #+END_SRC
 * Useful key-bindings
 ** Show whitespaces
@@ -1021,6 +1063,7 @@ Org-Babel support for Rust.
   (with-eval-after-load 'rust-mode
     (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
   (add-hook 'rust-mode 'flycheck-rust-setup)
+  (add-hook 'rust-mode #'yas-minor-mode)
 #+END_SRC
 * Haskell
 I'm current learning Haskell from the Erik Meijer course, Functional Programming Fundamentals, so lets setup some enviroment.
@@ -1030,24 +1073,57 @@ First, the haskell mode.
   (use-package haskell-mode
     :ensure t)
 #+END_SRC
+* JavaScript
+#+BEGIN_SRC emacs-lisp
+  (use-package web-mode
+    :ensure t)
+  (use-package js2-mode
+    :ensure t)
+  (use-package js2-refactor
+    :ensure t)
+  (use-package xref-js2
+    :ensure t)
+  (use-package js-import
+    :ensure t)
+  (use-package react-snippets
+    :ensure t)
+  (use-package npm-mode
+    :ensure t)
+  (use-package tern
+    :ensure t)
+  (use-package company-tern
+    :ensure t
+    :config (setq company-tern-meta-as-single-line t))
+  (add-to-list 'company-backends 'company-tern)
+#+END_SRC
+** hooks
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'js-mode-hook 'js2-mode)
+  (add-hook 'js2-mode-hook 'js2-refactor-mode)
+  (add-hook 'js2-mode-hook 'xref-js2)
+  (add-hook 'js2-mode-hook 'tern-mode)
+  (add-hook 'js2-mode-hook 'company-mode)
+  (add-hook 'tern-mode 'company-tern)
+#+END_SRC
 * Org-config
 ** Commom settings
-   #+BEGIN_SRC emacs-lisp
-     (setq org-src-fontfy-natively t)
-     (setq org-src-tab-acts-natively t)
-     (setq org-export-with-smart-quotes t)
-     ;; (add-hook 'org-mode-hook 'org-indent-mode)
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-fontfy-natively t)
+  (setq org-src-tab-acts-natively nil)
+  (setq org-export-with-smart-quotes t)
+  (setq org-adapt-indentation nil)
+  (add-hook 'org-mode-hook 'org-indent-mode)
+#+END_SRC
 ** Line wrapping
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'org-mode-hook
-               '(lambda ()
-                  (visual-line-mode 1)))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'org-mode-hook
+            '(lambda ()
+               (visual-line-mode 1)))
+#+END_SRC
 ** Emacs-lisp template
 #+BEGIN_SRC emacs-lisp
-    (add-to-list 'org-structure-template-alist
-                '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+  (add-to-list 'org-structure-template-alist
+               '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
 #+END_SRC
 ** Haskell template
 #+BEGIN_SRC emacs-lisp
@@ -1056,8 +1132,13 @@ First, the haskell mode.
 #+END_SRC
 ** Python template
 #+BEGIN_SRC emacs-lisp
-    (add-to-list 'org-structure-template-alist
-                '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+  (add-to-list 'org-structure-template-alist
+               '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+#+END_SRC
+** Rust template
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '("rs" "#+BEGIN_SRC rust\n?\n#+END_SRC"))
 #+END_SRC
 * Diminish configurations
   It need to be the last thing on config file

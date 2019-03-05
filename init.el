@@ -26,7 +26,7 @@
  '(org-agenda-files (quote ("~/Documentos/agenda.org")))
  '(package-selected-packages
    (quote
-    (git-gutter-fringe+ toml-mode quick-peek fancy-battery fzf flycheck-haskell haskell-snippets haskell-tab-indent haskell-mode jedi flyspell-popup macrostep pomodoro flyspell-correct-helm pdf-tools company-auctex latex-preview-pane auctex markdown-mode+ company-math markdown-mode markdown flycheck-rust rust-mode dumb-jump ein nyan-mode elpy font-lock+ company-quickhelp multi-term htmlize ox-reveal spacemacs-theme spacelin whitespace-cleanup-mode which-key visual-regexp-steroids use-package try spaceline-all-the-icons solaire-mode smartparens simpleclip rainbow-mode rainbow-delimiters org-bullets neotree hlinum helm general evil doom-themes)))
+    (company-web comment-tags meghanada vimish-fold git-gutter-fringe+ toml-mode quick-peek fancy-battery fzf flycheck-haskell haskell-snippets haskell-tab-indent haskell-mode jedi flyspell-popup macrostep pomodoro flyspell-correct-helm pdf-tools company-auctex latex-preview-pane auctex markdown-mode+ company-math markdown-mode markdown flycheck-rust rust-mode dumb-jump ein nyan-mode elpy font-lock+ company-quickhelp multi-term htmlize ox-reveal spacemacs-theme spacelin whitespace-cleanup-mode which-key visual-regexp-steroids use-package try solaire-mode smartparens simpleclip rainbow-mode rainbow-delimiters org-bullets neotree hlinum helm general evil doom-themes)))
  '(paradox-github-token t)
  '(shell-pop-universal-key "<f6>"))
 (custom-set-faces
