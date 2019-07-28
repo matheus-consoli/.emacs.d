@@ -1,0 +1,363 @@
+* Helm
+#+BEGIN_SRC emacs-lisp
+  (use-package helm
+    :ensure t
+    :bind
+    ("C-x C-f" . 'helm-find-files)
+    ("C-x C-b" . 'helm-buffers-list)
+    ("C-x b" . 'helm-mini)
+    ("M-x" . 'helm-M-x)
+    ("M-:" . 'helm-eval-expression-with-eldoc)
+    ("<tab>" . 'helm-execute-persistent-action) ;; switch tab to complete
+    ("C-i" . 'helm-execute-persistent-action) ;; make tab work in terminal
+    ("C-j" . 'helm-list-available-options) ;; switch c-j to list options
+    :custom (helm-autoresize-max-height 80)
+	  (helm-autoresize-min-height 40)
+	  (helm-M-x-fuzzy-match t)
+	  (helm-buffers-fuzzy-matching t)
+	  (helm-recentf-fuzzy-match t)
+	  (helm-semantic-fuzzy-match t)
+	  (helm-imenu-fuzzy-match t)
+	  (helm-split-window-in-side-p nil)
+	  (helm-mode-to-line-cycle-in-source nil)
+	  (helm-ff-search-library-in-sexp t)
+	  (helm-scroll-amount 8)
+	  (helm-echo-input-in-header-line t)
+	  (helm-ff-skip-boring-files t))
+  (helm-mode 1)
+  (require 'helm-config)
+  (helm-autoresize-mode 1)
+
+#+END_SRC
+
+** Hide minibuffer
+http://tuhdo.github.io/helm-intro.html
+#+BEGIN_SRC emacs-lisp
+  (defun spacemacs//helm-hide-minibuffer-maybe ()
+    "Hide minibuffer in Helm session if we use the header line as input field."
+    (when (with-helm-buffer helm-echo-input-in-header-line)
+      (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
+	(overlay-put ov 'window (selected-window))
+	(overlay-put ov 'face
+		     (let ((bg-color (face-background 'default nil)))
+		       `(:background ,bg-color :foreground ,bg-color)))
+	(setq-local cursor-type nil))))
+
+  (add-hook 'helm-minibuffer-set-up-hook
+	    'spacemacs//helm-hide-minibuffer-maybe)
+#+END_SRC
+
+** Swipper
+#+BEGIN_SRC emacs-lisp
+  (use-package swiper-helm
+    :bind ("C-s" . swiper-helm)
+    :ensure t)
+#+END_SRC
+* Projectile
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :ensure t)
+#+END_SRC
+** Helm projectile
+#+BEGIN_SRC emacs-lisp
+  (use-package helm-projectile
+    :custom (projectile-completion-system 'helm)
+    :ensure t)
+#+END_SRC
+
+* Org
+#+BEGIN_SRC emacs-lisp
+    (use-package org
+      :ensure t
+      :custom (org-src-fontfy-natively t)
+      (org-src-tab-acts-natively nil)
+      (org-export-with-smart-quotes t)
+      (org-adapt-indentation nil)
+      :hook (org-mode . org-indent-mode)
+      (org-mode . visual-line-mode))
+#+END_SRC
+
+** Org bullets
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bullets
+    :ensure t
+    :custom (org-bullets-bullet-list
+	     '("☣" "☢" "☠"  "⚛" "◉"))
+    :hook (org-mode . org-bullets-mode))
+#+END_SRC
+
+** Org templates
+*** Elisp template
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+#+END_SRC
+*** Haskell template
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '("hs" "#+BEGIN_SRC haskell\n?\n#+END_SRC"))
+#+END_SRC
+*** Python template
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+#+END_SRC
+*** Rust template
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '("rs" "#+BEGIN_SRC rust\n?\n#+END_SRC"))
+#+END_SRC
+
+** Org export
+*** Org reveal
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-reveal
+    :ensure t
+    :custom (org-reveal-root "http://cdn.jsdelivr.net/reveal.js/3.0.0/")
+    (org-reveal-mathjax t)
+    :init (use-package htmlize
+            :ensure t))
+#+END_SRC
+
+* Git
+** Magit
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :ensure t)
+#+END_SRC
+* Which key
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :ensure t
+    :diminish
+    :custom (which-key-popup-type 'minibuffer)
+    :config (which-key-mode))
+#+END_SRC
+
+* Spell
+** Flyspell popup
+#+BEGIN_SRC emacs-lisp
+  (use-package flyspell-popup
+    :ensure t
+    :hook (flyspell-mode . flyspell-popup-auto-correct-mode)
+    :bind ("C-." . flyspell-popup-autocorrect))
+#+END_SRC
+** Flyspell lazy
+#+BEGIN_SRC emacs-lisp
+  (use-package flyspell-lazy
+    :ensure t)
+#+END_SRC
+
+** Aspell
+https://blog.binchen.org/posts/what-s-the-best-spell-check-set-up-in-emacs.html
+#+BEGIN_SRC emacs-lisp
+  (defmacro require-init (pkg)
+    `(load (file-truename (format "~/.emacs.d/elisp/%s" ,pkg)) t t))
+
+  (defmacro local-require (pkg)
+    `(unless (featurep ,pkg)
+       (load (expand-file-name
+	       (cond
+		 ((eq ,pkg 'go-mode-load)
+		  (format "~/.emacs.d/site-lisp/go-mode/%s" ,pkg))
+		 (t
+		   (format "~/.emacs.d/site-lisp/%s/%s" ,pkg ,pkg))))
+	     t t)))
+
+  (require-init 'init-spelling)
+#+END_SRC
+
+* Elfeed
+#+BEGIN_SRC emacs-lisp
+    (use-package elfeed
+      :ensure t
+      :bind (:map elfeed-search-mode-map
+                  ("A" . bjm/elfeed-show-all)
+                  ("q" . bjm/elfeed-save-db-and-bury)
+                  ("C-S-a" . zmsk/elfeed-mark-all-as-read))
+      :custom (url-queue-timeout 30))
+#+END_SRC
+
+** Elfeed org
+#+BEGIN_SRC emacs-lisp
+  (use-package elfeed-org
+    :ensure t
+    :after elfeed
+    :custom (rmh-elfeed-org-files
+             (list (concat user-emacs-directory "elfeed.org")))
+    :config (elfeed-org))
+#+END_SRC
+
+** Elfeed Goodies 
+#+BEGIN_SRC emacs-lisp
+  (use-package elfeed-goodies
+    :ensure t
+    :after elfeed
+    :config (elfeed-goodies/setup))
+#+END_SRC
+
+** Elfeed functions
+http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
+#+BEGIN_SRC emacs-lisp
+  (defun bjm/elfeed-load-db-and-open ()
+    "Wrapper to load the elfeed db from disk before opening"
+    (interactive)
+    (elfeed-db-load)
+    (elfeed)
+    (elfeed-search-update--force))
+
+  ;;write to disk when quiting
+  (defun bjm/elfeed-save-db-and-bury ()
+    "Wrapper to save the elfeed db to disk before burying buffer"
+    (interactive)
+    (elfeed-db-save)
+    (quit-window))
+
+  (defun zmsk/elfeed-mark-all-as-read ()
+    (interactive)
+    (mark-whole-buffer)
+    (elfeed-search-untag-all-unread))
+#+END_SRC
+* Utilities
+** Quick edit configuration files
+#+BEGIN_SRC emacs-lisp
+  (defun consoli/edit-config ()
+    "Easy open configuration file."
+    (interactive)
+    (find-file (concat user-emacs-directory "config.org")))
+  (global-set-key (kbd "S-<f1>") 'consoli/edit-config)
+#+END_SRC
+
+** Configure backup files
+#+BEGIN_SRC emacs-lisp
+  (defconst consoli/backup_dir
+    (concat user-emacs-directory "backups"))
+
+  (if (not (file-exists-p consoli/backup_dir))
+      (make-directory consoli/backup_dir t))
+
+  (setq backup-directory-alist
+	`(("." . ,consoli/backup_dir)))
+
+  (setq backup-by-copying t
+	delete-old-versions t
+	kept-new-versions 3
+	kept-old-versions 2
+	version-control t)
+#+END_SRC
+** No auto-save files
+#+BEGIN_SRC emacs-lisp
+  (setq auto-save-default nil)
+#+END_SRC
+** Increase/Decrease font size
+#+BEGIN_SRC emacs-lisp
+  (global-set-key (kbd "C-+") #'text-scale-increase)
+  (global-set-key (kbd "C--") #'text-scale-decrease)
+#+END_SRC
+** Better scroll
+#+BEGIN_SRC emacs-lisp
+  (setq scroll-conservatively 9999
+	scroll-preserve-screen-position t
+	scroll-margin 5)
+#+END_SRC
+
+** No bell
+#+BEGIN_SRC emacs-lisp
+  (setq ring-bell-function 'ignore)
+#+END_SRC
+
+** y or n instead of yes or no
+#+BEGIN_SRC emacs-lisp
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+** Kill current buffer
+https://superuser.com/a/1419521
+#+BEGIN_SRC emacs-lisp
+  (defun volatile-kill-buffer ()
+    "Kill current buffer unconditionally."
+    (interactive)
+    (let ((buffer-modified-p nil))
+      (kill-buffer (current-buffer))))
+
+  (global-set-key (kbd "C-x k") 'volatile-kill-buffer)     ;; Unconditionally kill unmodified buffers.
+
+#+END_SRC
+
+** No welcome message or scratch buffer message
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-message t
+	initial-scratch-message nil
+	inhibit-startup-echo-area-message t
+	org-edit-src-persistent-message nil)
+#+END_SRC
+
+** Save last cursor position
+#+BEGIN_SRC emacs-lisp
+  (save-place-mode 1)
+#+END_SRC
+
+** Easy move around frames with s-arrows
+#+BEGIN_SRC emacs-lisp
+(windmove-default-keybindings)
+#+END_SRC
+
+** Whitespaces
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<f10>") 'whitespace-mode)
+(global-set-key (kbd "S-<f10>") 'whitespace-cleanup)
+#+END_SRC
+
+** Smart new line
+   https://gist.github.com/brianloveswords/e23cedf3a80bab675fe5
+   #+BEGIN_SRC emacs-lisp
+     (defun consoli/smart-newline ()
+       "Add two newlines and put the cursor at the right indentation
+     between them if a newline is attempted when the cursor is between
+     two curly braces, otherwise do a regular newline and indent"
+       (interactive)
+       (if (or
+	    (and (equal (char-before) 123) ; {
+		 (equal (char-after) 125)) ; }
+	    (and (equal (char-before) 40)  ; (
+		 (equal (char-after) 41))) ; )
+	   (progn (newline-and-indent)
+		  (split-line)
+		  (indent-for-tab-command))
+	 (newline-and-indent)))
+     (global-set-key (kbd "RET") 'consoli/smart-newline)
+   #+END_SRC
+
+** Insert new line bellow
+#+BEGIN_SRC emacs-lisp
+  (defun consoli/insert-new-line-bellow ()
+    (interactive)
+    (let ((current-point (point)))
+      (move-end-of-line 1)
+      (open-line 1)
+      (goto-char current-point)))
+  (global-set-key (kbd "C-S-<down>") 'consoli/insert-new-line-bellow)
+#+END_SRC
+
+** Insert new line bellow
+#+BEGIN_SRC emacs-lisp
+  (defun consoli/insert-new-line-above ()
+    (interactive)
+    (let ((current-point (point)))
+      (move-beginning-of-line 1)
+      (newline-and-indent)
+      (indent-according-to-mode)
+      (goto-char current-point)
+      (forward-char)))
+  (global-set-key (kbd "C-S-<up>") 'consoli/insert-new-line-above)
+#+END_SRC
+
+** Set default browser to Firefox
+#+BEGIN_SRC emacs-lisp
+(setq browser-url-browse-function 'browse-url-firefox)
+#+END_SRC 
+** Translate
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package google-translate
+  ;;   :ensure t)
+#+END_SRC

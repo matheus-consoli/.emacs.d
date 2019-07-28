@@ -1,0 +1,287 @@
+* Theme
+** Doom theme
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-themes
+    :ensure t
+    :init (require 'doom-themes)
+    :custom (doom-themes-enable-bold t)
+    (doom-themes-enable-italic t)
+    (solaire-mode-remap-modeline nil)
+    :config (doom-themes-org-config)
+    (doom-themes-treemacs-config)
+    :init (solaire-mode-swap-bg)
+    :preface (defvar region-fg nil))
+#+END_SRC
+
+** Load theme
+#+BEGIN_SRC emacs-lisp
+  (load-theme 'doom-dracula
+	      :no-confirm)
+#+END_SRC
+
+* Font & icons
+** Iosevka
+#+BEGIN_SRC emacs-lisp
+  (set-default-font "Iosevka Italic 12")
+#+END_SRC
+
+** All the icons
+#+BEGIN_SRC emacs-lisp
+  (use-package all-the-icons
+    :ensure t)
+#+END_SRC
+
+** Pretty symbols
+#+BEGIN_SRC emacs-lisp
+  (when window-system
+    (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+#+END_SRC
+
+* Layout
+** No scroll, menu and tool bar 
+#+BEGIN_SRC emacs-lisp
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  (scroll-bar-mode -1)
+#+END_SRC
+
+** Line numbers
+*** Hook
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'prog-mode-hook 'linum-mode)
+#+END_SRC
+
+*** Line format
+#+BEGIN_SRC emacs-lisp
+(setq linum-format " %5d ")
+#+END_SRC
+
+** Highlight line
+#+BEGIN_SRC emacs-lisp
+  (use-package hlinum
+    :ensure t
+    :init (global-hl-line-mode)
+    :config (set-face-background 'hl-line "#1E2029"))
+#+END_SRC
+
+* Parens
+** Show matchs
+#+BEGIN_SRC emacs-lisp
+  (require 'paren)
+  ;; (set-face-foreground 'show-paren-match "#00BFFF")
+  (set-face-foreground 'show-paren-match "#FF3377")
+  (set-face-background 'show-paren-match (face-background 'default))
+  (set-face-attribute 'show-paren-match nil :weight 'extra-bold)
+  (show-paren-mode 1)
+#+END_SRC
+
+** Rainbow delimiters
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :config (rainbow-delimiters-mode t))
+#+END_SRC
+
+* Modeline
+** Doom modeline
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-modeline
+    :ensure t
+    :custom (doom-modeline-bar-width 5)
+    (doom-modeline-icon t)
+    (doom-modeline-major-mode-color-icon t)
+    (doom-modeline-major-mode-icon t)
+    (doom-modeline-buffer-state-icon t)
+    (doom-modeline-buffer-modification-icon t)
+    (doom-modeline-enable-word-count t)
+    (doom-modeline-buffer-encoding t)
+    (doom-modeline-lsp t)
+    (doom-modeline-env-version t)
+    (doom-modeline-height 1)
+    (doom-modeline-env-python-executable "ipython")
+    :hook (after-init . doom-modeline-mode)
+    :custom-face (mode-line ((t (:height 0.9))))
+    (mode-line-inactive ((t (:height 0.9)))))
+#+END_SRC
+
+** Fancy battery
+#+BEGIN_SRC emacs-lisp
+  (use-package fancy-battery
+    :ensure t
+    :after (doom-modeline)
+    :custom (fancy-battery-show-percentage t)
+    :init (fancy-battery-mode))
+#+END_SRC
+
+** Nyan cat
+#+BEGIN_SRC emacs-lisp
+  (use-package nyan-mode
+    :ensure t
+    :custom (nyan-animate-nyancat t)
+    (nyan-wavy-trail t)
+    (mode-line-format (list
+		       '(:eval (list (nyan-create)))))
+    :init (nyan-mode))
+#+END_SRC
+
+** Clock
+#+BEGIN_SRC emacs-lisp
+(setq display-time-24hr-format t)
+(setq display-time-format "%H:%M")
+(display-time-mode 1)
+#+END_SRC
+* Diminish
+#+BEGIN_SRC emacs-lisp
+  (use-package diminish
+    :ensure t)
+#+END_SRC
+* Treemacs
+** Treemacs by itself
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs
+    :ensure t
+    :defer t
+    :init
+    (with-eval-after-load 'winum
+      (define-key winum-keymap (kbd "<f8>") #'treemacs-select-window))
+    :config
+    (progn
+      (setq treemacs-collapse-dirs                 (if (treemacs--find-python3) 3 0)
+	    treemacs-deferred-git-apply-delay      0.5
+	    treemacs-display-in-side-window        t
+	    treemacs-eldoc-display                 t
+	    treemacs-file-event-delay              5000
+	    treemacs-file-follow-delay             0.2
+	    treemacs-follow-after-init             t
+	    treemacs-git-command-pipe              ""
+	    treemacs-goto-tag-strategy             'refetch-index
+	    treemacs-indentation                   2
+	    treemacs-indentation-string            " "
+	    treemacs-is-never-other-window         nil
+	    treemacs-max-git-entries               5000
+	    treemacs-missing-project-action        'ask
+	    treemacs-no-png-images                 nil
+	    treemacs-no-delete-other-windows       t
+	    treemacs-project-follow-cleanup        nil
+	    treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+	    treemacs-position                      'left
+	    treemacs-recenter-distance             0.1
+	    treemacs-recenter-after-file-follow    nil
+	    treemacs-recenter-after-tag-follow     nil
+	    treemacs-recenter-after-project-jump   'always
+	    treemacs-recenter-after-project-expand 'on-distance
+	    treemacs-show-cursor                   nil
+	    treemacs-show-hidden-files             t
+	    treemacs-silent-filewatch              nil
+	    treemacs-silent-refresh                nil
+	    treemacs-sorting                       'alphabetic-desc
+	    treemacs-space-between-root-nodes      t
+	    treemacs-tag-follow-cleanup            t
+	    treemacs-tag-follow-delay              1.5
+	    treemacs-width                         35)
+
+      ;; The default width and height of the icons is 22 pixels. If you are
+      ;; using a Hi-DPI display, uncomment this to double the icon size.
+      ;;(treemacs-resize-icons 44)
+
+      (treemacs-follow-mode t)
+      (treemacs-filewatch-mode t)
+      (treemacs-fringe-indicator-mode t)
+      (pcase (cons (not (null (executable-find "git")))
+		   (not (null (treemacs--find-python3))))
+	(`(t . t)
+	 (treemacs-git-mode 'deferred))
+	(`(t . _)
+	 (treemacs-git-mode 'simple))))
+    :bind
+    (:map global-map
+	  ("<f8>"      . treemacs)
+	  ("S-<f8>"    . treemacs-select-window)
+	  ("C-x t 1"   . treemacs-delete-other-windows)
+	  ("C-x t B"   . treemacs-bookmark)
+	  ("C-x t C-t" . treemacs-find-file)
+	  ("C-x t M-t" . treemacs-find-tag)))
+#+END_SRC
+* Git
+** Fringe Helper
+#+BEGIN_SRC emacs-lisp
+  (use-package fringe-helper
+    :ensure t)
+#+END_SRC
+
+** Git Gutter
+#+BEGIN_SRC emacs-lisp
+  (use-package git-gutter-fringe+
+    :ensure t)
+  (setq git-gutter-fr+-side 'right-fringe) ;; left side is for flycheck
+  (set-face-foreground 'git-gutter-fr+-modified "#e77818")
+  (set-face-background 'git-gutter-fr+-modified "#e77818")
+  (set-face-foreground 'git-gutter-fr+-deleted "#a20417")
+  (set-face-background 'git-gutter-fr+-deleted "#a20417")
+  (set-face-foreground 'git-gutter-fr+-added "#007144")
+  (set-face-background 'git-gutter-fr+-added "#007144")
+  (setq-default right-fringe-width 10)
+  (global-git-gutter+-mode)
+#+END_SRC
+
+** Treemacs magit
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs-magit
+    :after (treemacs magit)
+    :ensure t)
+#+END_SRC
+* Dashboard
+#+BEGIN_SRC emacs-lisp
+  (use-package dashboard
+    :ensure t
+    :requires (all-the-icons projectile)
+    :config (progn
+              (dashboard-setup-startup-hook)
+              (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))
+                    dashboard-banner-logo-title "HAPPY HACKING"
+                    dashboard-startup-banner (concat user-emacs-directory "img/pink_banner.png")
+                    dashboard-center-content    t
+                    dashboard-set-heading-icons t
+                    dashboard-set-file-icons    t
+                    dashboard-set-navigator     t
+                    dashboard-set-init-info     t
+                    dashboard-set-navigator     t
+                    show-week-agenda-p          t
+
+                    dashboard-items '((bookmarks . 5)
+                                      (projects  . 5)
+                                      (agenda))
+
+                    dashboard-navigator-buttons
+                    `(( ;; line one
+                       (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
+                        "" "Github"
+                        (lambda (&rest _) (browse-url "https://github.com/macconsoli")))
+
+                       (,(all-the-icons-faicon "gitlab" :height 1.1 :v-adjust 0.0)
+                        "" "Gitlab"
+                        (lambda (&rest _) (browse-url "https://gitlab.com/consoli")))
+
+                       (,(all-the-icons-material "email" :height 1.1 :v-adjust -0.13)
+                        "" "Email"
+                        (lambda (&rest _) (message "Install mu4e")))
+                       )
+
+                    ( ;; line two
+                     (,(all-the-icons-faicon "spotify" :height 1.2 :v-adjust 0.0)
+                      "" "Spotify"
+                      (lambda (&rest _) (message "Install helm-spotify"))
+                      )
+
+                      (,(all-the-icons-faicon "youtube-play" :height 1.1 :v-adjust 0.0)
+                       "" "Youtube"
+                       (lambda (&rest _) (browse-url "https://youtube.com")))
+
+                      (,(all-the-icons-faicon "rss-square" :height 1.1 :v-adjust 0.0)
+                      "" "Elfeed"
+                      (lambda (&rest _) (elfeed)))
+
+                     (,(all-the-icons-faicon "refresh" :height 1.1 :v-adjust 0.0)
+                      "" "Refresh Dashboard"
+                      (lambda (&rest _) (dashboard-refresh-buffer))))))))
+#+END_SRC
