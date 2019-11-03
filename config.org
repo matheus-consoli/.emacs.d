@@ -1,31 +1,36 @@
 * Load config
 #+BEGIN_SRC emacs-lisp
-  (defun load-config (file)
-    (org-babel-load-file (expand-file-name
-			  (concat user-emacs-directory file))))
+(defun load-config (file)
+  (org-babel-load-file (expand-file-name
+                        (concat user-emacs-directory file))))
 #+END_SRC
 
 ** General
 #+BEGIN_SRC emacs-lisp
-  (load-config "general.org")
+(load-config "general.org")
 #+END_SRC
 
 ** Appearence
 #+BEGIN_SRC emacs-lisp
-  (load-config "appearence.org")
+(load-config "appearence.org")
 #+END_SRC
 
 ** Prog
 #+BEGIN_SRC emacs-lisp
-  (load-config "prog.org")
+(load-config "prog.org")
 #+END_SRC
 
 *** Rust lang
 #+BEGIN_SRC emacs-lisp
-  (load-config "rust.org")
+(load-config "rust.org")
 #+END_SRC
 
 *** Haskell
 #+BEGIN_SRC emacs-lisp
-  (load-config "haskell.org")
+(load-config "haskell.org")
+#+END_SRC
+
+*** Python
+#+BEGIN_SRC emacs-lisp
+(load-config "python.org")
 #+END_SRC

@@ -157,7 +157,6 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   (use-package yasnippet-snippets
     :ensure t)
 #+END_SRC
-
 * Linter
 ** Flycheck
 #+BEGIN_SRC emacs-lisp
@@ -176,24 +175,26 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 #+BEGIN_SRC emacs-lisp
   (use-package flycheck-inline
     :ensure t
-    :after flycheck
     :hook (flycheck-mode . turn-on-flycheck-inline)
-    :custom (flycheck-inline-display-function
-             (lambda (msg pos)
-               (let* ((ov (quick-peek-overlay-ensure-at pos))
-                      (contents (quick-peek-overlay-contents ov)))
-                 (setf (quick-peek-overlay-contents ov)
-                       (concat contents (when contents "\n") msg))
-                 (quick-peek-update ov)))
-             flycheck-inline-clear-function #'quick-peek-hide))
+    :config (setq flycheck-inline-display-function
+        (lambda (msg pos)
+          (let* ((ov (quick-peek-overlay-ensure-at pos))
+                 (contents (quick-peek-overlay-contents ov)))
+            (setf (quick-peek-overlay-contents ov)
+                  (concat contents (when contents "\n") msg))
+            (quick-peek-update ov)))
+        flycheck-inline-clear-function #'quick-peek-hide))
 #+END_SRC
 
 * Utilities
 ** Smart parens
 #+BEGIN_SRC emacs-lisp
-  (use-package smartparens
-    :ensure t
-    :config (smartparens-global-mode))
+(use-package smartparens
+  :ensure t
+  :bind ("C-M-f" . 'sp-forward-sexp)
+  ("C-M-b" . 'sp-backward-sexp)
+  :config (smartparens-global-mode)
+  :init (smartparens-strict-mode))
 #+END_SRC
 ** Auto highlight
 #+BEGIN_SRC emacs-lisp
@@ -222,4 +223,52 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
     (highlight-indent-guides-delay 0)
     (highlight-indent-guides-responsive 'stack)
     :hook (prog-mode . highlight-indent-guides-mode))
+#+END_SRC
+
+** Dumb jump
+#+BEGIN_SRC emacs-lisp
+(use-package dumb-jump
+  :ensure t
+  :bind ("M-g o" . dumb-jump-go-other-window)
+  ("M-g j" . dumb-jump-go)
+  ("M-g x" . dumb-jump-go-prefer-external)
+  ("M-g z" . dumb-jump-go-prefer-external-other-window)
+  :custom (dumb-jump-selector 'helm)
+  :init (dumb-jump-mode))
+#+END_SRC
+
+* Debug
+** DAP
+#+BEGIN_SRC emacs-lisp
+  (use-package dap-mode
+    :ensure t)
+#+END_SRC
+* Language Server Protocol
+** eglot
+#+BEGIN_SRC emacs-lisp
+(use-package eglot
+  :ensure t)
+#+END_SRC
+
+** LSP mode
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-mode
+  :commands lsp
+  :custom (lsp-prefer-flymake nil) ;; use flycheck
+  :ensure t)
+#+END_SRC
+
+** Company lsp 
+#+BEGIN_SRC emacs-lisp
+(use-package company-lsp
+  :ensure t
+  :config (push 'company-lsp company-backends)
+  :custom (company-lsp-async t))
+#+END_SRC
+
+** Treemacs compatibility
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-treemacs
+  :ensure t
+  :commands lsp-treemacs-errors-list)
 #+END_SRC

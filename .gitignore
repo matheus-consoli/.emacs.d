@@ -63,3 +63,6 @@ transient/
 .cache
 *.el
 !init.el
+
+.lsp-session-v1
+elpy

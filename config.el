@@ -1,6 +1,6 @@
 (defun load-config (file)
   (org-babel-load-file (expand-file-name
-			(concat user-emacs-directory file))))
+                        (concat user-emacs-directory file))))
 
 (load-config "general.org")
 
@@ -11,3 +11,5 @@
 (load-config "rust.org")
 
 (load-config "haskell.org")
+
+(load-config "python.org")
