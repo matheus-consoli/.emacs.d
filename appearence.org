@@ -1,50 +1,70 @@
 * Theme
-** Doom theme
+** Solaire
 #+BEGIN_SRC emacs-lisp
-  (use-package doom-themes
-    :ensure t
-    :init (require 'doom-themes)
-    :custom (doom-themes-enable-bold t)
-    (doom-themes-enable-italic t)
-    (solaire-mode-remap-modeline nil)
-    :config (doom-themes-org-config)
-    (doom-themes-treemacs-config)
-    :init (solaire-mode-swap-bg)
-    :preface (defvar region-fg nil))
+(use-package solaire-mode
+  :hook
+  ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
+  (minibuffer-setup . solaire-mode-in-minibuffer)
+  :config
+  (solaire-global-mode +1)
+  (solaire-mode-swap-bg))
+#+END_SRC
+
+** Doom themes
+#+BEGIN_SRC emacs-lisp
+(use-package doom-themes
+  :ensure t
+  :custom ((doom-themes-enable-bold t)
+           (doom-themes-enable-italic t)
+           (solaire-mode-remap-modeline nil)
+           (doom-themes-treemacs-theme "doom-colors"))
+  :config (progn (doom-themes-org-config)
+                 (doom-themes-treemacs-config))
+  ;; :init (solaire-mode-swap-bg)
+  :preface (defvar region-fg nil))
+#+END_SRC
+
+** Kaolin Themes
+#+BEGIN_SRC emacs-lisp
+(use-package kaolin-themes
+  :ensure t
+  :config (kaolin-treemacs-theme)
+  :custom (
+          ;; enable italic style in comments
+          (kaolin-themes-italic-comments t)
+          ;; display colered hi-line instead of monochrome
+          (kaolin-themes-hi-line-colored t)
+          ;; distinct colors for company popup scrollbar
+          (kaolin-themes-distinct-company-scrollbar t)))
 #+END_SRC
 
 ** Load theme
 #+BEGIN_SRC emacs-lisp
-  (load-theme 'doom-dracula
-	      :no-confirm)
-#+END_SRC
-** Solaire
-#+BEGIN_SRC emacs-lisp
-  (use-package solaire-mode
-    :hook
-    ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
-    (minibuffer-setup . solaire-mode-in-minibuffer)
-    :config
-    (solaire-global-mode +1)
-    (solaire-mode-swap-bg))
+(load-theme 'kaolin-galaxy
+            :no-confirm)
 #+END_SRC
 * Font & icons
-** Iosevka
+** Set font
 #+BEGIN_SRC emacs-lisp
-(when window-system
-  (set-default-font "Iosevka Term SS05 11"))
+;; https://www.emacswiki.org/emacs/FacesPerBuffer#toc3
+(set-default-font "Jetbrains Mono 11")
+
+;; switch to CaskaydiaCove when in prog-mode
+(add-hook 'prog-mode (lambda ()
+                       (interactive)
+                       (setq buffer-face-mode-face '(:family "CaskaydiaCove Nerd Font Mono" :height 110))))
 #+END_SRC
 
 ** All the icons
 #+BEGIN_SRC emacs-lisp
-  (use-package all-the-icons
-    :ensure t)
+(use-package all-the-icons
+  :ensure t)
 #+END_SRC
 
 ** Pretty symbols
 #+BEGIN_SRC emacs-lisp
-  (when window-system
-    (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+(when window-system
+  (add-hook 'prog-mode-hook 'prettify-symbols-mode))
 #+END_SRC
 
 * Layout
@@ -65,9 +85,29 @@
 
 *** Line format
 #+BEGIN_SRC emacs-lisp
-(setq linum-format " %5d ")
-#+END_SRC
+(setq left-fringe-width 10)
+(setq right-fringe-width 3)
+;; (setq linum-format " %5d ")
 
+;; https://stackoverflow.com/questions/19540211/configure-linum-mode-to-not-show-whitespace-symbols-in-whitespace-mode
+(eval-after-load 'linum
+  '(progn
+     (defface linum-leading-zero
+       `((t :inherit 'linum
+            :foreground ,(face-attribute 'linum :background nil t)))
+       "Face for displaying leading zeroes for line numbers in display margin."
+       :group 'linum)
+     (defun linum-format-func (line)
+       (let ((w (length
+                 (number-to-string (count-lines (point-min) (point-max))))))
+         (concat
+          "\u2002"
+          (propertize (make-string (- w (length (number-to-string line))) ?0)
+                      'face 'linum-leading-zero)
+          (propertize (number-to-string line) 'face 'linum)
+          "\u2002")))
+     (setq linum-format 'linum-format-func)))
+#+END_SRC
 ** Highlight line
 #+BEGIN_SRC emacs-lisp
 (use-package hlinum
@@ -99,18 +139,23 @@
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :ensure t
-  :custom (doom-modeline-bar-width 5)
-  (doom-modeline-icon t)
-  (doom-modeline-major-mode-color-icon t)
-  (doom-modeline-major-mode-icon t)
-  (doom-modeline-buffer-state-icon t)
-  (doom-modeline-buffer-modification-icon t)
-  (doom-modeline-enable-word-count t)
-  (doom-modeline-buffer-encoding t)
-  (doom-modeline-lsp t)
-  (doom-modeline-env-version t)
-  (doom-modeline-height 1)
-  (doom-modeline-env-python-executable "ipython")
+  :custom ((doom-modeline-bar-width 5)
+           (doom-modeline-icon t)
+           (doom-modeline-project-detection 'projectile)
+           (doom-modeline-major-mode-color-icon t)
+           (doom-modeline-buffer-file-state 'relative-from-project)
+           (doom-modeline-major-mode-icon t)
+           (doom-modeline-buffer-state-icon t)
+           (doom-modeline-buffer-modification-icon t)
+           (doom-modeline-enable-word-count t)
+           (doom-modeline-buffer-encoding t)
+           (doom-modeline-indent-info t)
+           (doom-modeline-lsp t)
+           (doom-modeline-env-version t)
+           (doom-modeline-height 1)
+           (doom-modeline-env-python-executable "ipython")
+           (doom-modeline-env-rust-executable "rustc")
+           (doom-modeline-env-elixir-executable "iex"))
   :hook (after-init . doom-modeline-mode))
 #+END_SRC
 
@@ -140,11 +185,13 @@
 (setq display-time-format "%H:%M")
 (display-time-mode 1)
 #+END_SRC
+
 * Diminish
 #+BEGIN_SRC emacs-lisp
 (use-package diminish
   :ensure t)
 #+END_SRC
+
 * Treemacs
 ** Treemacs by itself
 #+BEGIN_SRC emacs-lisp
@@ -212,6 +259,20 @@
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
 #+END_SRC
+** Treemacs icons
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
+#+END_SRC
+
+** Treemacs projectile
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs-projectile
+  :ensure t
+  :after treemacs projectile)
+#+END_SRC
 * Git
 ** Fringe Helper
 #+BEGIN_SRC emacs-lisp
@@ -240,6 +301,7 @@
   :after (treemacs magit)
   :ensure t)
 #+END_SRC
+
 * Dashboard
 #+BEGIN_SRC emacs-lisp
 (use-package dashboard

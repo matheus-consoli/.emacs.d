@@ -1,0 +1,19 @@
+* Elixir mode
+#+BEGIN_SRC emacs-lisp
+(use-package elixir-mode
+  :ensure t
+  :hook (elixir-mode . lsp)
+  :init (add-to-list 'exec-path "~/.elixir-lsp/elixir-ls/release"))
+#+END_SRC
+* Yasnippets
+#+BEGIN_SRC emacs-lisp
+(use-package elixir-yasnippets
+  :ensure t
+  :hook (elixir-mode . yas-minor-mode))
+#+END_SRC
+* Credo
+#+BEGIN_SRC emacs-lisp
+;; (use-package flycheck-credo
+;;   :hook (elixir-mode . flycheck-credo-setup)
+;;   :ensure t)
+#+END_SRC

@@ -1,4 +1,5 @@
 * Load config
+** defun load-config
 #+BEGIN_SRC emacs-lisp
 (defun load-config (file)
   (org-babel-load-file (expand-file-name
@@ -20,7 +21,7 @@
 (load-config "prog.org")
 #+END_SRC
 
-*** Rust lang
+*** Rust
 #+BEGIN_SRC emacs-lisp
 (load-config "rust.org")
 #+END_SRC
@@ -28,6 +29,11 @@
 *** Haskell
 #+BEGIN_SRC emacs-lisp
 (load-config "haskell.org")
+#+END_SRC
+
+*** Elixir
+#+BEGIN_SRC emacs-lisp
+(load-config "elixir.org")
 #+END_SRC
 
 *** Python

@@ -2,24 +2,24 @@
 ** Company
 https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 #+BEGIN_SRC emacs-lisp
-  (use-package company
-    :diminish company-mode
-    :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
-    :commands company-abort
-    :hook (after-init . global-company-mode)
-    :init
-    (defun my-company-yasnippet ()
-      (interactive)
-      (company-abort)
-      (call-interactively 'company-yasnippet))
-    :custom (company-tooltip-align-annotations t)
-          (company-tooltip-limit 12)
-          (company-idle-delay 0)
-          (company-echo-delay (if (display-graphic-p) nil 0))
-          (company-minimum-prefix-length 2)
-          (company-require-match nil)
-          (company-dabbrev-ignore-case nil)
-          (company-dabbrev-downcase nil))
+(use-package company
+  :diminish company-mode
+  :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
+  :commands company-abort
+  :hook (after-init . global-company-mode)
+  :init
+  (defun my-company-yasnippet ()
+    (interactive)
+    (company-abort)
+    (call-interactively 'company-yasnippet))
+  :custom (company-tooltip-align-annotations t)
+  (company-tooltip-limit 12)
+  (company-idle-delay 0)
+  (company-echo-delay (if (display-graphic-p) nil 0))
+  (company-minimum-prefix-length 2)
+  (company-require-match nil)
+  (company-dabbrev-ignore-case nil)
+  (company-dabbrev-downcase nil))
 #+END_SRC
 
 *** Company Prescient
@@ -135,21 +135,37 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 
 ** Yasnippets
 #+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :ensure t
-    :config (yas-reload-all)
-    :config
-    ;; https://emacs.stackexchange.com/a/10520
-    ;; Add yasnippet support for all company backends
-    ;; https://github.com/syl20bnr/spacemacs/pull/179
-    (defvar company-mode/enable-yas t
-      "Enable yasnippet for all backends.")
-    (defun company-mode/backend-with-yas (backend)
-      (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
-          backend
-        (append (if (consp backend) backend (list backend))
-                '(:with company-yasnippet))))
-    (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends)))
+(use-package yasnippet
+  :ensure t
+  :config (yas-reload-all)
+  :init
+  (progn
+    (defun check-expansion ()
+      (save-excursion
+        (if (looking-at "\\_>") t
+          (backward-char 1)
+          (if (looking-at "\\.") t
+            (backward-char 1)
+            (if (looking-at "->") t nil)))))
+
+    (defun do-yas-expand ()
+      (let ((yas/fallback-behavior 'return-nil))
+        (yas/expand)))
+
+    (defun tab-indent-or-complete ()
+      (interactive)
+      (if (minibufferp)
+          (minibuffer-complete)
+        (if (or (not yas/minor-mode)
+                (null (do-yas-expand)))
+            (if (check-expansion)
+                (company-complete-common)
+              (indent-for-tab-command)))))
+
+    (global-set-key [tab] 'tab-indent-or-complete)
+
+    )
+  )
 #+END_SRC
 
 *** Yasnippets snippets
@@ -160,9 +176,9 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 * Linter
 ** Flycheck
 #+BEGIN_SRC emacs-lisp
-  (use-package flycheck
-    :ensure t
-    :config (global-flycheck-mode))
+(use-package flycheck
+  :ensure t
+  :config (global-flycheck-mode))
 #+END_SRC
 
 *** Quick Peek
@@ -186,76 +202,48 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
         flycheck-inline-clear-function #'quick-peek-hide))
 #+END_SRC
 
-* Utilities
-** Smart parens
-#+BEGIN_SRC emacs-lisp
-(use-package smartparens
-  :ensure t
-  :bind ("C-M-f" . 'sp-forward-sexp)
-  ("C-M-b" . 'sp-backward-sexp)
-  :config (smartparens-global-mode)
-  :init (smartparens-strict-mode))
-#+END_SRC
-** Auto highlight
-#+BEGIN_SRC emacs-lisp
-  (use-package auto-highlight-symbol
-    :ensure t
-    :custom-face (ahs-definition-face ((t (:background "dark orange" :foreground "black"))))
-    (ahs-face ((t (:background "orange" :foreground "black"))))
-    (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
-    :init (global-auto-highlight-symbol-mode))
-#+END_SRC
-** Code format
-#+BEGIN_SRC emacs-lisp
-  (use-package format-all
-    :ensure t
-    :bind ("<f7>" . format-all-buffer)
-    :init (format-all-mode))
-#+END_SRC
-
-** Highlight indent guides
-#+BEGIN_SRC emacs-lisp
-  (use-package highlight-indent-guides
-    :ensure t
-    :custom (highlight-indent-guides-method 'character)
-    (highlight-indent-guides-character ?\┆)
-    (highlight-indent-guides-auto-enabled t)
-    (highlight-indent-guides-delay 0)
-    (highlight-indent-guides-responsive 'stack)
-    :hook (prog-mode . highlight-indent-guides-mode))
-#+END_SRC
-
-** Dumb jump
-#+BEGIN_SRC emacs-lisp
-(use-package dumb-jump
-  :ensure t
-  :bind ("M-g o" . dumb-jump-go-other-window)
-  ("M-g j" . dumb-jump-go)
-  ("M-g x" . dumb-jump-go-prefer-external)
-  ("M-g z" . dumb-jump-go-prefer-external-other-window)
-  :custom (dumb-jump-selector 'helm)
-  :init (dumb-jump-mode))
-#+END_SRC
-
 * Debug
 ** DAP
 #+BEGIN_SRC emacs-lisp
-  (use-package dap-mode
-    :ensure t)
-#+END_SRC
-* Language Server Protocol
-** eglot
-#+BEGIN_SRC emacs-lisp
-(use-package eglot
+(use-package dap-mode
   :ensure t)
 #+END_SRC
 
+* Language Server Protocol
 ** LSP mode
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
-  :commands lsp
-  :custom (lsp-prefer-flymake nil) ;; use flycheck
+  :custom ((lsp-auto-guess-root t)
+           (lsp-file-watch-threshold 2000)
+           (lsp-file-watch-ignored (-concat
+                                    '("\\.asdf" "[/\\\\]\\.elixir_ls$" "[/\\\\]deps$" "[/\\\\]_build$")
+                                    lsp-file-watch-ignored))
+           (lsp-prefer-flymake nil) ;; use flycheck
+           (lsp-auto-configure t)
+           (lsp-rust-server 'rust-analyzer)
+           (lsp-keep-workspace-alive nil))
+  :hook (lsp-mode . lsp-enable-which-key-integration)
+  :bind (:map lsp-mode-map
+              ("C-c l r" . lsp-rename)
+              ("C-c l a" . lsp-execute-code-action)
+              ("C-c l t" . lsp-find-type-definition))
   :ensure t)
+
+(setq lsp-rust-server 'rust-analyzer)
+#+END_SRC
+
+** LSP-UI
+#+BEGIN_SRC emacs-lisp
+(use-package lsp-ui
+  :ensure t
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom ((lsp-ui-doc-include-signature t)
+           (lsp-ui-doc-enable nil))
+  :bind (:map lsp-ui-mode-map
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c l i" . lsp-ui-imenu)
+              ("C-c l d" . lsp-ui-doc-show)))
 #+END_SRC
 
 ** Company lsp 
@@ -271,4 +259,68 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 (use-package lsp-treemacs
   :ensure t
   :commands lsp-treemacs-errors-list)
+#+END_SRC
+
+* Utilities
+** Smart parens
+#+BEGIN_SRC emacs-lisp
+(use-package smartparens
+  :ensure t
+  :bind ("C-M-f" . 'sp-forward-sexp)
+  ("C-M-b" . 'sp-backward-sexp)
+  :config (smartparens-global-mode)
+  :init (smartparens-strict-mode))
+#+END_SRC
+
+** Auto highlight
+#+BEGIN_SRC emacs-lisp
+(use-package auto-highlight-symbol
+  :ensure t
+  :custom-face (ahs-definition-face ((t (:background "dark orange" :foreground "black"))))
+  (ahs-face ((t (:background "orange" :foreground "black"))))
+  (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
+  :hook (prog-mode . auto-highlight-symbol-mode))
+#+END_SRC
+
+** Code format
+#+BEGIN_SRC emacs-lisp
+(use-package format-all
+  :ensure t
+  :bind ("<f7>" . format-all-buffer)
+  :init (format-all-mode))
+#+END_SRC
+
+** Highlight indent guides
+#+BEGIN_SRC emacs-lisp
+(use-package highlight-indent-guides
+  :ensure t
+  :custom (highlight-indent-guides-method 'character)
+  (highlight-indent-guides-character ?\┆)
+  (highlight-indent-guides-auto-enabled t)
+  (highlight-indent-guides-delay 0)
+  (highlight-indent-guides-responsive 'stack)
+  :hook (prog-mode . highlight-indent-guides-mode))
+#+END_SRC
+
+** Dumb jump
+#+BEGIN_SRC emacs-lisp
+(use-package dumb-jump
+  :ensure t
+  :bind ("M-g o" . dumb-jump-go-other-window)
+  ("M-g j" . dumb-jump-go)
+  ("M-g x" . dumb-jump-go-prefer-external)
+  ("M-g z" . dumb-jump-go-prefer-external-other-window)
+  :custom (dumb-jump-selector 'helm)
+  :init (dumb-jump-mode))
+#+END_SRC
+
+** Multiple cursors
+#+BEGIN_SRC emacs-lisp
+(use-package multiple-cursors
+  :ensure t
+  :bind (:map prog-mode-map
+              ("C-c c <SPC>" . 'mc/edit-lines)
+              ("C-c c >" . 'mc/mark-next-like-this)
+              ("C-c c <" . 'mc/mark-previous-like-this)
+              ("C-c c ." . 'mc/mark-all-like-this)))
 #+END_SRC

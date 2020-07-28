@@ -3,8 +3,12 @@
 (setq package-enable-at-startup nil)
 
 (setq package-archives '(("org" . "http://orgmode.org/elpa/")
-			 ("gnu" . "http://elpa.gnu.org/packages/")
-			 ("melpa" . "https://melpa.org/packages/")))
+                         ("gnu" . "http://elpa.gnu.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")))
+
+(setq gc-cons-threshold-original gc-cons-threshold)
+(setq gc-cons-threshold 100000000)
+(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold gc-cons-threshold-original)))
 
 (package-initialize)
 
@@ -17,12 +21,16 @@
 (require 'diminish)                ;; if you use :diminish
 (require 'bind-key)                ;; if you use any :bind variant
 
+;; (load-file "~/.emacs.d/rust-analyzer.el")
+;; (require 'rust-analyzer)
+
 (org-babel-load-file (expand-file-name (concat user-emacs-directory "config.org")))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(anzu-replace-to-string-separator " => ")
  '(comment-tags-case-sensitive t t)
  '(comment-tags-comment-start-only t t)
  '(comment-tags-lighter nil t)
@@ -40,35 +48,42 @@
  '(company-lsp-async t)
  '(company-minimum-prefix-length 2)
  '(company-require-match nil)
+ '(company-tooltip-align-annotation t t)
  '(company-tooltip-align-annotations t)
  '(company-tooltip-limit 12)
  '(custom-safe-themes
    (quote
-    ("f951343d4bbe5a90dba0f058de8317ca58a6822faa65d8463b0e751a07ec887c" "728eda145ad16686d4bbb8e50d540563573592013b10c3e2defc493f390f7d83" "2d1fe7c9007a5b76cea4395b0fc664d0c1cfd34bb4f1860300347cdad67fb2f9" "34c99997eaa73d64b1aaa95caca9f0d64229871c200c5254526d0062f8074693" default)))
+    ("9f9450547564423166a7d2de976c9ca712293170415ec78ed98d198748b44a90" "bb28b083fe1c61848c10c049be076afc572ea9bee6e1f8dc2631c5ee4f7388c8" "c1c459af570241993823db87096bc775506c378aa02c9c6cd9ccaa8247056b96" "6a0d7f41968908e25b2f56fa7b4d188e3fc9a158c39ef680b349dccffc42d1c8" "c499bf4e774b34e784ef5a104347b81c56220416d56d5fd3fd85df8704260aad" "7e5d400035eea68343be6830f3de7b8ce5e75f7ac7b8337b5df492d023ee8483" "1623aa627fecd5877246f48199b8e2856647c99c6acdab506173f9bb8b0a41ac" "76bfa9318742342233d8b0b42e824130b3a50dcc732866ff8e47366aed69de11" "2f1518e906a8b60fac943d02ad415f1d8b3933a5a7f75e307e6e9a26ef5bf570" "fe94e2e42ccaa9714dd0f83a5aa1efeef819e22c5774115a9984293af609fce7" "3577ee091e1d318c49889574a31175970472f6f182a9789f1a3e9e4513641d86" "6177ecbffb8f37756012c9ee9fd73fc043520836d254397566e37c6204118852" "dde8c620311ea241c0b490af8e6f570fdd3b941d7bc209e55cd87884eb733b0e" "730a87ed3dc2bf318f3ea3626ce21fb054cd3a1471dcd59c81a4071df02cb601" "56911bd75304fdb19619c9cb4c7b0511214d93f18e566e5b954416756a20cc80" "e1ecb0536abec692b5a5e845067d75273fe36f24d01210bf0aa5842f2a7e029f" "e47c0abe03e0484ddadf2ae57d32b0f29f0b2ddfe7ec810bd6d558765d9a6a6c" "c8f959fb1ea32ddfc0f50db85fea2e7d86b72bb4d106803018be1c3566fd6c72" "0fe9f7a04e7a00ad99ecacc875c8ccb4153204e29d3e57e9669691e6ed8340ce" "f2b83b9388b1a57f6286153130ee704243870d40ae9ec931d0a1798a5a916e76" "f951343d4bbe5a90dba0f058de8317ca58a6822faa65d8463b0e751a07ec887c" "728eda145ad16686d4bbb8e50d540563573592013b10c3e2defc493f390f7d83" "2d1fe7c9007a5b76cea4395b0fc664d0c1cfd34bb4f1860300347cdad67fb2f9" "34c99997eaa73d64b1aaa95caca9f0d64229871c200c5254526d0062f8074693" default)))
  '(doom-modeline-bar-width 5)
  '(doom-modeline-buffer-encoding t)
+ '(doom-modeline-buffer-file-state (quote relative-from-project) t)
  '(doom-modeline-buffer-modification-icon t)
  '(doom-modeline-buffer-state-icon t)
  '(doom-modeline-enable-word-count t)
+ '(doom-modeline-env-elixir-executable "iex")
  '(doom-modeline-env-python-executable "ipython")
+ '(doom-modeline-env-rust-executable "rustc")
  '(doom-modeline-env-version t)
  '(doom-modeline-height 1)
  '(doom-modeline-icon t)
+ '(doom-modeline-indent-info t)
  '(doom-modeline-lsp t)
  '(doom-modeline-major-mode-color-icon t)
  '(doom-modeline-major-mode-icon t)
+ '(doom-modeline-project-detection (quote projectile))
  '(doom-themes-enable-bold t)
  '(doom-themes-enable-italic t)
+ '(doom-themes-treemacs-theme "doom-colors")
  '(dumb-jump-selector (quote helm))
  '(eldoc-idle-delay 0.5)
  '(elpy-modules
    (quote
     (elpy-module-company elpy-module-eldoc elpy-module-flymake elpy-module-pyvenv elpy-module-yasnippet elpy-module-django elpy-module-autodoc elpy-module-sane-defaults)))
  '(fancy-battery-show-percentage t)
- '(google-translate-output-destination (quote popup))
- '(google-translate-show-phonetic t)
+ '(google-translate-output-destination (quote popup) t)
+ '(google-translate-show-phonetic t t)
  '(google-translate-translation-directions-alist (quote (("en" . "pt") ("pt" . "en"))) t)
- '(helm-M-x-fuzzy-match t)
+ '(helm-M-x-fuzzy-match t t)
  '(helm-autoresize-max-height 0)
  '(helm-autoresize-min-height 40)
  '(helm-buffers-fuzzy-matching t)
@@ -87,7 +102,24 @@
  '(highlight-indent-guides-delay 0)
  '(highlight-indent-guides-method (quote character))
  '(highlight-indent-guides-responsive (quote stack))
- '(lsp-prefer-flymake nil)
+ '(kaolin-themes-distinct-company-scrollbar t)
+ '(kaolin-themes-hi-line-colored t t)
+ '(kaolin-themes-italic-comments t)
+ '(lsp-auto-configure t)
+ '(lsp-auto-guess-root t)
+ '(lsp-file-watch-ignored
+   (quote
+    ("\\.asdf" "[/\\\\]\\.elixir_ls$" "[/\\\\]deps$" "[/\\\\]_build$" "[/\\\\]\\.git$" "[/\\\\]\\.hg$" "[/\\\\]\\.bzr$" "[/\\\\]_darcs$" "[/\\\\]\\.svn$" "[/\\\\]_FOSSIL_$" "[/\\\\]\\.idea$" "[/\\\\]\\.ensime_cache$" "[/\\\\]\\.eunit$" "[/\\\\]node_modules$" "[/\\\\]\\.fslckout$" "[/\\\\]\\.tox$" "[/\\\\]\\.stack-work$" "[/\\\\]\\.bloop$" "[/\\\\]\\.metals$" "[/\\\\]target$" "[/\\\\]\\.ccls-cache$" "[/\\\\]\\.deps$" "[/\\\\]build-aux$" "[/\\\\]autom4te.cache$" "[/\\\\]\\.reference$")))
+ '(lsp-file-watch-threshold 2000)
+ '(lsp-keep-workspace-alive nil)
+ '(lsp-prefer-flymake nil t)
+ '(lsp-rust-analyzer-display-chaining-hints t t)
+ '(lsp-rust-analyzer-display-parameter-hints t t)
+ '(lsp-rust-analyzer-server-command (quote ("/usr/bin/rust-analyzer")) t)
+ '(lsp-rust-server (quote rust-analyzer) t)
+ '(lsp-ui-doc-enable nil t)
+ '(lsp-ui-doc-include-signature t t)
+ '(lsp-ui-sideline-enable nil t)
  '(mode-line-format (quote ((:eval (list (nyan-create))))))
  '(multi-term-dedicated-close-back-to-open-buffer-p t t)
  '(multi-term-dedicated-select-after-open-p t t)
@@ -108,15 +140,23 @@
  '(org-src-tab-acts-natively nil)
  '(package-selected-packages
    (quote
-    (expand-region poetry docker-compose-mode django-snippets jinja2-mode web-mode emmet-mode python-black dockerfile-mode google-translate dumb-jump org company-auctex wakatime-mode undo-tree latex-pretty-symbols ob-ipython elpy latex-preview-pane pdf-tools comment-tags wakatime lsp-treemacs company-lsp eglot dap-mode helm-spotify-plus multi-term anzu intero haskell-mode highlight-indent-guides ob-rust rust-ob racer cargo rust-mode format-all auto-highlight-symbol swiper-helm smartparens flycheck-inline quick-peek company-prescient flyckeck yasnippet-snippets yasnippet company-quickhelp company-box company elfeed htmlize ox-reveal flyspell-lazy treemacs-magit rainbow-delimiters doom-themes org-bullets use-package)))
+    (kaolin-themes ripgrep treemacs-projectile drag-stuff multiple-cursors treemacs-icons-dired treemacs-icons-dired-mode helm-rg elixir-yasnippets elixir-mode lsp-haskell ox-gfm rainbow-mode expand-region poetry docker-compose-mode django-snippets jinja2-mode web-mode emmet-mode python-black dockerfile-mode google-translate dumb-jump org company-auctex wakatime-mode undo-tree latex-pretty-symbols ob-ipython elpy latex-preview-pane pdf-tools comment-tags wakatime lsp-treemacs company-lsp eglot dap-mode helm-spotify-plus multi-term anzu haskell-mode highlight-indent-guides ob-rust rust-ob racer cargo rust-mode format-all auto-highlight-symbol swiper-helm smartparens flycheck-inline quick-peek company-prescient flyckeck yasnippet-snippets yasnippet company-quickhelp company-box company elfeed htmlize ox-reveal flyspell-lazy treemacs-magit rainbow-delimiters doom-themes org-bullets use-package)))
  '(projectile-completion-system (quote helm))
+ '(projectile-globally-ignored-directories
+   (quote
+    (".elixir_ls"
+     (\, "deps")
+     (\, "_build")
+     (\, "__pycache__")
+     (\, "target")
+     (\, "node_modules"))))
  '(python-check-command "/usr/bin/black")
  '(python-flymake-command (quote ("black")))
  '(python-shell-interpreter "ipython" nil nil "Customized with use-package elpy")
  '(python-shell-interpreter-args "-i" nil nil "Customized with use-package elpy")
- '(racer-cmd "~/.cargo/bin/racer" t)
+ '(racer-cmd "~/.cargo/bin/racer")
  '(racer-rust-src-path
-   "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src" t)
+   "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src")
  '(rmh-elfeed-org-files (quote ("~/.emacs.d/elfeed.org")))
  '(solaire-mode-remap-modeline nil)
  '(url-queue-timeout 30 t)

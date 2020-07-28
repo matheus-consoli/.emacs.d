@@ -1,32 +1,28 @@
 * Helm
 #+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :ensure t
-    :bind
-    ("C-x C-f" . 'helm-find-files)
-    ("C-x C-b" . 'helm-buffers-list)
-    ("C-x b" . 'helm-mini)
-    ("M-x" . 'helm-M-x)
-    ("M-:" . 'helm-eval-expression-with-eldoc)
-    ("C-i" . 'helm-execute-persistent-action) ;; make tab work in terminal
-    ("C-j" . 'helm-list-available-options) ;; switch c-j to list options
-    :custom (helm-autoresize-max-height 80)
-	  (helm-autoresize-min-height 40)
-	  (helm-M-x-fuzzy-match t)
-	  (helm-buffers-fuzzy-matching t)
-	  (helm-recentf-fuzzy-match t)
-	  (helm-semantic-fuzzy-match t)
-	  (helm-imenu-fuzzy-match t)
-	  (helm-split-window-in-side-p nil)
-	  (helm-mode-to-line-cycle-in-source nil)
-	  (helm-ff-search-library-in-sexp t)
-	  (helm-scroll-amount 8)
-	  (helm-echo-input-in-header-line t)
-	  (helm-ff-skip-boring-files t))
-  (helm-mode 1)
-  (require 'helm-config)
-  (helm-autoresize-mode 1)
-
+(use-package helm
+  :ensure t
+  :bind(("C-x C-f" . 'helm-find-files)
+	("C-x C-b" . 'helm-buffers-list)
+	("C-x b" . 'helm-mini)
+	("M-x" . 'helm-M-x)
+	("M-:" . 'helm-eval-expression-with-eldoc)
+	("C-i" . 'helm-execute-persistent-action) ;; make tab work in terminal
+	("C-j" . 'helm-list-available-options)) ;; switch c-j to list options
+  :custom ((helm-autoresize-max-height 80)
+	   (helm-autoresize-min-height 40)
+	   (helm-M-x-fuzzy-match t)
+	   (helm-buffers-fuzzy-matching t)
+	   (helm-recentf-fuzzy-match t)
+	   (helm-semantic-fuzzy-match t)
+	   (helm-imenu-fuzzy-match t)
+	   (helm-split-window-in-side-p nil)
+	   (helm-mode-to-line-cycle-in-source nil)
+	   (helm-ff-search-library-in-sexp t)
+	   (helm-scroll-amount 8)
+	   (helm-echo-input-in-header-line t)
+	   (helm-ff-skip-boring-files t))
+  :config (helm-mode 1))
 #+END_SRC
 
 ** Hide minibuffer
@@ -63,62 +59,66 @@ http://tuhdo.github.io/helm-intro.html
   (multi-term-dedicated-close-back-to-open-buffer-p t)
   (multi-term-dedicated-select-after-open-p t))
 #+END_SRC
+
 * Projectile
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :ensure t
+  :init (projectile-mode +1)
+  :custom ((projectile-completion-system 'helm)
+           (projectile-globally-ignored-directories '(".elixir_ls", "deps", "_build", "__pycache__", "target", "node_modules")))
   :bind ("C-c p" . projectile-command-map))
 #+END_SRC
+
 ** Helm projectile
 #+BEGIN_SRC emacs-lisp
-  (use-package helm-projectile
-    :custom (projectile-completion-system 'helm)
-    :ensure t)
+(use-package helm-projectile
+  :custom (projectile-completion-system 'helm)
+  :ensure t)
 #+END_SRC
 
 * Org
 #+BEGIN_SRC emacs-lisp
 (use-package org
   :ensure t
-  :pin org
-  :custom (org-src-fontify-natively t)
-  (org-src-tab-acts-natively nil)
-  (org-edit-src-content-indentation 0)
-  (org-export-with-smart-quotes t)
-  (org-adapt-indentation nil)
-  (org-src-preserve-indentation t)
-  (org-hide-emphasis-markers t)
-  (org-confirm-babel-evaluate nil)
+  :custom ((org-src-fontify-natively t)
+           (org-src-tab-acts-natively nil)
+           (org-edit-src-content-indentation 0)
+           (org-export-with-smart-quotes t)
+           (org-adapt-indentation nil)
+           (org-src-preserve-indentation t)
+           (org-hide-emphasis-markers t)
+           (org-confirm-babel-evaluate nil))
   :config (plist-put org-format-latex-options :scale 2.0)
   :bind ("C-M-<return>" . org-babel-execute-src-block)
-  :hook (org-mode . org-indent-mode)
-  (org-mode . visual-line-mode))
+  :hook ((org-mode . org-indent-mode)
+	 (org-mode . visual-line-mode)))
 #+END_SRC
 
 ** Org bullets
 #+BEGIN_SRC emacs-lisp
-  (use-package org-bullets
-    :ensure t
-    :custom (org-bullets-bullet-list
-	     '("☣" "☢" "☠"  "⚛" "◉"))
-    :hook (org-mode . org-bullets-mode))
+(use-package org-bullets
+  :ensure t
+  :custom (org-bullets-bullet-list
+           '("☣" "☢" "☠"  "⚛" "◉"))
+  :hook org-mode)
 #+END_SRC
 
 ** Org templates
 *** Elisp template
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'org-structure-template-alist
-               '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+(add-to-list 'org-structure-template-alist
+             '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
 #+END_SRC
 *** Haskell template
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'org-structure-template-alist
-               '("hs" "#+BEGIN_SRC haskell\n?\n#+END_SRC"))
+(add-to-list 'org-structure-template-alist
+             '("hs" "#+BEGIN_SRC haskell\n?\n#+END_SRC"))
 #+END_SRC
 *** Python template
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'org-structure-template-alist
-               '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
+(add-to-list 'org-structure-template-alist
+             '("py" "#+BEGIN_SRC python\n?\n#+END_SRC"))
 #+END_SRC
 *** Latex template
 #+BEGIN_SRC emacs-lisp
@@ -128,8 +128,14 @@ http://tuhdo.github.io/helm-intro.html
 
 *** Rust template
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'org-structure-template-alist
-               '("rs" "#+BEGIN_SRC rust\n?\n#+END_SRC"))
+(add-to-list 'org-structure-template-alist
+             '("rs" "#+BEGIN_SRC rust\n?\n#+END_SRC"))
+#+END_SRC
+
+*** Graphviz template
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'org-structure-template-alist
+             '("dot" "#+BEGIN_SRC dot :cmdline -Kdot -Tpng  :file ? \ndigraph {\n?\n}\n#+END_SRC"))
 #+END_SRC
 
 ** Org export
@@ -139,9 +145,31 @@ http://tuhdo.github.io/helm-intro.html
   :ensure t
   :init (use-package htmlize
           :ensure t)
-  :custom (org-reveal-root "file:///home/consoli/tmp/reveal.js/")
+  :custom (org-reveal-root "file:///home/permeets/tmp/reveal.js/")
   (org-reveal-mathjax t))
 #+END_SRC
+
+*** Org export to Github Markdown
+#+BEGIN_SRC emacs-lisp
+(use-package ox-gfm
+  :ensure t)
+#+END_SRC
+
+** Org noter
+#+BEGIN_SRC emacs-lisp
+(use-package org-noter
+  :ensure t)
+#+END_SRC
+
+** Org babel
+#+BEGIN_SRC emacs-lisp
+(require 'ox-latex)
+(org-babel-do-load-languages 'org-babel-load-languages
+                             '((python . t)
+                               (latex . t)
+                               (dot . t)))
+#+END_SRC
+
 * Avy mode
 ** Avy goto char
 #+BEGIN_SRC emacs-lisp
@@ -166,11 +194,11 @@ http://tuhdo.github.io/helm-intro.html
 
 * Which key
 #+BEGIN_SRC emacs-lisp
-  (use-package which-key
-    :ensure t
-    :diminish
-    :custom (which-key-popup-type 'minibuffer)
-    :config (which-key-mode))
+(use-package which-key
+  :ensure t
+  :diminish
+  :custom (which-key-popup-type 'minibuffer)
+  :config (which-key-mode))
 #+END_SRC
 
 * Spell
@@ -209,62 +237,57 @@ https://blog.binchen.org/posts/what-s-the-best-spell-check-set-up-in-emacs.html
 
 ** Elfeed org
 #+BEGIN_SRC emacs-lisp
-  (use-package elfeed-org
-    :ensure t
-    :after elfeed
-    :custom (rmh-elfeed-org-files
-             (list (concat user-emacs-directory "elfeed.org")))
-    :config (elfeed-org))
+(use-package elfeed-org
+  :ensure t
+  :after elfeed
+  :custom (rmh-elfeed-org-files
+           (list (concat user-emacs-directory "elfeed.org")))
+  :config (elfeed-org))
 #+END_SRC
 
 ** Elfeed Goodies 
 #+BEGIN_SRC emacs-lisp
-  (use-package elfeed-goodies
-    :ensure t
-    :after elfeed
-    :config (elfeed-goodies/setup))
+(use-package elfeed-goodies
+  :ensure t
+  :after elfeed
+  :config (elfeed-goodies/setup))
 #+END_SRC
 
 ** Elfeed functions
 http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
 #+BEGIN_SRC emacs-lisp
-  (defun bjm/elfeed-load-db-and-open ()
-    "Wrapper to load the elfeed db from disk before opening"
-    (interactive)
-    (elfeed-db-load)
-    (elfeed)
-    (elfeed-search-update--force))
+(defun bjm/elfeed-load-db-and-open ()
+  "Wrapper to load the elfeed db from disk before opening"
+  (interactive)
+  (elfeed-db-load)
+  (elfeed)
+  (elfeed-search-update--force))
 
-  ;;write to disk when quiting
-  (defun bjm/elfeed-save-db-and-bury ()
-    "Wrapper to save the elfeed db to disk before burying buffer"
-    (interactive)
-    (elfeed-db-save)
-    (quit-window))
+;;write to disk when quiting
+(defun bjm/elfeed-save-db-and-bury ()
+  "Wrapper to save the elfeed db to disk before burying buffer"
+  (interactive)
+  (elfeed-db-save)
+  (quit-window))
 
-  (defun zmsk/elfeed-mark-all-as-read ()
-    (interactive)
-    (mark-whole-buffer)
-    (elfeed-search-untag-all-unread))
+(defun zmsk/elfeed-mark-all-as-read ()
+  (interactive)
+  (mark-whole-buffer)
+  (elfeed-search-untag-all-unread))
 #+END_SRC
 * Anzu
 #+BEGIN_SRC emacs-lisp
 (use-package anzu
   :ensure t
   :config
-  (global-anzu-mode 1)
+  (global-anzu-mode +1)
   (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
   (global-set-key [remap query-replace] 'anzu-query-replace)
+  :custom ((anzu-replace-to-string-separator " => "))
   :bind ("C-S-r" . 'anzu-query-replace-at-cursor)
   ("C-r" . 'anzu-query-replace-regexp))
 #+END_SRC
-* Wakatime
-#+BEGIN_SRC emacs-lisp
-(use-package wakatime-mode
-  :ensure t
-  :config (global-wakatime-mode)
-  (require-init 'wakatime-config))
-#+END_SRC
+
 * PDF
 ** PDF tools
 #+BEGIN_SRC emacs-lisp
@@ -272,7 +295,19 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
   :ensure t
   :config (pdf-tools-install))
 #+END_SRC
-
+** Org pdftools
+#+BEGIN_SRC emacs-lisp
+(use-package org-pdftools
+  :ensure t
+  :hook (org-load . org-pdftools-setup-link))
+#+END_SRC
+** Org noter pdftools
+#+BEGIN_SRC emacs-lisp
+(use-package org-noter-pdftools
+  :ensure t
+  :config (with-eval-after-load 'pdf-annot
+            (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
+#+END_SRC
 * Latex
 ** Latex preview
 #+BEGIN_SRC emacs-lisp
@@ -312,6 +347,13 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
   ("C-c C--" . 'er/contract-region)
   :config (pending-delete-mode 1))
 #+END_SRC
+* Moving lines around
+#+BEGIN_SRC emacs-lisp
+(use-package drag-stuff
+  :ensure t
+  :init (turn-on-drag-stuff-mode)
+  :config (drag-stuff-define-keys))
+#+END_SRC
 * Utilities
 ** Quick edit configuration files
 #+BEGIN_SRC emacs-lisp
@@ -321,6 +363,7 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
   (find-file (concat user-emacs-directory "config.org")))
 (global-set-key (kbd "S-<f1>") 'consoli/edit-config)
 #+END_SRC
+
 ** Create a new scratch buffer
 #+BEGIN_SRC emacs-lisp
 (defun consoli/create-scratch-buffer ()
@@ -330,6 +373,7 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
   (lisp-interaction-mode))
 (global-set-key (kbd "<C-f12>") 'consoli/create-scratch-buffer)
 #+END_SRC
+
 ** Configure backup files
 #+BEGIN_SRC emacs-lisp
 (defconst consoli/backup_dir
@@ -347,15 +391,18 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
       kept-old-versions 2
       version-control t)
 #+END_SRC
+
 ** No auto-save files
 #+BEGIN_SRC emacs-lisp
 (setq auto-save-default nil)
 #+END_SRC
+
 ** Increase/Decrease font size
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-+") #'text-scale-increase)
 (global-set-key (kbd "C--") #'text-scale-decrease)
 #+END_SRC
+
 ** Better scroll
 #+BEGIN_SRC emacs-lisp
 (setq scroll-conservatively 9999
@@ -404,9 +451,23 @@ https://superuser.com/a/1419521
 #+END_SRC
 
 ** Whitespaces
+*** Kill whitespaces
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "S-<f10>") 'whitespace-cleanup)
+#+END_SRC
+
+*** Show whitespaces
 #+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "<f10>") 'whitespace-mode)
-(global-set-key (kbd "S-<f10>") 'whitespace-cleanup)
+#+END_SRC
+
+*** Braille whitespaces
+#+BEGIN_SRC emacs-lisp
+(setq whitespace-style '(space-mark))
+(setq whitespace-display-mappings '((space-mark 32 [183] [46])))
+(setq whitespace-style '(face spaces space-mark))
+
+(add-hook 'prog-mode 'whitespace-mode)
 #+END_SRC
 
 ** Smart new line
@@ -499,6 +560,7 @@ https://superuser.com/a/1419521
   :ensure t
   :init (global-undo-tree-mode))
 #+END_SRC
+
 ** Translate
 #+BEGIN_SRC emacs-lisp
 (use-package google-translate
@@ -510,6 +572,7 @@ https://superuser.com/a/1419521
   (google-translate-output-destination 'popup)
   (google-translate-show-phonetic t))
 #+END_SRC
+
 ** Smart go to beginning
 #+BEGIN_SRC emacs-lisp
 (defun smarter-beginning-of-line (arg)

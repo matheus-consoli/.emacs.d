@@ -66,3 +66,5 @@ transient/
 
 .lsp-session-v1
 elpy
+
+.dap-breakpoints
