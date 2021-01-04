@@ -28,32 +28,148 @@
 #+BEGIN_SRC emacs-lisp
 (use-package kaolin-themes
   :ensure t
-  :config (kaolin-treemacs-theme)
-  :custom (
-          ;; enable italic style in comments
-          (kaolin-themes-italic-comments t)
-          ;; display colered hi-line instead of monochrome
-          (kaolin-themes-hi-line-colored t)
-          ;; distinct colors for company popup scrollbar
-          (kaolin-themes-distinct-company-scrollbar t)))
+  :config (kaolin-treemacs-theme))
 #+END_SRC
 
 ** Load theme
 #+BEGIN_SRC emacs-lisp
 (load-theme 'kaolin-galaxy
             :no-confirm)
+(setq
+ ;; distinct background for fringe and line numbers
+ kaolin-themes-distinct-fringe t
+ ;; enable italic style in comments
+ kaolin-themes-italic-comments t
+ ;; display colered hi-line instead of monochrome
+ kaolin-themes-hi-line-colored t
+ ;; distinct colors for company popup scrollbar
+ kaolin-themes-distinct-company-scrollbar t
+ ;; modeline border
+ kaolin-themes-modeline-border t
+ ;; distinct #+TITLE, ...
+ kaolin-themes-distinct-metakeys t
+ ;; distinct colors for company popup scrollbar
+ kaolin-themes-distinct-company-scrollbar t)
 #+END_SRC
 * Font & icons
+** test
+   #+begin_src emacs-lisp
+;; (use-package composite
+;;   :defer t
+;;   :init
+;;   (defvar composition-ligature-table (make-char-table nil))
+;;   :hook
+;;   (((prog-mode conf-mode nxml-mode markdown-mode help-mode)
+;;     . (lambda () (setq-local composition-function-table composition-ligature-table))))
+;;   :config
+;;   ;; support ligatures, some toned down to prevent hang
+;;   (when (version<= "27.0" emacs-version)
+;;     (let ((alist
+;;            '((33 . ".\\(?:\\(==\\|[!=]\\)[!=]?\\)")
+;;              (35 . ".\\(?:\\(###?\\|_(\\|[(:=?[_{]\\)[#(:=?[_{]?\\)")
+;;              (36 . ".\\(?:\\(>\\)>?\\)")
+;;              (37 . ".\\(?:\\(%\\)%?\\)")
+;;              (38 . ".\\(?:\\(&\\)&?\\)")
+;;              (42 . ".\\(?:\\(\\*\\*\\|[*>]\\)[*>]?\\)")
+;;              ;; (42 . ".\\(?:\\(\\*\\*\\|[*/>]\\).?\\)")
+;;              (43 . ".\\(?:\\([>]\\)>?\\)")
+;;              ;; (43 . ".\\(?:\\(\\+\\+\\|[+>]\\).?\\)")
+;;              (45 . ".\\(?:\\(-[->]\\|<<\\|>>\\|[-<>|~]\\)[-<>|~]?\\)")
+;;              ;; (46 . ".\\(?:\\(\\.[.<]\\|[-.=]\\)[-.<=]?\\)")
+;;              (46 . ".\\(?:\\(\\.<\\|[-=]\\)[-<=]?\\)")
+;;              (47 . ".\\(?:\\(//\\|==\\|[=>]\\)[/=>]?\\)")
+;;              ;; (47 . ".\\(?:\\(//\\|==\\|[*/=>]\\).?\\)")
+;;              (48 . ".\\(?:\\(x[a-fA-F0-9]\\).?\\)")
+;;              (58 . ".\\(?:\\(::\\|[:<=>]\\)[:<=>]?\\)")
+;;              (59 . ".\\(?:\\(;\\);?\\)")
+;;              (60 . ".\\(?:\\(!--\\|\\$>\\|\\*>\\|\\+>\\|-[-<>|]\\|/>\\|<[-<=]\\|=[<>|]\\|==>?\\||>\\||||?\\|~[>~]\\|[$*+/:<=>|~-]\\)[$*+/:<=>|~-]?\\)")
+;;              (61 . ".\\(?:\\(!=\\|/=\\|:=\\|<<\\|=[=>]\\|>>\\|[=>]\\)[=<>]?\\)")
+;;              (62 . ".\\(?:\\(->\\|=>\\|>[-=>]\\|[-:=>]\\)[-:=>]?\\)")
+;;              (63 . ".\\(?:\\([.:=?]\\)[.:=?]?\\)")
+;;              (91 . ".\\(?:\\(|\\)[]|]?\\)")
+;;              ;; (92 . ".\\(?:\\([\\n]\\)[\\]?\\)")
+;;              (94 . ".\\(?:\\(=\\)=?\\)")
+;;              (95 . ".\\(?:\\(|_\\|[_]\\)_?\\)")
+;;              (119 . ".\\(?:\\(ww\\)w?\\)")
+;;              (123 . ".\\(?:\\(|\\)[|}]?\\)")
+;;              (124 . ".\\(?:\\(->\\|=>\\||[-=>]\\||||*>\\|[]=>|}-]\\).?\\)")
+;;              (126 . ".\\(?:\\(~>\\|[-=>@~]\\)[-=>@~]?\\)"))))
+;;       (dolist (char-regexp alist)
+;;         (set-char-table-range composition-ligature-table (car char-regexp)
+;;                               `([,(cdr char-regexp) 0 font-shape-gstring]))))
+;;     (set-char-table-parent composition-ligature-table composition-function-table))
+;;   )
+   #+end_src
 ** Set font
 #+BEGIN_SRC emacs-lisp
-;; https://www.emacswiki.org/emacs/FacesPerBuffer#toc3
-(set-default-font "Jetbrains Mono 11")
+(set-face-attribute 'default nil :family "Cascadia Code" :height 110)
+(auto-composition-mode t)
 
-;; switch to CaskaydiaCove when in prog-mode
-(add-hook 'prog-mode (lambda ()
-                       (interactive)
-                       (setq buffer-face-mode-face '(:family "CaskaydiaCove Nerd Font Mono" :height 110))))
+;; https://github.com/luksamuk/emacs-org-dotfiles#fonts
+(defun my-adjoin-to-list-or-symbol (element list-or-symbol)
+  (let ((list (if (not (listp list-or-symbol))
+                  (list list-or-symbol)
+                list-or-symbol)))
+    (require 'cl-lib)
+    (cl-adjoin element list)))
+;; Before, it was an (eval-after-load "org"
+(add-hook 'org-mode-hook
+          (lambda ()
+            (mapc (lambda (face)
+                    (set-face-attribute
+                     face nil
+                     :inherit
+                     (my-adjoin-to-list-or-symbol
+                      'fixed-pitch
+                      (face-attribute face :inherit))))
+             (list 'org-code 'org-block 'org-table))))
 #+END_SRC
+** teste
+   #+begin_src emacs-lisp
+(when (version<= "27.0" emacs-version)
+  (defvar composition-ligature-table (make-char-table nil))
+  (let ((alist
+         '((33 . ".\\(?:\\(==\\|[!=]\\)[!=]?\\)")
+           (35 . ".\\(?:\\(###?\\|_(\\|[(:=?[_{]\\)[#(:=?[_{]?\\)")
+           (36 . ".\\(?:\\(>\\)>?\\)")
+           (37 . ".\\(?:\\(%\\)%?\\)")
+           (38 . ".\\(?:\\(&\\)&?\\)")
+           (42 . ".\\(?:\\(\\*\\*\\|[*>]\\)[*>]?\\)")
+           ;; (42 . ".\\(?:\\(\\*\\*\\|[*/>]\\).?\\)")
+           (43 . ".\\(?:\\([>]\\)>?\\)")
+           ;; (43 . ".\\(?:\\(\\+\\+\\|[+>]\\).?\\)")
+           (45 . ".\\(?:\\(-[->]\\|<<\\|>>\\|[-<>|~]\\)[-<>|~]?\\)")
+           ;; (46 . ".\\(?:\\(\\.[.<]\\|[-.=]\\)[-.<=]?\\)")
+           (46 . ".\\(?:\\(\\.<\\|[-=]\\)[-<=]?\\)")
+           (47 . ".\\(?:\\(//\\|==\\|[=>]\\)[/=>]?\\)")
+           ;; (47 . ".\\(?:\\(//\\|==\\|[*/=>]\\).?\\)")
+           (48 . ".\\(?:\\(x[a-fA-F0-9]\\).?\\)")
+           (58 . ".\\(?:\\(::\\|[:<=>]\\)[:<=>]?\\)")
+           (59 . ".\\(?:\\(;\\);?\\)")
+           (60 . ".\\(?:\\(!--\\|\\$>\\|\\*>\\|\\+>\\|-[-<>|]\\|/>\\|<[-<=]\\|=[<>|]\\|==>?\\||>\\||||?\\|~[>~]\\|[$*+/:<=>|~-]\\)[$*+/:<=>|~-]?\\)")
+           (61 . ".\\(?:\\(!=\\|/=\\|:=\\|<<\\|=[=>]\\|>>\\|[=>]\\)[=<>]?\\)")
+           (62 . ".\\(?:\\(->\\|=>\\|>[-=>]\\|[-:=>]\\)[-:=>]?\\)")
+           (63 . ".\\(?:\\([.:=?]\\)[.:=?]?\\)")
+           (91 . ".\\(?:\\(|\\)[]|]?\\)")
+           ;; (92 . ".\\(?:\\([\\n]\\)[\\]?\\)")
+           (94 . ".\\(?:\\(=\\)=?\\)")
+           (95 . ".\\(?:\\(|_\\|[_]\\)_?\\)")
+           (119 . ".\\(?:\\(ww\\)w?\\)")
+           (123 . ".\\(?:\\(|\\)[|}]?\\)")
+           (124 . ".\\(?:\\(->\\|=>\\||[-=>]\\||||*>\\|[]=>|}-]\\).?\\)")
+           (126 . ".\\(?:\\(~>\\|[-=>@~]\\)[-=>@~]?\\)"))))
+    (dolist (char-regexp alist)
+      (set-char-table-range composition-ligature-table (car char-regexp)
+                            `([,(cdr char-regexp) 0 font-shape-gstring]))))
+  (set-char-table-parent composition-ligature-table composition-function-table)
+  (add-hook 'prog-mode-hook '(lambda () (setq-local composition-function-table composition-ligature-table))))
+   #+end_src
+
+** Italic comments
+#+begin_src emacs-lisp
+(custom-set-faces
+ '(font-lock-comment-face ((t (:slant italic)))))
+#+end_src
 
 ** All the icons
 #+BEGIN_SRC emacs-lisp
@@ -66,7 +182,6 @@
 (when window-system
   (add-hook 'prog-mode-hook 'prettify-symbols-mode))
 #+END_SRC
-
 * Layout
 ** No scroll, menu and tool bar 
 #+BEGIN_SRC emacs-lisp

@@ -10,13 +10,8 @@
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-haskell
   :ensure t
-  :hook (haskell-mode-hook #'lsp)
-  :custom (lsp-haskell-process-path-hie "hie-wrapper"))
+  :config
+  (setq lsp-haskell-process-path-hie "ghcide")
+  (setq lsp-haskell-process-args-hie '()))
 #+END_SRC
 
-* Intero
-#+BEGIN_SRC emacs-lisp
-;; (use-package intero
-;;   :hook (haskell-mode . intero-mode)
-;;   :ensure t)
-#+END_SRC

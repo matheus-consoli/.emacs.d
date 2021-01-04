@@ -12,21 +12,21 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
     (interactive)
     (company-abort)
     (call-interactively 'company-yasnippet))
-  :custom (company-tooltip-align-annotations t)
-  (company-tooltip-limit 12)
-  (company-idle-delay 0)
-  (company-echo-delay (if (display-graphic-p) nil 0))
-  (company-minimum-prefix-length 2)
-  (company-require-match nil)
-  (company-dabbrev-ignore-case nil)
-  (company-dabbrev-downcase nil))
+  :custom ((company-tooltip-align-annotations t)
+           (company-tooltip-limit 12)
+           (company-idle-delay 0.0)
+           (company-echo-delay (if (display-graphic-p) nil 0))
+           (company-minimum-prefix-length 1)
+           (company-require-match nil)
+           (company-dabbrev-ignore-case nil)
+           (company-dabbrev-downcase nil)))
 #+END_SRC
 
 *** Company Prescient
 #+BEGIN_SRC emacs-lisp
-  (use-package company-prescient
-    :ensure t
-    :init (company-prescient-mode))
+;; (use-package company-prescient
+;;   :ensure t
+;;   :init (company-prescient-mode))
 #+END_SRC
 
 *** Company box
@@ -124,13 +124,13 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 
 *** Company Quick Help
 #+BEGIN_SRC emacs-lisp
-  (use-package company-quickhelp
-        :defines company-quickhelp-delay
-        :bind (:map company-active-map
-               ([remap company-show-doc-buffer] . company-quickhelp-manual-begin))
-        :init
-        (setq company-quickhelp-delay 0.5)
-        (company-quickhelp-mode 1))
+(use-package company-quickhelp
+  :defines company-quickhelp-delay
+  :bind (:map company-active-map
+              ([remap company-show-doc-buffer] . company-quickhelp-manual-begin))
+  :init
+  (setq company-quickhelp-delay 0.5)
+  (company-quickhelp-mode 1))
 #+END_SRC
 
 ** Yasnippets
@@ -162,10 +162,7 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
                 (company-complete-common)
               (indent-for-tab-command)))))
 
-    (global-set-key [tab] 'tab-indent-or-complete)
-
-    )
-  )
+    (global-set-key [tab] 'tab-indent-or-complete)))
 #+END_SRC
 
 *** Yasnippets snippets
@@ -183,53 +180,67 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 
 *** Quick Peek
 #+BEGIN_SRC emacs-lisp
-  (use-package quick-peek
-    :ensure t)
+(use-package quick-peek
+  :ensure t)
 #+END_SRC
 
 *** Flycheck inline
 #+BEGIN_SRC emacs-lisp
-  (use-package flycheck-inline
-    :ensure t
-    :hook (flycheck-mode . turn-on-flycheck-inline)
-    :config (setq flycheck-inline-display-function
-        (lambda (msg pos)
-          (let* ((ov (quick-peek-overlay-ensure-at pos))
-                 (contents (quick-peek-overlay-contents ov)))
-            (setf (quick-peek-overlay-contents ov)
-                  (concat contents (when contents "\n") msg))
-            (quick-peek-update ov)))
-        flycheck-inline-clear-function #'quick-peek-hide))
+(use-package flycheck-inline
+  :ensure t)
+(with-eval-after-load 'flycheck
+  (add-hook 'flycheck-mode-hook #'flycheck-inline-mode))
+
+(setq flycheck-inline-display-function
+      (lambda (msg pos _unused)
+        (let* ((ov (quick-peek-overlay-ensure-at pos))
+               (contents (quick-peek-overlay-contents ov)))
+          (setf (quick-peek-overlay-contents ov)
+                (concat contents (when contents "\n") msg))
+          (quick-peek-update ov)))
+      flycheck-inline-clear-function #'quick-peek-hide)
 #+END_SRC
 
 * Debug
 ** DAP
 #+BEGIN_SRC emacs-lisp
 (use-package dap-mode
-  :ensure t)
+  :ensure t
+  :config
+  (require 'dap-mode)
+  (require 'dap-python))
 #+END_SRC
 
 * Language Server Protocol
 ** LSP mode
 #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
-  :custom ((lsp-auto-guess-root t)
+  :custom (;; (lsp-auto-guess-root t)
+           (lsp-eldoc-render-all nil)
            (lsp-file-watch-threshold 2000)
-           (lsp-file-watch-ignored (-concat
-                                    '("\\.asdf" "[/\\\\]\\.elixir_ls$" "[/\\\\]deps$" "[/\\\\]_build$")
-                                    lsp-file-watch-ignored))
+           (lsp-enable-indentation t)
+           (lsp-semantic-highlighting t)
+           (lsp-signature-auto-activate nil)
+           (lsp-signature-render-documentation t)
+           (lsp-enable-text-document-color t)
            (lsp-prefer-flymake nil) ;; use flycheck
            (lsp-auto-configure t)
+           (lsp-enable-on-type-formatting nil)
+           (lsp-enable-snippet t)
            (lsp-rust-server 'rust-analyzer)
-           (lsp-keep-workspace-alive nil))
-  :hook (lsp-mode . lsp-enable-which-key-integration)
+           (lsp-keep-workspace-alive nil)
+           (lsp-modeline-code-actions-mode t)
+           (lsp-modeline-diagnostics-scope  :project)
+           (lsp-keymap-prefix "C-c l"))
+  :hook (lsp-mode . (lambda ()
+                      (let ((lsp-keymap-prefix "C-c l"))
+                        (lsp-enable-which-key-integration))))
   :bind (:map lsp-mode-map
               ("C-c l r" . lsp-rename)
               ("C-c l a" . lsp-execute-code-action)
               ("C-c l t" . lsp-find-type-definition))
+  :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
   :ensure t)
-
-(setq lsp-rust-server 'rust-analyzer)
 #+END_SRC
 
 ** LSP-UI
@@ -238,20 +249,13 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   :ensure t
   :hook (lsp-mode . lsp-ui-mode)
   :custom ((lsp-ui-doc-include-signature t)
-           (lsp-ui-doc-enable nil))
+           (lsp-ui-doc-enable t)
+           (lsp-ui-doc-delay 5))
   :bind (:map lsp-ui-mode-map
               ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
               ([remap xref-find-references] . lsp-ui-peek-find-references)
               ("C-c l i" . lsp-ui-imenu)
               ("C-c l d" . lsp-ui-doc-show)))
-#+END_SRC
-
-** Company lsp 
-#+BEGIN_SRC emacs-lisp
-(use-package company-lsp
-  :ensure t
-  :config (push 'company-lsp company-backends)
-  :custom (company-lsp-async t))
 #+END_SRC
 
 ** Treemacs compatibility
@@ -268,8 +272,10 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   :ensure t
   :bind ("C-M-f" . 'sp-forward-sexp)
   ("C-M-b" . 'sp-backward-sexp)
-  :config (smartparens-global-mode)
-  :init (smartparens-strict-mode))
+  :config (smartparens-global-mode))
+
+(add-hook 'prog-mode 'turn-on-smartparens-strict-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 #+END_SRC
 
 ** Auto highlight
@@ -302,18 +308,6 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   :hook (prog-mode . highlight-indent-guides-mode))
 #+END_SRC
 
-** Dumb jump
-#+BEGIN_SRC emacs-lisp
-(use-package dumb-jump
-  :ensure t
-  :bind ("M-g o" . dumb-jump-go-other-window)
-  ("M-g j" . dumb-jump-go)
-  ("M-g x" . dumb-jump-go-prefer-external)
-  ("M-g z" . dumb-jump-go-prefer-external-other-window)
-  :custom (dumb-jump-selector 'helm)
-  :init (dumb-jump-mode))
-#+END_SRC
-
 ** Multiple cursors
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
@@ -324,3 +318,14 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
               ("C-c c <" . 'mc/mark-previous-like-this)
               ("C-c c ." . 'mc/mark-all-like-this)))
 #+END_SRC
+
+** Markdown
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+#+end_src

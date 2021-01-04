@@ -2,7 +2,8 @@
 #+BEGIN_SRC emacs-lisp
 (use-package rust-mode
   :ensure t
-  :hook (rust-mode . lsp)
+  :hook ((rust-mode . lsp)
+         (rust-mode . yas-minor-mode))
   :bind (:map rust-mode-map
               ("C-c l x" . lsp-rust-analyzer-expand-macro)
               ("C-c l j" . lsp-rust-analyzer-join-lines))
@@ -16,26 +17,13 @@
            ;; sideline notes doesnt interact well with inlay hints
            ;; (lsp-ui-sideline-enable nil)
            ))
-
-(add-hook 'rust-mode 'yas-minor-mode)
 #+END_SRC
 
 * Cargo
 #+BEGIN_SRC emacs-lisp
-(use-package cargo
-  :hook (rust-mode . cargo-minor-mode)
-  :ensure t)
-#+END_SRC
-
-* Racer
-#+BEGIN_SRC emacs-lisp
-;; (use-package racer
-;;   :ensure t
-;;   :hook (rust-mode . racer-mode)
-;;   (racer-mode . eldoc-mode)
-;;   :custom (racer-cmd "~/.cargo/bin/racer")
-;;   (eldoc-idle-delay 0.5)
-;;   (racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
+;; (use-package cargo
+;;   :hook (rust-mode . cargo-minor-mode)
+;;   :ensure t)
 #+END_SRC
 
 * Rust org babel

@@ -1,11 +1,15 @@
 * Load config
+** Remove cl-deprecaded-warning
+#+begin_src emacs-lisp
+(setq byte-compile-warnings '(cl-functions))
+#+end_src
+
 ** defun load-config
 #+BEGIN_SRC emacs-lisp
 (defun load-config (file)
   (org-babel-load-file (expand-file-name
                         (concat user-emacs-directory file))))
 #+END_SRC
-
 ** General
 #+BEGIN_SRC emacs-lisp
 (load-config "general.org")
@@ -28,7 +32,7 @@
 
 *** Haskell
 #+BEGIN_SRC emacs-lisp
-(load-config "haskell.org")
+;; (load-config "haskell.org")
 #+END_SRC
 
 *** Elixir
