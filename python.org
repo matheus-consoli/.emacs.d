@@ -1,7 +1,27 @@
+* python lsp
+   #+begin_src emacs-lisp
+(use-package lsp-python-ms
+  :ensure t
+  :init (setq lsp-python-ms-auto-install-server t)
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-python-ms)
+                          (lsp))))
+
+
+;; (use-package lsp-python-ms
+;;   :ensure t
+;;   :hook (python-mode . (lambda ()
+;;                          (require 'lsp-python-ms)
+;;                          (lsp)))
+;;   :init
+;;   (setq lsp-python-ms-executable (executable-find "python-language-server"))
+   #+end_src
 * Elpy
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
   :ensure t
+  :hook ((python-mode . lsp)
+         (python-mode . yas-minor-mode))
   :custom (python-shell-interpreter "ipython")
   (python-shell-interpreter-args "-i")
   :init (progn
@@ -25,3 +45,4 @@
 (org-babel-do-load-languages 'org-babel-load-languages
                              '((python . t)))
 #+END_SRC
+

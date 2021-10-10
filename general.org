@@ -1,3 +1,11 @@
+* Auto package update
+automatically updates emacs packages
+https://tsdh.org/posts/2021-06-06-update-all-emacs-packages-from-the-command-line.html
+#+begin_src emacs-lisp
+(use-package auto-package-update
+  :config (setq auto-package-update-delete-old-versions t))
+#+end_src
+now we can run it from CLI `$ emacs -f auto-package-update-now`
 * Helm
 #+BEGIN_SRC emacs-lisp
 (use-package helm
@@ -81,10 +89,25 @@ http://tuhdo.github.io/helm-intro.html
 #+BEGIN_SRC emacs-lisp
 (use-package org
   :ensure org-plus-contrib
+  :bind ("C-TAB" . org-cycle)
   :config (plist-put org-format-latex-options :scale 2.0))
 
 (setq-default org-confirm-babel-evaluate nil)
+
+(setq org-startup-indented t
+      org-ellipsis "  "
+      org-pretty-entities t
+      org-hide-emphasis-markers t
+      org-fontify-whole-heading-line t
+      org-fontify-done-headline t
+      org-fontify-quote-and-verse-blocks t)
 #+END_SRC
+
+** Org mode as the *scratch* buffer
+#+begin_src emacs-lisp
+(setq initial-major-mode 'org-mode)
+#+end_src
+
 ** Visual stuff
 #+begin_src emacs-lisp
 (add-hook 'org-mode-hook #'toggle-word-wrap)
@@ -112,6 +135,8 @@ http://tuhdo.github.io/helm-intro.html
 *** Different font size for headlines
 https://zzamboni.org/post/beautifying-org-mode-in-emacs/
 #+begin_src emacs-lisp
+(when window-system
+  (progn
 (let* ((variable-tuple
         (cond ((x-list-fonts "Cascadia Mono")         '(:font "Cascadia Mono"))
               ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
@@ -131,7 +156,7 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
    `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
    `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
    `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.75))))
-   `(org-document-title ((t (,@headline ,@variable-tuple :height 2.0 :underline nil))))))
+   `(org-document-title ((t (,@headline ,@variable-tuple :height 2.0 :underline nil))))))))
 #+end_src
 
 *** Pretty checkboxes
@@ -221,19 +246,9 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
 #+END_SRC
 
 * Avy mode
-** Avy goto char
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c C-j C-;") 'avy-goto-char)
-#+END_SRC
-
-** Avy goto char 2
-#+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-:") 'avy-goto-char-2)
-#+END_SRC
-
 ** Avy goto char timer 
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-ç") 'avy-goto-char-timer)
+(global-set-key (kbd "C-:") 'avy-goto-char-timer)
 #+END_SRC
 * Git
 ** Magit
@@ -341,9 +356,7 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
 * PDF
 ** PDF tools
 #+BEGIN_SRC emacs-lisp
-(use-package pdf-tools
-  :ensure t
-  :config (pdf-tools-install))
+(use-package pdf-tools)
 (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 #+END_SRC
 ** Org pdftools
@@ -361,10 +374,10 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
 #+END_SRC
 ** Org noter pdftools
 #+BEGIN_SRC emacs-lisp
-(use-package org-noter-pdftools
-  :ensure t
-  :config (with-eval-after-load 'pdf-annot
-            (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
+;; (use-package org-noter-pdftools
+;;   :ensure t
+;;   :config (with-eval-after-load 'pdf-annot
+;;             (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
 #+END_SRC
 * Latex
 ** Latex preview
@@ -449,7 +462,7 @@ https://github.com/luksamuk/emacs-org-dotfiles#latex
 (global-set-key (kbd "S-<f1>") 'consoli/edit-config)
 #+END_SRC
 
-** Create a new scratch buffer
+** Create a new scratch buffer 
 #+BEGIN_SRC emacs-lisp
 (defun consoli/create-scratch-buffer ()
   "Create a scratch buffer"
@@ -508,13 +521,11 @@ https://github.com/luksamuk/emacs-org-dotfiles#latex
 ** Kill current buffer
 https://superuser.com/a/1419521
 #+BEGIN_SRC emacs-lisp
-(defun volatile-kill-buffer ()
-  "Kill current buffer unconditionally."
+(defun consoli/kill-this-buffer ()
+  "Kill the current buffer"
   (interactive)
-  (let ((buffer-modified-p nil))
-    (kill-buffer (current-buffer))))
-
-(global-set-key (kbd "C-x k") 'volatile-kill-buffer)     ;; Unconditionally kill unmodified buffers.
+  (kill-buffer (current-buffer)))
+(global-set-key (kbd "C-x k") 'consoli/kill-this-buffer)
 #+END_SRC
 
 ** No welcome message or scratch buffer message
@@ -679,3 +690,46 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 
 (global-set-key [remap move-beginning-of-line] 'smarter-beginning-of-line)
 #+END_SRC
+
+** auto reload files
+#+begin_src emacs-lisp
+(global-auto-revert-mode t)
+#+end_src
+** hide unwanted buffers cycling with c-x <left-right>
+https://emacs.stackexchange.com/questions/27749/how-can-i-hide-unwanted-buffers-when-cycling-with-c-x-left-right
+#+begin_src emacs-lisp
+(set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
+#+end_src
+** dwin
+#+begin_src emacs-lisp
+(global-set-key (kbd "M-u") 'upcase-dwim)
+(global-set-key (kbd "M-l") 'downcase-dwim)
+(global-set-key (kbd "M-c") 'capitalize-dwim)
+#+end_src
+
+** easy-kill
+#+begin_src emacs-lisp
+(use-package easy-kill)
+(global-set-key [remap kill-ring-save] 'easy-kill)
+#+end_src
+
+** crux
+#+begin_src emacs-lisp
+(use-package crux)
+(global-set-key [remap move-beginning-of-line] #'crux-move-beginning-of-line)
+(global-set-key (kbd "C-c C-o") #'crux-open-with)
+(global-set-key [(shift return)] #'crux-smart-open-line)
+(global-set-key (kbd "C-c C-r") #'crux-recentf-find-file)
+(global-set-key (kbd "C-c C-<backspace>") #'crux-kill-line-backwards)
+(global-set-key [remap kill-whole-line] #'crux-kill-whole-line)
+#+end_src
+
+** DONT FREEZE
+#+begin_src emacs-lisp
+(global-unset-key (kbd "C-z"))
+#+end_src
+
+** delete selection
+#+begin_src emacs-lisp
+(delete-selection-mode t)
+#+end_src

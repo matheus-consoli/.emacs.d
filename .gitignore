@@ -68,3 +68,9 @@ transient/
 elpy
 
 .dap-breakpoints
+
+eln-cache/
+projects
+
+private/
+bookmarks

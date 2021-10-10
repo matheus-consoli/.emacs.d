@@ -3,13 +3,12 @@
 (use-package rust-mode
   :ensure t
   :hook ((rust-mode . lsp)
-         (rust-mode . yas-minor-mode))
+         (rust-mode . yas-global-mode))
   :bind (:map rust-mode-map
               ("C-c l x" . lsp-rust-analyzer-expand-macro)
               ("C-c l j" . lsp-rust-analyzer-join-lines))
   :custom ((company-tooltip-align-annotation t)
            (lsp-rust-server 'rust-analyzer)
-           ;; (lsp-rust-analyzer-server-command '("~/tmp/rust-analyzer/target/release/rust-analyzer"))
            (lsp-rust-analyzer-server-command '("/usr/bin/rust-analyzer"))
            (lsp-rust-analyzer-display-parameter-hints t)
            (lsp-rust-server 'rust-analyzer)
@@ -17,6 +16,10 @@
            ;; sideline notes doesnt interact well with inlay hints
            ;; (lsp-ui-sideline-enable nil)
            ))
+(setq lsp-rust-server 'rust-analyzer)
+(setq lsp-rust-analyzer-inlay-hints-mode 't)
+(add-hook 'rust-mode 'lsp)
+(yas-global-mode t)
 #+END_SRC
 
 * Cargo

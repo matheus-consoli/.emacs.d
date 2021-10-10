@@ -1,13 +1,12 @@
 * Theme
 ** Solaire
 #+BEGIN_SRC emacs-lisp
-(use-package solaire-mode
-  :hook
-  ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
-  (minibuffer-setup . solaire-mode-in-minibuffer)
-  :config
-  (solaire-global-mode +1)
-  (solaire-mode-swap-bg))
+;; (use-package solaire-mode
+;;   :hook
+;;   ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
+;;   (minibuffer-setup . solaire-mode-in-minibuffer)
+;;   :config
+;;   (solaire-global-mode +1))
 #+END_SRC
 
 ** Doom themes
@@ -16,7 +15,7 @@
   :ensure t
   :custom ((doom-themes-enable-bold t)
            (doom-themes-enable-italic t)
-           (solaire-mode-remap-modeline nil)
+           ;; (solaire-mode-remap-modeline nil)
            (doom-themes-treemacs-theme "doom-colors"))
   :config (progn (doom-themes-org-config)
                  (doom-themes-treemacs-config))
@@ -33,7 +32,7 @@
 
 ** Load theme
 #+BEGIN_SRC emacs-lisp
-(load-theme 'kaolin-galaxy
+(load-theme 'kaolin-temple
             :no-confirm)
 (setq
  ;; distinct background for fringe and line numbers
@@ -102,8 +101,9 @@
    #+end_src
 ** Set font
 #+BEGIN_SRC emacs-lisp
-(set-face-attribute 'default nil :family "Cascadia Code" :height 110)
-(auto-composition-mode t)
+(add-to-list 'default-frame-alist '(font . "Cascadia Mono-13"))
+(set-face-attribute 'default t :font "Cascadia Mono")
+(global-auto-composition-mode t)
 
 ;; https://github.com/luksamuk/emacs-org-dotfiles#fonts
 (defun my-adjoin-to-list-or-symbol (element list-or-symbol)
@@ -187,48 +187,49 @@
 #+BEGIN_SRC emacs-lisp
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-
-(when window-system
-  (scroll-bar-mode -1))
+(scroll-bar-mode -1)
 #+END_SRC
+
+** Cursor type
+#+begin_src emacs-lisp
+(setq-default cursor-type 'bar) ; 'hollow
+#+end_src
 
 ** Line numbers
 *** Hook
 #+BEGIN_SRC emacs-lisp
-(add-hook 'prog-mode-hook 'linum-mode)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
 #+END_SRC
 
 *** Line format
 #+BEGIN_SRC emacs-lisp
-(setq left-fringe-width 10)
-(setq right-fringe-width 3)
+(fringe-mode '(10 . 5))
+
 ;; (setq linum-format " %5d ")
 
 ;; https://stackoverflow.com/questions/19540211/configure-linum-mode-to-not-show-whitespace-symbols-in-whitespace-mode
-(eval-after-load 'linum
-  '(progn
-     (defface linum-leading-zero
-       `((t :inherit 'linum
-            :foreground ,(face-attribute 'linum :background nil t)))
-       "Face for displaying leading zeroes for line numbers in display margin."
-       :group 'linum)
-     (defun linum-format-func (line)
-       (let ((w (length
-                 (number-to-string (count-lines (point-min) (point-max))))))
-         (concat
-          "\u2002"
-          (propertize (make-string (- w (length (number-to-string line))) ?0)
-                      'face 'linum-leading-zero)
-          (propertize (number-to-string line) 'face 'linum)
-          "\u2002")))
-     (setq linum-format 'linum-format-func)))
+;; (defvar my-linum-format-string "%4d ")
+
+;; (add-hook 'linum-before-numbering-hook 'my-linum-get-format-string)
+
+;; (defun my-linum-get-format-string ()
+;;   (let* ((width (length (number-to-string
+;;                          (count-lines (point-min) (point-max)))))
+;;          (format (concat "%" (number-to-string width) "d")))
+;;     (setq my-linum-format-string format)))
+
+;; (setq linum-format 'my-linum-format)
+
+;; (defun my-linum-format (line-number)
+;;   (propertize (format my-linum-format-string line-number) 'face 'linum))
 #+END_SRC
 ** Highlight line
 #+BEGIN_SRC emacs-lisp
-(use-package hlinum
-  :ensure t
-  :init (global-hl-line-mode)
-  :config (set-face-background 'hl-line "#1E2029"))
+(global-hl-line-mode 1)
+;; (use-package hlinum
+;;   :ensure t
+;;   :init (global-hl-line-mode)
+;;   :config (set-face-background 'hl-line "#1E2029"))
 #+END_SRC
 
 * Parens
@@ -274,15 +275,6 @@
   :hook (after-init . doom-modeline-mode))
 #+END_SRC
 
-** Fancy battery
-#+BEGIN_SRC emacs-lisp
-(use-package fancy-battery
-  :ensure t
-  :after (doom-modeline)
-  :custom (fancy-battery-show-percentage t)
-  :init (fancy-battery-mode))
-#+END_SRC
-
 ** Nyan cat
 #+BEGIN_SRC emacs-lisp
 (use-package nyan-mode
@@ -307,87 +299,6 @@
   :ensure t)
 #+END_SRC
 
-* Treemacs
-** Treemacs by itself
-#+BEGIN_SRC emacs-lisp
-(use-package treemacs
-  :ensure t
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "<f8>") #'treemacs-select-window))
-  :config
-  (progn
-    (setq treemacs-collapse-dirs                 (if (treemacs--find-python3) 3 0)
-          treemacs-deferred-git-apply-delay      0.5
-          treemacs-display-in-side-window        t
-          treemacs-eldoc-display                 t
-          treemacs-file-event-delay              5000
-          treemacs-file-follow-delay             0.2
-          treemacs-follow-after-init             t
-          treemacs-git-command-pipe              ""
-          treemacs-goto-tag-strategy             'refetch-index
-          treemacs-indentation                   2
-          treemacs-indentation-string            " "
-          treemacs-is-never-other-window         nil
-          treemacs-max-git-entries               5000
-          treemacs-missing-project-action        'ask
-          treemacs-no-png-images                 nil
-          treemacs-no-delete-other-windows       t
-          treemacs-project-follow-cleanup        nil
-          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-          treemacs-position                      'left
-          treemacs-recenter-distance             0.1
-          treemacs-recenter-after-file-follow    nil
-          treemacs-recenter-after-tag-follow     nil
-          treemacs-recenter-after-project-jump   'always
-          treemacs-recenter-after-project-expand 'on-distance
-          treemacs-show-cursor                   nil
-          treemacs-show-hidden-files             t
-          treemacs-silent-filewatch              nil
-          treemacs-silent-refresh                nil
-          treemacs-sorting                       'alphabetic-desc
-          treemacs-space-between-root-nodes      t
-          treemacs-tag-follow-cleanup            t
-          treemacs-tag-follow-delay              1.5
-          treemacs-width                         35)
-
-    ;; The default width and height of the icons is 22 pixels. If you are
-    ;; using a Hi-DPI display, uncomment this to double the icon size.
-    ;;(treemacs-resize-icons 44)
-
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode t)
-    (pcase (cons (not (null (executable-find "git")))
-                 (not (null (treemacs--find-python3))))
-      (`(t . t)
-       (treemacs-git-mode 'deferred))
-      (`(t . _)
-       (treemacs-git-mode 'simple))))
-  :bind
-  (:map global-map
-        ("<f8>"      . treemacs)
-        ("S-<f8>"    . treemacs-select-window)
-        ("C-x t 1"   . treemacs-delete-other-windows)
-        ("C-x t B"   . treemacs-bookmark)
-        ("C-x t C-t" . treemacs-find-file)
-        ("C-x t M-t" . treemacs-find-tag)))
-#+END_SRC
-** Treemacs icons
-#+BEGIN_SRC emacs-lisp
-(use-package treemacs-icons-dired
-  :after treemacs dired
-  :ensure t
-  :config (treemacs-icons-dired-mode))
-#+END_SRC
-
-** Treemacs projectile
-#+BEGIN_SRC emacs-lisp
-(use-package treemacs-projectile
-  :ensure t
-  :after treemacs projectile)
-#+END_SRC
 * Git
 ** Fringe Helper
 #+BEGIN_SRC emacs-lisp
@@ -410,60 +321,21 @@
 (global-git-gutter+-mode)
 #+END_SRC
 
+** Highlight-quoted
+ #+begin_src emacs-lisp
+(use-package highlight-quoted)
+(add-hook 'prog-mode-hook 'highlight-quoted-mode)
+ #+end_src
+
+** Highlight-numbers
+ #+begin_src emacs-lisp
+(use-package highlight-numbers)
+(add-hook 'prog-mode-hook 'highlight-numbers-mode)
+ #+end_src
+
 ** Treemacs magit
 #+BEGIN_SRC emacs-lisp
 (use-package treemacs-magit
   :after (treemacs magit)
   :ensure t)
-#+END_SRC
-
-* Dashboard
-#+BEGIN_SRC emacs-lisp
-(use-package dashboard
-  :ensure t
-  :requires (all-the-icons projectile)
-  :config (progn
-            (dashboard-setup-startup-hook)
-            (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*"))
-                  dashboard-banner-logo-title "HAPPY HACKING"
-                  dashboard-startup-banner (concat user-emacs-directory "img/pink_banner.png")
-                  dashboard-center-content    t
-                  dashboard-set-heading-icons t
-                  dashboard-set-file-icons    t
-                  dashboard-set-navigator     t
-                  dashboard-set-init-info     t
-                  dashboard-set-navigator     t
-                  show-week-agenda-p          t
-
-                  dashboard-items '((bookmarks . 5)
-                                    (projects  . 5)
-                                    (agenda))
-
-                  dashboard-navigator-buttons
-                  `(( ;; line one
-                     (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
-                      "" "Github"
-                      (lambda (&rest _) (browse-url "https://github.com/macconsoli")))
-
-                     (,(all-the-icons-faicon "gitlab" :height 1.1 :v-adjust 0.0)
-                      "" "Gitlab"
-                      (lambda (&rest _) (browse-url "https://gitlab.com/consoli")))
-
-                     (,(all-the-icons-material "email" :height 1.1 :v-adjust -0.13)
-                      "" "Email"
-                      (lambda (&rest _) (message "Install mu4e")))
-                     )
-
-                    ( ;; line two
-                     (,(all-the-icons-faicon "youtube-play" :height 1.1 :v-adjust 0.0)
-                      "" "Youtube"
-                      (lambda (&rest _) (browse-url "https://youtube.com")))
-
-                     (,(all-the-icons-faicon "rss-square" :height 1.1 :v-adjust 0.0)
-                      "" "Elfeed"
-                      (lambda (&rest _) (elfeed)))
-
-                     (,(all-the-icons-faicon "refresh" :height 1.1 :v-adjust 0.0)
-                      "" "Refresh Dashboard"
-                      (lambda (&rest _) (dashboard-refresh-buffer))))))))
 #+END_SRC

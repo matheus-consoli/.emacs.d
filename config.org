@@ -27,7 +27,7 @@
 
 *** Rust
 #+BEGIN_SRC emacs-lisp
-(load-config "rust.org")
+;; (load-config "rust.org")
 #+END_SRC
 
 *** Haskell
@@ -37,10 +37,17 @@
 
 *** Elixir
 #+BEGIN_SRC emacs-lisp
-(load-config "elixir.org")
+;; (load-config "elixir.org")
 #+END_SRC
 
 *** Python
 #+BEGIN_SRC emacs-lisp
 (load-config "python.org")
 #+END_SRC
+
+*** Gleam
+    #+begin_src emacs-lisp
+;; (load-file "~/.emacs.d/private/gleam-mode/gleam-mode.el")
+;; (require 'gleam-mode)
+;; (add-to-list 'auto-mode-alist '("\\.gleam$" . gleam-mode))
+    #+end_src

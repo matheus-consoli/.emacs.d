@@ -8,10 +8,10 @@
 
 * Haskell LSP
 #+BEGIN_SRC emacs-lisp
-(use-package lsp-haskell
-  :ensure t
-  :config
-  (setq lsp-haskell-process-path-hie "ghcide")
-  (setq lsp-haskell-process-args-hie '()))
+;; (use-package lsp-haskell
+;;   :ensure t
+;;   :config
+;;   (setq lsp-haskell-process-path-hie "ghcide")
+;;   (setq lsp-haskell-process-args-hie '()))
 #+END_SRC
 

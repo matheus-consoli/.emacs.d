@@ -133,6 +133,34 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   (company-quickhelp-mode 1))
 #+END_SRC
 
+*** COMMENT Company tabnine
+    #+begin_src emacs-lisp
+(use-package company-tabnine)
+
+(add-to-list 'company-backends #'company-tabnine)
+;; Trigger completion immediately.
+(setq company-idle-delay 0)
+
+;; Number the candidates (use M-1, M-2 etc to select completions).
+(setq company-show-numbers t)
+
+;; workaround for company-transformers
+(setq company-tabnine--disable-next-transform nil)
+(defun my-company--transform-candidates (func &rest args)
+  (if (not company-tabnine--disable-next-transform)
+      (apply func args)
+    (setq company-tabnine--disable-next-transform nil)
+    (car args)))
+
+(defun my-company-tabnine (func &rest args)
+  (when (eq (car args) 'candidates)
+    (setq company-tabnine--disable-next-transform t))
+  (apply func args))
+
+(advice-add #'company--transform-candidates :around #'my-company--transform-candidates)
+(advice-add #'company-tabnine :around #'my-company-tabnine)
+   #+end_src
+
 ** Yasnippets
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
@@ -168,7 +196,8 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
 *** Yasnippets snippets
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet-snippets
-    :ensure t)
+    :ensure t
+    :config (yas-global-mode))
 #+END_SRC
 * Linter
 ** Flycheck
@@ -211,6 +240,13 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   (require 'dap-python))
 #+END_SRC
 
+* iedit
+
+#+begin_src emacs-lisp
+(use-package iedit)
+#+end_src
+
+
 * Language Server Protocol
 ** LSP mode
 #+BEGIN_SRC emacs-lisp
@@ -238,7 +274,8 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
   :bind (:map lsp-mode-map
               ("C-c l r" . lsp-rename)
               ("C-c l a" . lsp-execute-code-action)
-              ("C-c l t" . lsp-find-type-definition))
+              ("C-c l t" . lsp-find-type-definition)
+              ("C-c l e" . lsp-iedit-highlights))
   :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
   :ensure t)
 #+END_SRC
@@ -328,4 +365,19 @@ https://github.com/seagle0128/.emacs.d/blob/master/lisp/init-company.el
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
+#+end_src
+
+* Treesitter
+#+begin_src emacs-lisp
+(use-package tree-sitter)
+(use-package tree-sitter-langs)
+
+;; enable tree-sitter for all supported major modes
+(global-tree-sitter-mode)
+(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+#+end_src
+
+* magit side by side diff
+#+begin_src emacs-lisp
+(setq magit-ediff-dwim-show-on-hunks t)
 #+end_src
