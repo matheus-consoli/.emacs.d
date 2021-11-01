@@ -27,7 +27,7 @@
 
 *** Rust
 #+BEGIN_SRC emacs-lisp
-;; (load-config "rust.org")
+(load-config "rust.org")
 #+END_SRC
 
 *** Haskell

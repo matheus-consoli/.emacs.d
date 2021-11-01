@@ -235,16 +235,6 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
                                (dot . t)))
 #+END_SRC
 
-** Org ref
-#+BEGIN_SRC emacs-lisp
-(use-package org-ref
-  :config (progn
-            (require 'org-ref-pdf)
-            (require 'org-ref-bibtex)
-            (require 'org-ref-url-utils)))
-(org-ref-define-citation-link "citeonline" ?o)
-#+END_SRC
-
 * Avy mode
 ** Avy goto char timer 
 #+BEGIN_SRC emacs-lisp

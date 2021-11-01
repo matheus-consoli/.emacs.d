@@ -1,42 +1,23 @@
 * Rust mode
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package rust-mode
-  :ensure t
-  :hook ((rust-mode . lsp)
-         (rust-mode . yas-global-mode))
-  :bind (:map rust-mode-map
-              ("C-c l x" . lsp-rust-analyzer-expand-macro)
-              ("C-c l j" . lsp-rust-analyzer-join-lines))
-  :custom ((company-tooltip-align-annotation t)
-           (lsp-rust-server 'rust-analyzer)
-           (lsp-rust-analyzer-server-command '("/usr/bin/rust-analyzer"))
-           (lsp-rust-analyzer-display-parameter-hints t)
-           (lsp-rust-server 'rust-analyzer)
-           (lsp-rust-analyzer-display-chaining-hints t)
-           ;; sideline notes doesnt interact well with inlay hints
-           ;; (lsp-ui-sideline-enable nil)
-           ))
-(setq lsp-rust-server 'rust-analyzer)
-(setq lsp-rust-analyzer-inlay-hints-mode 't)
-(add-hook 'rust-mode 'lsp)
-(yas-global-mode t)
-#+END_SRC
+  :init (setq rust-format-on-save nil)
+  :hook ((rust-mode . (lambda () (setq indent-tabs-mode nil)))
+         (rust-mode . lsp)
+         (rust-mode . yas-minor-mode)))
+#+end_src
 
-* Cargo
-#+BEGIN_SRC emacs-lisp
-;; (use-package cargo
-;;   :hook (rust-mode . cargo-minor-mode)
-;;   :ensure t)
-#+END_SRC
+* Lsp settup
+
+** Type hints
+#+begin_src emacs-lisp
+(setq lsp-rust-analyzer-server-display-inlay-hints t
+      lsp-rust-analyzer-display-chaining-hints t
+      lsp-rust-analyzer-display-parameter-hints t)
+#+end_src
 
 * Rust org babel
 #+BEGIN_SRC emacs-lisp
 (use-package ob-rust
   :ensure t)
 #+END_SRC
-
-* DAP mode
-#+BEGIN_SRC emacs-lisp
-(add-hook 'dap-mode #'(lambda () (require 'dap-lldb)))
-#+END_SRC
-
