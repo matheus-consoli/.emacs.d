@@ -88,7 +88,7 @@ http://tuhdo.github.io/helm-intro.html
 * Org
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :ensure org-plus-contrib
+  :pin gnu
   :bind ("C-<tab>" . org-cycle)
   :config (plist-put org-format-latex-options :scale 2.0))
 
