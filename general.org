@@ -89,7 +89,7 @@ http://tuhdo.github.io/helm-intro.html
 #+BEGIN_SRC emacs-lisp
 (use-package org
   :ensure org-plus-contrib
-  :bind ("C-TAB" . org-cycle)
+  :bind ("C-<tab>" . org-cycle)
   :config (plist-put org-format-latex-options :scale 2.0))
 
 (setq-default org-confirm-babel-evaluate nil)
@@ -439,9 +439,10 @@ https://github.com/luksamuk/emacs-org-dotfiles#latex
 #+BEGIN_SRC emacs-lisp
 (use-package drag-stuff
   :ensure t
-  :init (turn-on-drag-stuff-mode)
+  :hook (prog-mode . drag-stuff-mode)
   :config (drag-stuff-define-keys))
 #+END_SRC
+
 * Utilities
 ** Quick edit configuration files
 #+BEGIN_SRC emacs-lisp

@@ -6,15 +6,6 @@
   :hook (python-mode . (lambda ()
                           (require 'lsp-python-ms)
                           (lsp))))
-
-
-;; (use-package lsp-python-ms
-;;   :ensure t
-;;   :hook (python-mode . (lambda ()
-;;                          (require 'lsp-python-ms)
-;;                          (lsp)))
-;;   :init
-;;   (setq lsp-python-ms-executable (executable-find "python-language-server"))
    #+end_src
 * Elpy
 #+BEGIN_SRC emacs-lisp

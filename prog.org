@@ -94,8 +94,8 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 
 *** Quick Peek
 #+BEGIN_SRC emacs-lisp
-(use-package quick-peek
-  :ensure t)
+;; (use-package quick-peek
+;;   :ensure t)
 #+END_SRC
 
 *** Flycheck inline
@@ -105,14 +105,14 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 (with-eval-after-load 'flycheck
   (add-hook 'flycheck-mode-hook #'flycheck-inline-mode))
 
-(setq flycheck-inline-display-function
-      (lambda (msg pos _unused)
-        (let* ((ov (quick-peek-overlay-ensure-at pos))
-               (contents (quick-peek-overlay-contents ov)))
-          (setf (quick-peek-overlay-contents ov)
-                (concat contents (when contents "\n") msg))
-          (quick-peek-update ov)))
-      flycheck-inline-clear-function #'quick-peek-hide)
+;; (setq flycheck-inline-display-function
+;;       (lambda (msg pos _unused)
+;;         (let* ((ov (quick-peek-overlay-ensure-at pos))
+;;                (contents (quick-peek-overlay-contents ov)))
+;;           (setf (quick-peek-overlay-contents ov)
+;;                 (concat contents (when contents "\n") msg))
+;;           (quick-peek-update ov)))
+;;       flycheck-inline-clear-function #'quick-peek-hide)
 #+END_SRC
 
 * Debug
@@ -143,11 +143,17 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
               lsp-enable-indentation t
               lsp-enable-folding t
               lsp-enable-snippet t
-              lsp-semantic-tokens-enable t
+              lsp-semantic-tokens-enable nil
               lsp-lens-enable t
               lsp-headerline-breadcrumb-icons-enable t
               lsp-idle-delay 0.2)
+  :bind (:map lsp-mode-map
+              ("C-c l r" . lsp-rename)
+              ("C-c l a" . lsp-execute-code-action)
+              ("C-c l t" . lsp-find-type-definition)
+              ("C-c l e" . lsp-iedit-highlights))
   :hook (lsp-mode . lsp-enable-which-key-integration)
+  :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
   :commands lsp)
 #+END_SRC
 
@@ -156,7 +162,7 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 (use-package lsp-ui
   :init (setq lsp-ui-doc-enable t
               lsp-ui-sideline-show-diagnostics t
-              lsp-ui-doc-delay 2
+              lsp-ui-doc-delay 0.2
               lsp-ui-sideline-show-hover t
               lsp-ui-sideline-show-code-actions t
               lsp-ui-peek-show-directory t

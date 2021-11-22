@@ -32,7 +32,7 @@
 
 *** Haskell
 #+BEGIN_SRC emacs-lisp
-;; (load-config "haskell.org")
+(load-config "haskell.org")
 #+END_SRC
 
 *** Elixir
