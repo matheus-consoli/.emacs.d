@@ -13,8 +13,8 @@
   :ensure t
   :hook ((python-mode . lsp)
          (python-mode . yas-minor-mode))
-  :custom (python-shell-interpreter "ipython")
-  (python-shell-interpreter-args "-i")
+  :custom ((python-shell-interpreter "ipython")
+           (python-shell-interpreter-args "-i --simple-prompt"))
   :init (progn
           (elpy-enable)
           (load "elpy")

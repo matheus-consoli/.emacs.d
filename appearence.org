@@ -1,12 +1,9 @@
 * Theme
 ** Solaire
 #+BEGIN_SRC emacs-lisp
-;; (use-package solaire-mode
-;;   :hook
-;;   ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
-;;   (minibuffer-setup . solaire-mode-in-minibuffer)
-;;   :config
-;;   (solaire-global-mode +1))
+(use-package solaire-mode
+  :config
+  (solaire-global-mode +1))
 #+END_SRC
 
 ** Doom themes
@@ -32,7 +29,7 @@
 
 ** Load theme
 #+BEGIN_SRC emacs-lisp
-(load-theme 'kaolin-temple
+(load-theme 'doom-dracula
             :no-confirm)
 (setq
  ;; distinct background for fringe and line numbers
@@ -255,35 +252,37 @@
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
   :ensure t
-  :custom ((doom-modeline-bar-width 5)
-           (doom-modeline-icon t)
-           (doom-modeline-project-detection 'projectile)
-           (doom-modeline-major-mode-color-icon t)
-           (doom-modeline-buffer-file-state 'relative-from-project)
-           (doom-modeline-major-mode-icon t)
-           (doom-modeline-buffer-state-icon t)
-           (doom-modeline-buffer-modification-icon t)
-           (doom-modeline-enable-word-count t)
-           (doom-modeline-buffer-encoding t)
-           (doom-modeline-indent-info t)
-           (doom-modeline-lsp t)
-           (doom-modeline-env-version t)
-           (doom-modeline-height 1)
-           (doom-modeline-env-python-executable "ipython")
-           (doom-modeline-env-rust-executable "rustc")
-           (doom-modeline-env-elixir-executable "iex"))
+  :custom (doom-modeline-height 40)
+  (doom-modeline-hud t)
+  ;; :custom ((doom-modeline-bar-width 5)
+  ;;          (doom-modeline-icon t)
+  ;;          (doom-modeline-project-detection 'projectile)
+  ;;          (doom-modeline-major-mode-color-icon t)
+  ;;          (doom-modeline-buffer-file-state 'relative-from-project)
+  ;;          (doom-modeline-major-mode-icon t)
+  ;;          (doom-modeline-buffer-state-icon t)
+  ;;          (doom-modeline-buffer-modification-icon t)
+  ;;          (doom-modeline-enable-word-count t)
+  ;;          (doom-modeline-buffer-encoding t)
+  ;;          (doom-modeline-indent-info t)
+  ;;          (doom-modeline-lsp t)
+  ;;          (doom-modeline-env-version t)
+  ;;          (doom-modeline-height 1)
+  ;;          (doom-modeline-env-python-executable "ipython")
+  ;;          (doom-modeline-env-rust-executable "rustc")
+  ;;          (doom-modeline-env-elixir-executable "iex"))
   :hook (after-init . doom-modeline-mode))
 #+END_SRC
 
 ** Nyan cat
 #+BEGIN_SRC emacs-lisp
-(use-package nyan-mode
-  :ensure t
-  :custom (nyan-animate-nyancat t)
-  (nyan-wavy-trail t)
-  (mode-line-format (list
-                     '(:eval (list (nyan-create)))))
-  :init (nyan-mode))
+;; (use-package nyan-mode
+;;   :ensure t
+;;   :custom (nyan-animate-nyancat t)
+;;   (nyan-wavy-trail t)
+;;   (mode-line-format (list
+;;                      '(:eval (list (nyan-create)))))
+;;   :init (nyan-mode))
 #+END_SRC
 
 ** Clock
@@ -319,23 +318,4 @@
 (set-face-background 'git-gutter-fr+-added "#007144")
 (setq-default right-fringe-width 10)
 (global-git-gutter+-mode)
-#+END_SRC
-
-** Highlight-quoted
- #+begin_src emacs-lisp
-(use-package highlight-quoted)
-(add-hook 'prog-mode-hook 'highlight-quoted-mode)
- #+end_src
-
-** Highlight-numbers
- #+begin_src emacs-lisp
-(use-package highlight-numbers)
-(add-hook 'prog-mode-hook 'highlight-numbers-mode)
- #+end_src
-
-** Treemacs magit
-#+BEGIN_SRC emacs-lisp
-(use-package treemacs-magit
-  :after (treemacs magit)
-  :ensure t)
 #+END_SRC

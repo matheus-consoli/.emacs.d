@@ -254,3 +254,9 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 #+begin_src emacs-lisp
 (setq magit-ediff-dwim-show-on-hunks t)
 #+end_src
+
+* yaml
+#+begin_src emacs-lisp
+(use-package yaml-mode)
+#+end_src
+

@@ -724,3 +724,10 @@ https://emacs.stackexchange.com/questions/27749/how-can-i-hide-unwanted-buffers-
 #+begin_src emacs-lisp
 (delete-selection-mode t)
 #+end_src
+
+** smooth scrolling
+#+begin_src emacs-lisp
+(use-package good-scroll
+  :init (good-scroll-mode 1))
+(setq redisplay-dont-pause t)
+#+end_src
