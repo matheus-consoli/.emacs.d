@@ -3,7 +3,6 @@
 https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 #+BEGIN_SRC emacs-lisp
 (use-package company
-  :diminish company-mode
   :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
   :commands company-abort
   :hook (after-init . global-company-mode)

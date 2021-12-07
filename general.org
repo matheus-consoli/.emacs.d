@@ -8,29 +8,32 @@ https://tsdh.org/posts/2021-06-06-update-all-emacs-packages-from-the-command-lin
 now we can run it from CLI `$ emacs -f auto-package-update-now`
 * Helm
 #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :ensure t
-  :bind(("C-x C-f" . 'helm-find-files)
-	("C-x C-b" . 'helm-buffers-list)
-	("C-x b" . 'helm-mini)
-	("M-x" . 'helm-M-x)
-	("M-y" . 'helm-show-kill-ring)
-	("M-:" . 'helm-eval-expression-with-eldoc))
-  :custom ((helm-autoresize-max-height 80)
-	   (helm-autoresize-min-height 40)
-	   (helm-M-x-fuzzy-match t)
-	   (helm-buffers-fuzzy-matching t)
-	   (helm-recentf-fuzzy-match t)
-	   (helm-semantic-fuzzy-match t)
-	   (helm-imenu-fuzzy-match t)
-	   (helm-split-window-in-side-p t)
-	   (helm-mode-to-line-cycle-in-source t)
-	   (helm-ff-search-library-in-sexp t)
-	   (helm-scroll-amount 8)
-	   (helm-echo-input-in-header-line t)
-	   (helm-ff-skip-boring-files t)
-	   (helm-autoresize-mode t))
-  :config (helm-mode 1))
+  (use-package helm
+    :hook (helm-mode-hook . (lambda () (setq completion-styles '(flex))))
+    :bind(("C-x C-f" . 'helm-find-files)
+	  ("C-x C-b" . 'helm-buffers-list)
+	  ("C-x b" . 'helm-mini)
+	  ("M-x" . 'helm-M-x)
+	  ("M-y" . 'helm-show-kill-ring)
+	  ("M-:" . 'helm-eval-expression-with-eldoc))
+    :config (setq helm-autoresize-max-height 60
+	     helm-M-x-fuzzy-match t
+	     helm-buffers-fuzzy-matching t
+	     helm-recentf-fuzzy-match t
+	     helm-semantic-fuzzy-match t
+	     helm-imenu-fuzzy-match t
+	     helm-mode-to-line-cycle-in-source t
+	     helm-ff-search-library-in-sexp t
+	     helm-scroll-amount 8
+	     helm-echo-input-in-header-line t
+	     helm-ff-skip-boring-files t
+	     helm-autoresize-mode t
+	     helm-always-two-windows t
+	     helm-split-window-inside-p nil
+	     helm-use-frame-when-dedicated-window t
+	     helm-use-frame-when-more-than-two-windows t
+	     helm-kill-ring-threshold 1)
+    (helm-mode 1))
 #+END_SRC
 
 ** Hide minibuffer
@@ -56,6 +59,11 @@ http://tuhdo.github.io/helm-intro.html
     :bind ("C-s" . swiper-helm)
     :ensure t)
 #+END_SRC
+
+** help-rg
+#+begin_src emacs-lisp
+(use-package helm-rg)
+#+end_src
 
 * Multiterm
 #+BEGIN_SRC emacs-lisp
@@ -176,8 +184,7 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
 ** Org bullets
 #+begin_src emacs-lisp
 (use-package org-bullets
-  :ensure t)
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+  :hook org-mode-hook)
 #+end_src
 
 ** Org templates
@@ -221,18 +228,18 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
 
 ** Org noter
 #+BEGIN_SRC emacs-lisp
-(use-package org-noter
-  :ensure t)
+;; (use-package org-noter
+;;   :ensure t)
 #+END_SRC
 
 ** Org babel
 #+BEGIN_SRC emacs-lisp
-(require 'ox-latex)
-(org-babel-do-load-languages 'org-babel-load-languages
-                             '((python . t)
-                               (latex . t)
-                               (gnuplot . t)
-                               (dot . t)))
+;; (require 'ox-latex)
+;; (org-babel-do-load-languages 'org-babel-load-languages
+;;                              '((python . t)
+;;                                (latex . t)
+;;                                (gnuplot . t)
+;;                                (dot . t)))
 #+END_SRC
 
 * Avy mode
@@ -250,10 +257,13 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
 * Which key
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
-  :ensure t
-  :diminish
   :custom (which-key-popup-type 'minibuffer)
-  :config (which-key-mode))
+  (which-key-show-early-on-C-h t)
+  (which-key-idle-delay 0.25)
+  (which-key-idle-secondary-delay 0.05)
+  (max-mini-window-height 0.25)
+  :config (which-key-mode)
+  :bind ("C-c c w" . which-key-show-major-mode))
 #+END_SRC
 
 * Spell
@@ -279,57 +289,6 @@ https://blog.binchen.org/posts/what-s-the-best-spell-check-set-up-in-emacs.html
 (require-init 'init-spelling)
 #+END_SRC
 
-* Elfeed
-#+BEGIN_SRC emacs-lisp
-(use-package elfeed
-  :ensure t
-  :bind (:map elfeed-search-mode-map
-              ("A" . bjm/elfeed-show-all)
-              ("q" . bjm/elfeed-save-db-and-bury)
-              ("C-S-a" . zmsk/elfeed-mark-all-as-read))
-  :custom (url-queue-timeout 30))
-#+END_SRC
-
-** Elfeed org
-#+BEGIN_SRC emacs-lisp
-(use-package elfeed-org
-  :ensure t
-  :after elfeed
-  :custom (rmh-elfeed-org-files
-           (list (concat user-emacs-directory "elfeed.org")))
-  :config (elfeed-org))
-#+END_SRC
-
-** Elfeed Goodies 
-#+BEGIN_SRC emacs-lisp
-(use-package elfeed-goodies
-  :ensure t
-  :after elfeed
-  :config (elfeed-goodies/setup))
-#+END_SRC
-
-** Elfeed functions
-http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
-#+BEGIN_SRC emacs-lisp
-(defun bjm/elfeed-load-db-and-open ()
-  "Wrapper to load the elfeed db from disk before opening"
-  (interactive)
-  (elfeed-db-load)
-  (elfeed)
-  (elfeed-search-update--force))
-
-;;write to disk when quiting
-(defun bjm/elfeed-save-db-and-bury ()
-  "Wrapper to save the elfeed db to disk before burying buffer"
-  (interactive)
-  (elfeed-db-save)
-  (quit-window))
-
-(defun zmsk/elfeed-mark-all-as-read ()
-  (interactive)
-  (mark-whole-buffer)
-  (elfeed-search-untag-all-unread))
-#+END_SRC
 * Anzu
 #+BEGIN_SRC emacs-lisp
 (use-package anzu
@@ -346,21 +305,21 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
 * PDF
 ** PDF tools
 #+BEGIN_SRC emacs-lisp
-(use-package pdf-tools)
-(add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+;; (use-package pdf-tools)
+;; (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 #+END_SRC
 ** Org pdftools
 #+BEGIN_SRC emacs-lisp
-(use-package org-pdftools
-  :ensure t
-  :hook (org-load . org-pdftools-setup-link))
+;; (use-package org-pdftools
+;;   :ensure t
+;;   :hook (org-load . org-pdftools-setup-link))
 
-(add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
-(add-hook 'pdf-view-mode-hook 'pdf-view-fit-height-to-window)
-(add-hook 'pdf-view-mode-hook 'auto-revert-mode)
+;; (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
+;; (add-hook 'pdf-view-mode-hook 'pdf-view-fit-height-to-window)
+;; (add-hook 'pdf-view-mode-hook 'auto-revert-mode)
 
-(setq org-file-apps
-      '((auto-mode . emacs)))
+;; (setq org-file-apps
+;;       '((auto-mode . emacs)))
 #+END_SRC
 ** Org noter pdftools
 #+BEGIN_SRC emacs-lisp
@@ -372,53 +331,53 @@ http://pragmaticemacs.com/emacs/read-your-rss-feeds-in-emacs-with-elfeed/
 * Latex
 ** Latex preview
 #+BEGIN_SRC emacs-lisp
-(use-package latex-preview-pane
-  :ensure t)
+;; (use-package latex-preview-pane
+;;   :ensure t)
 #+END_SRC
 
 ** Latex pretty symbols
 #+BEGIN_SRC emacs-lisp
-(use-package latex-pretty-symbols
-  :ensure t)
+;; (use-package latex-pretty-symbols
+;;   :ensure t)
 #+END_SRC
 
 ** Latex Auctex
 #+BEGIN_SRC emacs-lisp
-(use-package auctex
-  :ensure t
-  :defer t)
+;; (use-package auctex
+;;   :ensure t
+;;   :defer t)
 #+END_SRC
 ** Company auctex
 #+BEGIN_SRC emacs-lisp
-(use-package company-auctex
-  :ensure t
-  :init (company-auctex-init))
+;; (use-package company-auctex
+;;   :ensure t
+;;   :init (company-auctex-init))
 #+END_SRC
 ** abntex
 https://github.com/luksamuk/emacs-org-dotfiles#latex
 #+begin_src emacs-lisp
-(require 'ox-latex)
-(unless (boundp 'org-latex-classes)
-  (setq org-latex-classes nil))
+;; (require 'ox-latex)
+;; (unless (boundp 'org-latex-classes)
+;;   (setq org-latex-classes nil))
 
-(add-to-list 'org-latex-classes
-	     '("abntex2"
-	       "\\documentclass{abntex2}
-		  [NO-DEFAULT-PACKAGES]
-		  [EXTRA]"
-	       ("\\section{%s}" . "\\section*{%s}")
-	       ("\\subsection{%s}" . "\\subsection*{%s}")
-	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
-	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
-	       ("\\maketitle" . "\\imprimircapa")))
+;; (add-to-list 'org-latex-classes
+;; 	     '("abntex2"
+;; 	       "\\documentclass{abntex2}
+;; 		  [NO-DEFAULT-PACKAGES]
+;; 		  [EXTRA]"
+;; 	       ("\\section{%s}" . "\\section*{%s}")
+;; 	       ("\\subsection{%s}" . "\\subsection*{%s}")
+;; 	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+;; 	       ("\\paragraph{%s}" . "\\paragraph*{%s}")
+;; 	       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+;; 	       ("\\maketitle" . "\\imprimircapa")))
 
-(add-to-list 'org-latex-classes
-             '("standalone"
-               "\\documentclass{standalone}
-                [NO-DEFAULT-PACKAGES]"))
+;; (add-to-list 'org-latex-classes
+;;              '("standalone"
+;;                "\\documentclass{standalone}
+;;                 [NO-DEFAULT-PACKAGES]"))
 
-(setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
+;; (setq org-latex-inputenc-alist '(("utf8" . "utf8x")))
 #+end_src
 
 * Dockerfile

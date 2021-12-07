@@ -1,15 +1,15 @@
 * Haskell mode
 #+BEGIN_SRC emacs-lisp
-(use-package haskell-mode
-  :hook ((haskell-mode . haskell-indentation-mode)
-         (haskell-mode . interactive-haskell-mode))
-  :ensure t)
+;; (use-package haskell-mode
+;;   :hook ((haskell-mode . haskell-indentation-mode)
+;;          (haskell-mode . interactive-haskell-mode))
+;;   :ensure t)
 #+END_SRC
 
 * Haskell LSP
 #+BEGIN_SRC emacs-lisp
-(use-package lsp-haskell
-  :hook (haskell-mode . lsp)
-  :init (setq lsp-haskell-server-path "/home/consoli/.ghcup/bin/haskell-language-server-wrapper"))
+;; (use-package lsp-haskell
+;;   :hook (haskell-mode . lsp)
+;;   :init (setq lsp-haskell-server-path "/home/consoli/.ghcup/bin/haskell-language-server-wrapper"))
 #+END_SRC
 
