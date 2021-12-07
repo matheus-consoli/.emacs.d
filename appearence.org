@@ -159,7 +159,7 @@
       (set-char-table-range composition-ligature-table (car char-regexp)
                             `([,(cdr char-regexp) 0 font-shape-gstring]))))
   (set-char-table-parent composition-ligature-table composition-function-table)
-  (add-hook 'prog-mode-hook '(lambda () (setq-local composition-function-table composition-ligature-table))))
+  (add-hook 'prog-mode-hook #'(lambda () (setq-local composition-function-table composition-ligature-table))))
    #+end_src
 
 ** Italic comments
