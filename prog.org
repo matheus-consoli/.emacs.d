@@ -5,8 +5,8 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 (use-package company
   :defines (company-dabbrev-ignore-case company-dabbrev-downcase)
   :commands company-abort
-  :hook (after-init . global-company-mode)
   :init
+  (global-company-mode 1)
   (defun my-company-yasnippet ()
     (interactive)
     (company-abort)
@@ -19,13 +19,6 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
            (company-require-match nil)
            (company-dabbrev-ignore-case nil)
            (company-dabbrev-downcase nil)))
-#+END_SRC
-
-*** Company Prescient
-#+BEGIN_SRC emacs-lisp
-;; (use-package company-prescient
-;;   :ensure t
-;;   :init (company-prescient-mode))
 #+END_SRC
 
 *** Company box
@@ -48,33 +41,8 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
 ** Yasnippets
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
-  :ensure t
   :config (yas-reload-all)
-  :init
-  (progn
-    (defun check-expansion ()
-      (save-excursion
-        (if (looking-at "\\_>") t
-          (backward-char 1)
-          (if (looking-at "\\.") t
-            (backward-char 1)
-            (if (looking-at "->") t nil)))))
-
-    (defun do-yas-expand ()
-      (let ((yas/fallback-behavior 'return-nil))
-        (yas/expand)))
-
-    (defun tab-indent-or-complete ()
-      (interactive)
-      (if (minibufferp)
-          (minibuffer-complete)
-        (if (or (not yas/minor-mode)
-                (null (do-yas-expand)))
-            (if (check-expansion)
-                (company-complete-common)
-              (indent-for-tab-command)))))
-
-    (global-set-key [tab] 'tab-indent-or-complete)))
+  :hook prog-mode-hook)
 #+END_SRC
 
 *** Yasnippets snippets
@@ -144,6 +112,7 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
               lsp-enable-snippet t
               lsp-semantic-tokens-enable nil
               lsp-lens-enable t
+              lsp-log-io nil
               lsp-headerline-breadcrumb-icons-enable t
               lsp-idle-delay 0.2)
   :bind (:map lsp-mode-map
@@ -166,6 +135,9 @@ https://github.com/liguangsheng/emacsd/blob/master/lisp/init-completion.el
               lsp-ui-sideline-show-code-actions t
               lsp-ui-peek-show-directory t
               lsp-ui-doc-show-with-cursor t
+              ;; lsp-ui-doc-use-webkit t
+              lsp-completion-show-kind t
+              lsp-completion-show-detail t
               lsp-ui-doc-show-with-mouse t)
   :bind (:map lsp-ui-mode-map
               ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)

@@ -94,11 +94,14 @@ http://tuhdo.github.io/helm-intro.html
 #+END_SRC
 
 * Org
+
+** org itself
 #+BEGIN_SRC emacs-lisp
 (use-package org
   :pin gnu
   :bind ("C-<tab>" . org-cycle)
-  :config (plist-put org-format-latex-options :scale 2.0))
+  :config (plist-put org-format-latex-options :scale 2.0)
+  :init (org-bullets-mode t))
 
 (setq-default org-confirm-babel-evaluate nil)
 
@@ -110,6 +113,13 @@ http://tuhdo.github.io/helm-intro.html
       org-fontify-done-headline t
       org-fontify-quote-and-verse-blocks t)
 #+END_SRC
+
+
+** Org bullets
+#+begin_src emacs-lisp
+(use-package org-bullets)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+#+end_src
 
 ** Org mode as the *scratch* buffer
 #+begin_src emacs-lisp
@@ -180,12 +190,6 @@ https://zzamboni.org/post/beautifying-org-mode-in-emacs/
     1 'org-checkbox-done-text prepend))
  'append)
  #+END_SRC
-
-** Org bullets
-#+begin_src emacs-lisp
-(use-package org-bullets
-  :hook org-mode-hook)
-#+end_src
 
 ** Org templates
 *** Elisp template

@@ -9,10 +9,10 @@
 
 * rustc development
 #+begin_src emacs-lisp
-(setq lsp-rust-analyzer-rustc-source "/home/consoli/projects/personal/rust/rust/Cargo.toml"
-      lsp-rust-analyzer-proc-macro-enable nil
-      lsp-rust-analyzer-rustfmt-override-command '("/home/consoli/projects/personal/rust/rust/build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021")
-      lsp-rust-analyzer-cargo-run-build-scripts nil)
+;; (setq lsp-rust-analyzer-rustc-source "/home/consoli/projects/personal/rust/rust/Cargo.toml"
+;;       lsp-rust-analyzer-proc-macro-enable nil
+;;       lsp-rust-analyzer-rustfmt-override-command '("/home/consoli/projects/personal/rust/rust/build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021")
+;;       lsp-rust-analyzer-cargo-run-build-scripts nil)
 #+end_src
 
 * Lsp settup

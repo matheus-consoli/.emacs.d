@@ -29,7 +29,7 @@
 
 ** Load theme
 #+BEGIN_SRC emacs-lisp
-(load-theme 'doom-dracula
+(load-theme 'kaolin-galaxy
             :no-confirm)
 (setq
  ;; distinct background for fringe and line numbers
@@ -254,6 +254,7 @@
   :ensure t
   :custom (doom-modeline-height 40)
   (doom-modeline-hud t)
+  (doom-modeline-lsp t)
   ;; :custom ((doom-modeline-bar-width 5)
   ;;          (doom-modeline-icon t)
   ;;          (doom-modeline-project-detection 'projectile)
@@ -271,7 +272,8 @@
   ;;          (doom-modeline-env-python-executable "ipython")
   ;;          (doom-modeline-env-rust-executable "rustc")
   ;;          (doom-modeline-env-elixir-executable "iex"))
-  :hook (after-init . doom-modeline-mode))
+  :init (doom-modeline-mode 1)
+)
 #+END_SRC
 
 ** Nyan cat
@@ -290,12 +292,6 @@
 (setq display-time-24hr-format t)
 (setq display-time-format "%H:%M")
 (display-time-mode 1)
-#+END_SRC
-
-* Diminish
-#+BEGIN_SRC emacs-lisp
-;; (use-package diminish
-;;   :ensure t)
 #+END_SRC
 
 * Git
