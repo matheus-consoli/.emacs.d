@@ -5,12 +5,6 @@
   :custom (vertico-cycle t)
   :init (vertico-mode))
 
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completino-category-overrides '(file (stles partial-completion))))
-
 (use-package savehist
   :init (savehist-mode))
 
@@ -35,6 +29,91 @@
 
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
+#+end_src
+*** Orderless
+https://github.com/minad/consult/wiki#minads-orderless-configuration
+#+begin_src emacs-lisp
+(use-package orderless
+  :demand t
+  :config
+  (defvar +orderless-dispatch-alist
+    '((?% . char-fold-to-regexp)
+      (?! . orderless-without-literal)
+      (?`. orderless-initialism)
+      (?= . orderless-literal)
+      (?~ . orderless-flex)))
+
+  ;; Recognizes the following patterns:
+  ;; * ~flex flex~
+  ;; * =literal literal=
+  ;; * %char-fold char-fold%
+  ;; * `initialism initialism`
+  ;; * !without-literal without-literal!
+  ;; * .ext (file extension)
+  ;; * regexp$ (regexp matching at end)
+  (defun +orderless-dispatch (pattern index _total)
+    (cond
+     ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
+     ((string-suffix-p "$" pattern)
+      `(orderless-regexp . ,(concat (substring pattern 0 -1) "[\x100000-\x10FFFD]*$")))
+     ;; File extensions
+     ((and
+       ;; Completing filename or eshell
+       (or minibuffer-completing-file-name
+           (derived-mode-p 'eshell-mode))
+       ;; File extension
+       (string-match-p "\\`\\.." pattern))
+      `(orderless-regexp . ,(concat "\\." (substring pattern 1) "[\x100000-\x10FFFD]*$")))
+     ;; Ignore single !
+     ((string= "!" pattern) `(orderless-literal . ""))
+     ;; Prefix and suffix
+     ((if-let (x (assq (aref pattern 0) +orderless-dispatch-alist))
+          (cons (cdr x) (substring pattern 1))
+        (when-let (x (assq (aref pattern (1- (length pattern))) +orderless-dispatch-alist))
+          (cons (cdr x) (substring pattern 0 -1)))))))
+
+  ;; Define orderless style with initialism by default
+  (orderless-define-completion-style +orderless-with-initialism
+    (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
+
+  ;; You may want to combine the `orderless` style with `substring` and/or `basic`.
+  ;; There are many details to consider, but the following configurations all work well.
+  ;; Personally I (@minad) use option 3 currently. Also note that you may want to configure
+  ;; special styles for special completion categories, e.g., partial-completion for files.
+  ;;
+  ;; 1. (setq completion-styles '(orderless))
+  ;; This configuration results in a very coherent completion experience,
+  ;; since orderless is used always and exclusively. But it may not work
+  ;; in all scenarios. Prefix expansion with TAB is not possible.
+  ;;
+  ;; 2. (setq completion-styles '(substring orderless))
+  ;; By trying substring before orderless, TAB expansion is possible.
+  ;; The downside is that you can observe the switch from substring to orderless
+  ;; during completion, less coherent.
+  ;;
+  ;; 3. (setq completion-styles '(orderless basic))
+  ;; Certain dynamic completion tables (completion-table-dynamic)
+  ;; do not work properly with orderless. One can add basic as a fallback.
+  ;; Basic will only be used when orderless fails, which happens only for
+  ;; these special tables.
+  ;;
+  ;; 4. (setq completion-styles '(substring orderless basic))
+  ;; Combine substring, orderless and basic.
+  ;;
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        ;;; Enable partial-completion for files.
+        ;;; Either give orderless precedence or partial-completion.
+        ;;; Note that completion-category-overrides is not really an override,
+        ;;; but rather prepended to the default completion-styles.
+        ;; completion-category-overrides '((file (styles orderless partial-completion))) ;; orderless is tried first
+        completion-category-overrides '((file (styles partial-completion)) ;; partial-completion is tried first
+                                        ;; enable initialism by default for symbols
+                                        (command (styles +orderless-with-initialism))
+                                        (variable (styles +orderless-with-initialism))
+                                        (symbol (styles +orderless-with-initialism)))
+        orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
+        orderless-style-dispatchers '(+orderless-dispatch)))
 #+end_src
 ** Company
 #+begin_src emacs-lisp
@@ -70,6 +149,17 @@
   :init (marginalia-mode))
 #+end_src
 
+** Which-key
+#+begin_src emacs-lisp
+(use-package which-key
+  :config
+  (setq which-key-idle-delay 0.25
+		which-key-idle-secondary-delay 0.05
+		which-key-show-remaining-keys nil)
+  :init (which-key-mode)
+  :bind ("C-c c w" . which-key-show-major-mode))
+#+end_src
+
 ** Embark
 #+begin_src emacs-lisp
 (use-package embark
@@ -98,6 +188,47 @@
   ;; if you want to have consult previews as you move around an
   ;; auto-updating embark collect buffer
   :hook (embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
+
+*** Embark use whick-key like a key menu prompt
+#+begin_src emacs-lisp
+(defun embark-which-key-indicator ()
+  "An embark indicator that displays keymaps using which-key.
+The which-key help message will show the type and value of the
+current target followed by an ellipsis if there are further
+targets."
+  (lambda (&optional keymap targets prefix)
+	(if (null keymap)
+		(which-key--hide-popup-ignore-command)
+	  (which-key--show-keymap
+	   (if (eq (plist-get (car targets) :type) 'embark-become)
+		   "Become"
+		 (format "Act on %s '%s'%s"
+				 (plist-get (car targets) :type)
+				 (embark--truncate-target (plist-get (car targets) :target))
+				 (if (cdr targets) "…" "")))
+	   (if prefix
+		   (pcase (lookup-key keymap prefix 'accept-default)
+			 ((and (pred keymapp) km) km)
+			 (_ (key-binding prefix 'accept-default)))
+		 keymap)
+	   nil nil t (lambda (binding)
+				   (not (string-suffix-p "-argument" (cdr binding))))))))
+
+(setq embark-indicators
+	  '(embark-which-key-indicator
+		embark-highlight-indicator
+		embark-isearch-highlight-indicator))
+
+(defun embark-hide-which-key-indicator (fn &rest args)
+  "Hide the which-key indicator immediately when using the completing-read prompter."
+  (which-key--hide-popup-ignore-command)
+  (let ((embark-indicators
+		 (remq #'embark-which-key-indicator embark-indicators)))
+	(apply fn args)))
+
+(advice-add #'embark-completing-read-prompter
+			:around #'embark-hide-which-key-indicator)
 #+end_src
 ** Projectile
 #+begin_src emacs-lisp
@@ -270,8 +401,12 @@
 
   ;; Optionally make narrowing help available in the minibuffer.
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
-  (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
+  ;; Configure S-up/S-down preview keys
+  (define-key vertico-map [S-up] #'vertico-previous)
+  (define-key vertico-map [S-down] #'vertico-next)
+  (consult-customize consult-recent-file :preview-key '([S-up] [S-down]))
   ;; Optionally configure a function which returns the project root directory.
   ;; There are multiple reasonable alternatives to chose from.
     ;;;; 1. project.el (project-roots)
@@ -287,6 +422,25 @@
     ;;;; 4. locate-dominating-file
   ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
   )
+#+end_src
+**** Use Orderless as a pattern compiler for regex
+#+begin_src emacs-lisp
+(defun consult--orderless-regexp-compiler (input type)
+  (setq input (orderless-pattern-compiler input))
+  (cons
+   (mapcar (lambda (r) (consult--convert-regexp r type)) input)
+   (lambda (str) (orderless--highlight input str))))
+
+;; OPTION 1: Activate globally for all consult-grep/ripgrep/find/...
+;; (setq consult--regexp-compiler #'consult--orderless-regexp-compiler)
+
+;; OPTION 2: Activate only for some commands, e.g., consult-ripgrep!
+(defun consult--with-orderless (&rest args)
+  (minibuffer-with-setup-hook
+	  (lambda ()
+		(setq-local consult--regexp-compiler #'consult--orderless-regexp-compiler))
+	(apply args)))
+(advice-add #'consult-ripgrep :around #'consult--with-orderless)
 #+end_src
 *** Consult flycheck
 #+begin_src emacs-lisp
