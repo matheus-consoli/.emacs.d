@@ -589,7 +589,17 @@ targets."
   (use-package flycheck-elixir)
 #+end_src
 
-*** TODO Haskell
+*** Haskell
+**** Haskell mode
+#+begin_src emacs-lisp
+(use-package haskell-mode)
+#+end_src
+**** LSP
+#+begin_src emacs-lisp
+(use-package lsp-haskell
+  :hook (haskell-mode . lsp)
+  (haskell-literate-mode . lsp))
+#+end_src
 
 *** TODO Python
 *** Minors
@@ -833,4 +843,9 @@ targets."
   ("C-c n" . crux-cleanup-buffer-or-region)
   ("C-c d" . crux-duplicate-current-line-or-region)
   ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
+#+end_src
+** Read $PATH
+#+begin_src emacs-lisp
+(use-package exec-path-from-shell
+  :init (exec-path-from-shell-initialize))
 #+end_src
