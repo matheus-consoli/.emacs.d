@@ -382,7 +382,7 @@ targets."
 
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
-  (setq consult-preview-key 'any)
+  (setq consult-preview-key (list :debounce 0.5 'any))
   ;; (setq consult-preview-key (kbd "M-."))
   ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
   ;; For some commands and buffer sources it is useful to configure the
@@ -395,6 +395,12 @@ targets."
    consult--source-recent-file consult--source-project-recent-file consult--source-bookmark
    :preview-key (kbd "M-."))
 
+  ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
+  (consult-customize consult-theme
+					 :preview-key
+					 (list (kbd "M-.")
+						   :debounce 0.5 (kbd "<up>") (kbd "<down>")
+						   :debounce 1 'any))
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
   (setq consult-narrow-key "<") ;; (kbd "C-+")
@@ -409,39 +415,21 @@ targets."
   (consult-customize consult-recent-file :preview-key '([S-up] [S-down]))
   ;; Optionally configure a function which returns the project root directory.
   ;; There are multiple reasonable alternatives to chose from.
-    ;;;; 1. project.el (project-roots)
+	;;;; 1. project.el (project-roots)
   (setq consult-project-root-function
 		(lambda ()
-          (when-let (project (project-current))
+		  (when-let (project (project-current))
 			(car (project-roots project)))))
-    ;;;; 2. projectile.el (projectile-project-root)
+	;;;; 2. projectile.el (projectile-project-root)
   ;; (autoload 'projectile-project-root "projectile")
   ;; (setq consult-project-root-function #'projectile-project-root)
-    ;;;; 3. vc.el (vc-root-dir)
+	;;;; 3. vc.el (vc-root-dir)
   ;; (setq consult-project-root-function #'vc-root-dir)
-    ;;;; 4. locate-dominating-file
+	;;;; 4. locate-dominating-file
   ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
   )
 #+end_src
-**** Use Orderless as a pattern compiler for regex
-#+begin_src emacs-lisp
-(defun consult--orderless-regexp-compiler (input type)
-  (setq input (orderless-pattern-compiler input))
-  (cons
-   (mapcar (lambda (r) (consult--convert-regexp r type)) input)
-   (lambda (str) (orderless--highlight input str))))
 
-;; OPTION 1: Activate globally for all consult-grep/ripgrep/find/...
-;; (setq consult--regexp-compiler #'consult--orderless-regexp-compiler)
-
-;; OPTION 2: Activate only for some commands, e.g., consult-ripgrep!
-(defun consult--with-orderless (&rest args)
-  (minibuffer-with-setup-hook
-	  (lambda ()
-		(setq-local consult--regexp-compiler #'consult--orderless-regexp-compiler))
-	(apply args)))
-(advice-add #'consult-ripgrep :around #'consult--with-orderless)
-#+end_src
 *** Consult flycheck
 #+begin_src emacs-lisp
   (use-package consult-flycheck
@@ -810,7 +798,12 @@ targets."
 #+begin_src emacs-lisp
 (use-package good-scroll
   :custom (redisplay-dont-pause 1)
-  :init (good-scroll-mode 1))
+  :config (good-scroll-mode 1))
+#+end_src
+*** Preserve screen position
+#+begin_src emacs-lisp
+(setq scroll-preserve-screen-position t
+	  scroll-conservatively 101)
 #+end_src
 ** Backup files
 #+begin_src emacs-lisp
