@@ -308,20 +308,6 @@ targets."
                  (window-height   . 0.33)))
   :init (global-flycheck-mode))
 #+end_src
-**** Flycheck integration with projectile
-#+begin_src emacs-lisp
-(use-package flycheck-projectile
-  :bind ("C-c ! L" . flycheck-projectile-list-errors)
-  :config
-  (add-to-list 'display-buffer-alist
-               `(,(rx bos "*Project errors*" eos)
-                 (display-buffer-reuse-window
-                  display-buffer-in-side-window)
-                 (side            . bottom)
-                 (reusable-frames . visible)
-                 (window-height   . 0.33)))
-  :after (projectile flycheck))
-#+end_src
 
 ** Consult and integrations
 *** Consult
