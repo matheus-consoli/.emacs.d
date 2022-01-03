@@ -160,6 +160,12 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
   :bind ("C-c c w" . which-key-show-major-mode))
 #+end_src
 
+** Avy
+#+begin_src emacs-lisp
+(use-package avy
+  :bind ("C-:" . avy-goto-char))
+#+end_src
+
 ** Embark
 #+begin_src emacs-lisp
 (use-package embark
@@ -292,7 +298,29 @@ targets."
 *** Flycheck
 #+begin_src emacs-lisp
 (use-package flycheck
+  :config
+  (add-to-list 'display-buffer-alist
+               `(,(rx bos "*Flycheck errors*" eos)
+                 (display-buffer-reuse-window
+                  display-buffer-in-side-window)
+                 (side            . bottom)
+                 (reusable-frames . visible)
+                 (window-height   . 0.33)))
   :init (global-flycheck-mode))
+#+end_src
+**** Flycheck integration with projectile
+#+begin_src emacs-lisp
+(use-package flycheck-projectile
+  :bind ("C-c ! L" . flycheck-projectile-list-errors)
+  :config
+  (add-to-list 'display-buffer-alist
+               `(,(rx bos "*Project errors*" eos)
+                 (display-buffer-reuse-window
+                  display-buffer-in-side-window)
+                 (side            . bottom)
+                 (reusable-frames . visible)
+                 (window-height   . 0.33)))
+  :after (projectile flycheck))
 #+end_src
 
 ** Consult and integrations
@@ -783,7 +811,7 @@ targets."
 
 ** Use spaces
 #+begin_src emacs-lisp
-(setq indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
 (defun consoli/infer-indentation-style ()
@@ -823,10 +851,6 @@ targets."
 #+begin_src emacs-lisp
 (setq auto-save-default nil)
 #+end_src
-** Hide unwanted buffers when cycling
-#+begin_src emacs-lisp
-(set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
-#+end_src
 ** Do what I mean
 #+begin_src emacs-lisp
 (global-set-key (kbd "M-u") 'upcase-dwim)
@@ -849,3 +873,8 @@ targets."
 (use-package exec-path-from-shell
   :init (exec-path-from-shell-initialize))
 #+end_src
+** Hide unwanted buffers when cycling
+#+begin_src emacs-lisp
+(set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
+#+end_src
+
