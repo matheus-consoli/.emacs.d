@@ -573,6 +573,15 @@ targets."
 #+begin_src emacs-lisp
   (save-place-mode 1)
 #+end_src
+*** Auto highlight symbol
+#+begin_src emacs-lisp
+(use-package auto-highlight-symbol
+  :ensure t
+  :custom-face (ahs-definition-face ((t (:background "dark orange" :foreground "black"))))
+  (ahs-face ((t (:background "orange" :foreground "black"))))
+  (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
+  :hook (prog-mode . auto-highlight-symbol-mode))
+#+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
@@ -643,8 +652,7 @@ targets."
 #+end_src
 *** Clock
 #+BEGIN_SRC emacs-lisp
-(setq display-time-24hr-format t)
-(setq display-time-format "%H:%M")
+(setq-default display-time-default-load-average nil)
 (display-time-mode 1)
 #+END_SRC
 
@@ -848,8 +856,8 @@ targets."
 (use-package crux
   :bind ([remap kill-line] . crux-smart-kill-line)
   ([remap kill-whole-line] . crux-kill-whole-line)
-  ("C-S-<UP>" . crux-smart-open-line-above)
-  ("C-S-<DOWN>" . crux-smart-open-line)
+  ("C-S-<up>" . crux-smart-open-line-above)
+  ("C-S-<down>" . crux-smart-open-line)
   ("C-c n" . crux-cleanup-buffer-or-region)
   ("C-c d" . crux-duplicate-current-line-or-region)
   ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
@@ -858,6 +866,45 @@ targets."
 #+begin_src emacs-lisp
 (use-package exec-path-from-shell
   :init (exec-path-from-shell-initialize))
+#+end_src
+** Smart go to beggining of line
+#+begin_src emacs-lisp
+(defun smarter-beginning-of-line (arg)
+  "Move point back to indentation of beginning of line.
+Move point to the first non-whitespace character on this line.
+If point is already there, move to the beginning of the line.
+Effectively toggle between the first non-whitespace character and the beginning of the line.
+If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the beginning or end of the buffer, stop there."
+
+  (interactive "^p")
+  (setq arg (or arg 1))
+  (when (/= arg 1)
+    (let ((line-move-visual nil))
+      (forward-line (1- arg))))
+  (let ((orig-point (point)))
+    (back-to-indentation)
+    (when (= orig-point (point))
+      (move-beginning-of-line 1))))
+
+(global-set-key [remap move-beginning-of-line] 'smarter-beginning-of-line)
+#+end_src
+** Smart new line
+#+begin_src emacs-lisp
+(defun consoli/smart-newline ()
+  "Add two newlines and put the cursor at the right indentation
+     between them if a newline is attempted when the cursor is between
+     two curly braces, otherwise do a regular newline and indent"
+  (interactive)
+  (if (or
+       (and (equal (char-before) 123) ; {
+            (equal (char-after) 125)) ; }
+       (and (equal (char-before) 40)  ; (
+            (equal (char-after) 41))) ; )
+      (progn (newline-and-indent)
+             (split-line)
+             (indent-for-tab-command))
+    (newline-and-indent)))
+(global-set-key (kbd "RET") 'consoli/smart-newline)
 #+end_src
 ** Hide unwanted buffers when cycling
 #+begin_src emacs-lisp
