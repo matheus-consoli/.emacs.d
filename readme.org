@@ -491,7 +491,7 @@ targets."
     :bind ("C-M-f" . 'sp-forward-sexp)
     ("C-M-b" . 'sp-backward-sexp)
     :config (smartparens-global-mode)
-    (smartparens-strict-mode t))
+    :init (smartparens-strict-mode t))
 #+end_src
 
 **** Show matches
@@ -582,6 +582,20 @@ targets."
   (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
   :hook (prog-mode . auto-highlight-symbol-mode))
 #+end_src
+*** Folding
+**** Origami
+#+begin_src emacs-lisp
+(use-package origami
+  :init (global-origami-mode)
+  :bind ("C-<tab>" . origami-recursively-toggle-node)
+  ("C-<iso-lefttab>" . origami-show-only-node))
+#+end_src
+**** Origami integration with LSP =textDocument/foldingRange= functionality
+#+begin_src emacs-lisp
+(use-package lsp-origami
+  :init (add-hook 'lsp-after-open-hook #'lsp-origami-try-enable))
+#+end_src
+
 ** Languages specifics
 *** Rust
 **** Rust mode
@@ -856,8 +870,6 @@ targets."
 (use-package crux
   :bind ([remap kill-line] . crux-smart-kill-line)
   ([remap kill-whole-line] . crux-kill-whole-line)
-  ("C-S-<up>" . crux-smart-open-line-above)
-  ("C-S-<down>" . crux-smart-open-line)
   ("C-c n" . crux-cleanup-buffer-or-region)
   ("C-c d" . crux-duplicate-current-line-or-region)
   ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
@@ -905,6 +917,26 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
              (indent-for-tab-command))
     (newline-and-indent)))
 (global-set-key (kbd "RET") 'consoli/smart-newline)
+#+end_src
+** Open lines around
+#+begin_src emacs-lisp
+(defun consoli/insert-new-line-bellow ()
+  (interactive)
+  (let ((current-point (point)))
+    (move-end-of-line 1)
+    (open-line 1)
+    (goto-char current-point)))
+(global-set-key (kbd "C-S-<down>") 'consoli/insert-new-line-bellow)
+
+(defun consoli/insert-new-line-above ()
+  (interactive)
+  (let ((current-point (point)))
+    (move-beginning-of-line 1)
+    (newline-and-indent)
+    (indent-according-to-mode)
+    (goto-char current-point)
+    (forward-char)))
+(global-set-key (kbd "C-S-<up>") 'consoli/insert-new-line-above)
 #+end_src
 ** Hide unwanted buffers when cycling
 #+begin_src emacs-lisp
