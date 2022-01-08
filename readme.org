@@ -582,20 +582,6 @@ targets."
   (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
   :hook (prog-mode . auto-highlight-symbol-mode))
 #+end_src
-*** Folding
-**** Origami
-#+begin_src emacs-lisp
-(use-package origami
-  :init (global-origami-mode)
-  :bind ("C-<tab>" . origami-recursively-toggle-node)
-  ("C-<iso-lefttab>" . origami-show-only-node))
-#+end_src
-**** Origami integration with LSP =textDocument/foldingRange= functionality
-#+begin_src emacs-lisp
-(use-package lsp-origami
-  :init (add-hook 'lsp-after-open-hook #'lsp-origami-try-enable))
-#+end_src
-
 ** Languages specifics
 *** Rust
 **** Rust mode
