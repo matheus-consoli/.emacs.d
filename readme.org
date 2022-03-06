@@ -518,6 +518,13 @@ targets."
   (use-package magit
     :config (setq magit-ediff-dwim-show-on-hunks t))
 #+end_src
+
+***** Magit TODOs
+#+begin_src emacs-lisp
+(use-package magit-todos
+  :config (magit-todos-mode t))
+#+end_src
+
 **** Fringe Helper
 #+BEGIN_SRC emacs-lisp
   (use-package fringe-helper
@@ -639,7 +646,6 @@ targets."
   (haskell-literate-mode . lsp))
 #+end_src
 
-*** TODO Python
 *** Minors
 **** TOML
 #+begin_src emacs-lisp
@@ -725,6 +731,10 @@ targets."
 #+begin_src emacs-lisp
   (global-hl-line-mode t)
 #+end_src
+*** Only highlight text region
+#+begin_src emacs-lisp
+(set-face-attribute 'region nil :extend nil)
+#+end_src
 *** Line numbers
 **** Hook
 #+begin_src emacs-lisp
@@ -737,7 +747,7 @@ targets."
 ** Font
 *** Set font
 #+begin_src emacs-lisp
-  (add-to-list 'default-frame-alist '(font . "Monoid Nerd Font"))
+  (add-to-list 'default-frame-alist '(font . "Monoid Nerd Font-11"))
   (set-face-attribute 'default t :font "Monoid Nerd Font")
   (global-auto-composition-mode t)
 #+end_src
@@ -952,3 +962,7 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
 #+end_src
 
+** Hide native compile logs
+#+begin_src emacs-lisp
+(setq native-comp-async-report-warnings-errors nil)
+#+end_src
