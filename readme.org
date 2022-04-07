@@ -606,7 +606,15 @@ targets."
 #+begin_src emacs-lisp
   (setq lsp-rust-analyzer-server-display-inlay-hints t
       lsp-rust-analyzer-display-chaining-hints t
-      lsp-rust-analyzer-display-parameter-hints t)
+      lsp-rust-analyzer-display-parameter-hints t
+      lsp-rust-analyzer-display-chaining-hints t
+      lsp-rust-analyzer-display-closure-return-type-hints t
+      lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
+      lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
+      lsp-rust-analyzer-display-parameter-hints t
+      lsp-rust-analyzer-display-reborrow-hints t
+      lsp-rust-analyzer-max-inlay-hint-length 40
+      lsp-rust-analyzer-proc-macro-enable t)
 #+end_src
 **** When creating news language bugs
 [[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
