@@ -256,7 +256,8 @@ targets."
 (use-package lsp-mode
   :init (setq lsp-keymap-prefix "C-c l"
               lsp-eldoc-render-all nil
-              lsp-modeline-code-actions-mode t
+              ;; lsp-modeline-code-actions-mode t
+              lsp-modeline-code-actions-segments '(count icon name)
               lsp-enable-on-type-formatting t
               lsp-enable-indentation t
               lsp-enable-folding t
@@ -277,22 +278,28 @@ targets."
 *** LSP UI
 #+begin_src emacs-lisp
 (use-package lsp-ui
-  :init (setq lsp-ui-doc-enable t
-			  lsp-ui-sideline-show-diagnostics t
-			  lsp-ui-doc-delay 0.2
-			  lsp-ui-sideline-show-hover t
-			  lsp-ui-sideline-show-code-actions t
-			  lsp-ui-peek-show-directory t
-			  lsp-ui-doc-show-with-cursor t
-			  ;; lsp-ui-doc-use-webkit t
-			  lsp-completion-show-kind t
-			  lsp-completion-show-detail t
-			  lsp-ui-doc-show-with-mouse t)
+  :init (setq lsp-ui-doc-enable nil
+              ;; lsp-ui-doc-delay 0.2
+              ;; lsp-ui-doc-show-with-cursor t
+              ;; lsp-ui-doc-show-with-mouse t
+
+              lsp-ui-sideline-show-diagnostics nil
+              lsp-ui-sideline-show-hover nil
+              lsp-ui-sideline-show-code-actions nil
+
+              lsp-ui-peek-enable t
+              lsp-ui-peek-show-directory t
+
+              lsp-completion-show-kind t
+              lsp-completion-show-detail t)
   :bind (:map lsp-ui-mode-map
-			  ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-			  ([remap xref-find-references] . lsp-ui-peek-find-references)
-			  ("C-c l i" . lsp-ui-imenu)
-			  ("C-c l d" . lsp-ui-doc-show)))
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c l i" . lsp-ui-imenu)
+              ("C-c l d" . lsp-ui-doc-show))
+  :config
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
 #+end_src
 ** Linter
 *** Flycheck
@@ -706,7 +713,7 @@ targets."
 #+end_src
 *** Load theme
 #+begin_src emacs-lisp
-  (load-theme 'doom-one
+  (load-theme 'doom-dracula
 	      :no-confirm)
 #+end_src
 ** UI
