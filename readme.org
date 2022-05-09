@@ -283,9 +283,9 @@ targets."
               ;; lsp-ui-doc-show-with-cursor t
               ;; lsp-ui-doc-show-with-mouse t
 
-              lsp-ui-sideline-show-diagnostics nil
-              lsp-ui-sideline-show-hover nil
-              lsp-ui-sideline-show-code-actions nil
+              lsp-ui-sideline-show-diagnostics t
+              lsp-ui-sideline-show-hover t
+              lsp-ui-sideline-show-code-actions t
 
               lsp-ui-peek-enable t
               lsp-ui-peek-show-directory t
@@ -293,13 +293,12 @@ targets."
               lsp-completion-show-kind t
               lsp-completion-show-detail t)
   :bind (:map lsp-ui-mode-map
-              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("M-." . lsp-ui-peek-find-definitions)
+              ("M-?" . lsp-ui-peek-find-references)
               ("C-c l i" . lsp-ui-imenu)
-              ("C-c l d" . lsp-ui-doc-show))
-  :config
-  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+              ("C-c l d" . lsp-ui-doc-show)))
+;; (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+;; (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
 #+end_src
 ** Linter
 *** Flycheck
@@ -479,8 +478,7 @@ targets."
 *** Consult LSP
 #+begin_src emacs-lisp
   (use-package consult-lsp
-    :after (consult marginalia lsp-mode)
-    :config (consult-lsp-marginalia-mode t))
+    :after (consult marginalia lsp-mode))
 #+end_src
 * Programming
 ** Utils
@@ -616,7 +614,7 @@ targets."
       lsp-rust-analyzer-display-parameter-hints t
       lsp-rust-analyzer-display-chaining-hints t
       lsp-rust-analyzer-display-closure-return-type-hints t
-      lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
+      lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial"
       lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
       lsp-rust-analyzer-display-parameter-hints t
       lsp-rust-analyzer-display-reborrow-hints t
