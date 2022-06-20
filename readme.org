@@ -1,3 +1,107 @@
+* Appearence
+** Modeline
+#+begin_src emacs-lisp
+  (use-package doom-modeline
+    :custom
+    (doom-modeline-height 50)
+    (doom-modeline-hud t)
+    (doom-modeline-enable-word-count t)
+    :init (doom-modeline-mode 1))
+#+end_src
+*** Clock
+#+BEGIN_SRC emacs-lisp
+(setq-default display-time-default-load-average nil)
+(display-time-mode 1)
+#+END_SRC
+
+** All the icons
+#+begin_src emacs-lisp
+  (use-package all-the-icons)
+#+end_src
+** Themes
+*** Doom themes
+#+begin_src emacs-lisp
+  (use-package doom-themes
+    :config (doom-themes-org-config)
+    :custom
+    (doom-themes-enable-bold   nil)
+    (doom-themes-enable-italic t))
+#+end_src
+**** Solaire-mode
+#+begin_src emacs-lisp
+  (use-package solaire-mode
+    :config (solaire-global-mode t))
+  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+#+end_src
+*** Load theme
+#+begin_src emacs-lisp
+(load-theme 'doom-horizon
+             :no-confirm)
+#+end_src
+** UI
+*** Splash screen
+#+begin_src emacs-lisp
+  (setq inhibit-startup-screen t)
+#+end_src
+*** Scratch buffer message
+#+begin_src emacs-lisp
+  (setq initial-scratch-message nil
+	inhibit-startup-echo-area-message t)
+#+end_src
+*** Scroll bar
+#+begin_src emacs-lisp
+  (scroll-bar-mode -1)
+#+end_src
+*** Menu bar
+#+begin_src emacs-lisp
+  (menu-bar-mode -1)
+#+end_src
+*** Tool bar
+#+begin_src emacs-lisp
+  (tool-bar-mode -1)
+#+end_src
+*** Cursor type
+#+begin_src emacs-lisp
+  (setq-default cursor-type 'bar)
+#+end_src
+*** Highlight line
+#+begin_src emacs-lisp
+  (global-hl-line-mode t)
+#+end_src
+*** Only highlight text region
+#+begin_src emacs-lisp
+(set-face-attribute 'region nil :extend nil)
+#+end_src
+*** Line numbers
+**** Hook
+#+begin_src emacs-lisp
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+#+end_src
+**** Format
+#+begin_src emacs-lisp
+  (fringe-mode '(15 . 10))
+#+end_src
+** Font
+*** Set font
+#+begin_src emacs-lisp
+(add-to-list 'default-frame-alist '(font . "CaskaydiaCove Nerd Font-13"))
+(set-face-attribute 'default t :font "CaskaydiaCove Nerd Font")
+(global-auto-composition-mode t)
+#+end_src
+*** Italic comments
+#+begin_src emacs-lisp
+(custom-set-faces
+ '(font-lock-comment-face ((t (:slant italic)))))
+#+end_src
+*** Pretty symbols
+#+begin_src emacs-lisp
+(when window-system
+  (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+#+end_src
+*** Fix org mode tables
+#+begin_src emacs-lisp
+(set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+#+end_src
 * Completion system
 ** Vertico
 #+begin_src emacs-lisp
@@ -506,11 +610,9 @@ targets."
 
 **** Show matches
 #+begin_src emacs-lisp
-  (require 'paren)
-  (set-face-foreground 'show-paren-match "#FF3377")
-  (set-face-background 'show-paren-match (face-background 'default))
-  (set-face-attribute 'show-paren-match nil :weight 'extra-bold)
-  (show-paren-mode 1)
+(show-paren-mode 1)
+(setq show-paren-style 'parenthesis)
+(set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
 #+end_src
 **** Rainbow delimiters
 #+begin_src emacs-lisp
@@ -552,17 +654,17 @@ targets."
 #+END_SRC
 *** Highlight indent guards
 #+begin_src emacs-lisp
-  (use-package highlight-indent-guides
-    :custom (highlight-indent-guides-method 'bitmap)
-    (highlight-indent-guides-auto-enabled t)
-    (highlight-indent-guides-delay 0)
-    (highlight-indent-guides-responsive 'stack)
-    :hook (prog-mode . highlight-indent-guides-mode))
-  (defun my-highlighter (level responsive display)
-    (if (> 1 level)
-	nil
-      (highlight-indent-guides--highlighter-default level responsive display)))
-  (setq highlight-indent-guides-highlighter-function 'my-highlighter)
+(use-package highlight-indent-guides
+  :custom (highlight-indent-guides-method 'bitmap)
+  (highlight-indent-guides-auto-enabled t)
+  (highlight-indent-guides-delay 0)
+  (highlight-indent-guides-responsive 'stack)
+  :hook (prog-mode . highlight-indent-guides-mode))
+(defun my-highlighter (level responsive display)
+  (if (> 1 level)
+      nil
+    (highlight-indent-guides--highlighter-default level responsive display)))
+(setq highlight-indent-guides-highlighter-function 'my-highlighter)
 #+end_src
 *** Region Expansion
 #+begin_src emacs-lisp
@@ -674,110 +776,6 @@ targets."
   (use-package dockerfile-mode)
 #+end_src
 
-* Appearence
-** Modeline
-#+begin_src emacs-lisp
-  (use-package doom-modeline
-    :custom
-    (doom-modeline-height 50)
-    (doom-modeline-hud t)
-    (doom-modeline-enable-word-count t)
-    :init (doom-modeline-mode 1))
-#+end_src
-*** Clock
-#+BEGIN_SRC emacs-lisp
-(setq-default display-time-default-load-average nil)
-(display-time-mode 1)
-#+END_SRC
-
-** All the icons
-#+begin_src emacs-lisp
-  (use-package all-the-icons)
-#+end_src
-** Themes
-*** Doom themes
-#+begin_src emacs-lisp
-  (use-package doom-themes
-    :config (doom-themes-org-config)
-    :custom
-    (doom-themes-enable-bold   t)
-    (doom-themes-enable-italic t))
-#+end_src
-**** Solaire-mode
-#+begin_src emacs-lisp
-  (use-package solaire-mode
-    :config (solaire-global-mode t))
-  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-#+end_src
-*** Load theme
-#+begin_src emacs-lisp
-  (load-theme 'doom-dracula
-	      :no-confirm)
-#+end_src
-** UI
-*** Splash screen
-#+begin_src emacs-lisp
-  (setq inhibit-startup-screen t)
-#+end_src
-*** Scratch buffer message
-#+begin_src emacs-lisp
-  (setq initial-scratch-message nil
-	inhibit-startup-echo-area-message t)
-#+end_src
-*** Scroll bar
-#+begin_src emacs-lisp
-  (scroll-bar-mode -1)
-#+end_src
-*** Menu bar
-#+begin_src emacs-lisp
-  (menu-bar-mode -1)
-#+end_src
-*** Tool bar
-#+begin_src emacs-lisp
-  (tool-bar-mode -1)
-#+end_src
-*** Cursor type
-#+begin_src emacs-lisp
-  (setq-default cursor-type 'bar)
-#+end_src
-*** Highlight line
-#+begin_src emacs-lisp
-  (global-hl-line-mode t)
-#+end_src
-*** Only highlight text region
-#+begin_src emacs-lisp
-(set-face-attribute 'region nil :extend nil)
-#+end_src
-*** Line numbers
-**** Hook
-#+begin_src emacs-lisp
-  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-#+end_src
-**** Format
-#+begin_src emacs-lisp
-  (fringe-mode '(15 . 10))
-#+end_src
-** Font
-*** Set font
-#+begin_src emacs-lisp
-  (add-to-list 'default-frame-alist '(font . "Monoid Nerd Font-11"))
-  (set-face-attribute 'default t :font "Monoid Nerd Font")
-  (global-auto-composition-mode t)
-#+end_src
-*** Italic comments
-#+begin_src emacs-lisp
-  (custom-set-faces
-   '(font-lock-comment-face ((t (:slant italic)))))
-#+end_src
-*** Pretty symbols
-#+begin_src emacs-lisp
-  (when window-system
-    (add-hook 'prog-mode-hook 'prettify-symbols-mode))
-#+end_src
-*** Fix org mode tables
-#+begin_src emacs-lisp
-  (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-#+end_src
 * Org
 ** Org-mode
 #+begin_src emacs-lisp
