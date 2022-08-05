@@ -46,7 +46,7 @@
 *** Scratch buffer message
 #+begin_src emacs-lisp
   (setq initial-scratch-message nil
-	inhibit-startup-echo-area-message t)
+    inhibit-startup-echo-area-message t)
 #+end_src
 *** Scroll bar
 #+begin_src emacs-lisp
@@ -80,6 +80,32 @@
 **** Format
 #+begin_src emacs-lisp
   (fringe-mode '(15 . 10))
+#+end_src
+*** svg tags
+#+begin_src emacs-lisp
+(use-package svg-tag-mode
+  :custom
+  (svg-tag-tags
+   ;; :XXX|YYY:
+   '(("\\(:[A-Za-z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
+                                           (svg-tag-make tag :beg 1 :inverse t
+                                                         :margin 0 :crop-right t))))
+     (":[A-Za-z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
+                                           (svg-tag-make tag :beg 1 :end -1
+                                                         :margin 0 :crop-left t))))
+     ;; :XXX:
+     ("\\(:[A-Za-z]+:\\)" . ((lambda (tag)
+                               (svg-tag-make tag :beg 1 :end -1))))
+     ;; #+TITLE: Something
+     ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
+                                    (svg-tag-make tag :beg 2 :end -1 :margin 1))))
+     ;; :#TAG1:#TAG2:…:$
+     ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+                                     (svg-tag-make tag :beg 2))))
+
+     ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
+                                       (svg-tag-make tag :beg 2 :end -1))))))
+  :hook (org-mode . svg-tag-mode))
 #+end_src
 ** Font
 *** Set font
@@ -258,8 +284,8 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
 (use-package which-key
   :config
   (setq which-key-idle-delay 0.25
-		which-key-idle-secondary-delay 0.05
-		which-key-show-remaining-keys nil)
+        which-key-idle-secondary-delay 0.05
+        which-key-show-remaining-keys nil)
   :init (which-key-mode)
   :bind ("C-c c w" . which-key-show-major-mode))
 #+end_src
@@ -308,37 +334,37 @@ The which-key help message will show the type and value of the
 current target followed by an ellipsis if there are further
 targets."
   (lambda (&optional keymap targets prefix)
-	(if (null keymap)
-		(which-key--hide-popup-ignore-command)
-	  (which-key--show-keymap
-	   (if (eq (plist-get (car targets) :type) 'embark-become)
-		   "Become"
-		 (format "Act on %s '%s'%s"
-				 (plist-get (car targets) :type)
-				 (embark--truncate-target (plist-get (car targets) :target))
-				 (if (cdr targets) "…" "")))
-	   (if prefix
-		   (pcase (lookup-key keymap prefix 'accept-default)
-			 ((and (pred keymapp) km) km)
-			 (_ (key-binding prefix 'accept-default)))
-		 keymap)
-	   nil nil t (lambda (binding)
-				   (not (string-suffix-p "-argument" (cdr binding))))))))
+    (if (null keymap)
+        (which-key--hide-popup-ignore-command)
+      (which-key--show-keymap
+       (if (eq (plist-get (car targets) :type) 'embark-become)
+           "Become"
+         (format "Act on %s '%s'%s"
+                 (plist-get (car targets) :type)
+                 (embark--truncate-target (plist-get (car targets) :target))
+                 (if (cdr targets) "…" "")))
+       (if prefix
+           (pcase (lookup-key keymap prefix 'accept-default)
+             ((and (pred keymapp) km) km)
+             (_ (key-binding prefix 'accept-default)))
+         keymap)
+       nil nil t (lambda (binding)
+                   (not (string-suffix-p "-argument" (cdr binding))))))))
 
 (setq embark-indicators
-	  '(embark-which-key-indicator
-		embark-highlight-indicator
-		embark-isearch-highlight-indicator))
+      '(embark-which-key-indicator
+        embark-highlight-indicator
+        embark-isearch-highlight-indicator))
 
 (defun embark-hide-which-key-indicator (fn &rest args)
   "Hide the which-key indicator immediately when using the completing-read prompter."
   (which-key--hide-popup-ignore-command)
   (let ((embark-indicators
-		 (remq #'embark-which-key-indicator embark-indicators)))
-	(apply fn args)))
+         (remq #'embark-which-key-indicator embark-indicators)))
+    (apply fn args)))
 
 (advice-add #'embark-completing-read-prompter
-			:around #'embark-hide-which-key-indicator)
+            :around #'embark-hide-which-key-indicator)
 #+end_src
 ** Projectile
 #+begin_src emacs-lisp
@@ -425,46 +451,46 @@ targets."
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
-		 ("C-c h" . consult-history)
-		 ("C-c m" . consult-mode-command)
-		 ;; C-x bindings (ctl-x-map)
-		 ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-		 ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-		 ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-		 ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-		 ;; Custom M-# bindings for fast register access
-		 ("M-#" . consult-register-load)
-		 ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-		 ("C-M-#" . consult-register)
-		 ;; Other custom bindings
-		 ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-		 ;; M-g bindings (goto-map)
-		 ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
-		 ("M-g g" . consult-goto-line)             ;; orig. goto-line
-		 ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-		 ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-		 ("M-g m" . consult-mark)
-		 ("M-g k" . consult-global-mark)
-		 ("M-g i" . consult-imenu)
-		 ("M-g I" . consult-imenu-multi)
-		 ;; M-s bindings (search-map)
-		 ("M-s f" . consult-find)
-		 ("M-s F" . consult-locate)
-		 ("M-s g" . consult-grep)
-		 ("M-s G" . consult-git-grep)
-		 ("M-s r" . consult-ripgrep)
-		 ("M-s l" . consult-line)
-		 ("M-s L" . consult-line-multi)
-		 ("M-s m" . consult-multi-occur)
-		 ("M-s k" . consult-keep-lines)
-		 ("M-s u" . consult-focus-lines)
-		 ;; Isearch integration
-		 ("M-s e" . consult-isearch-history)
-		 :map isearch-mode-map
-		 ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-		 ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-		 ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-		 ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ;; C-x bindings (ctl-x-map)
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings (goto-map)
+         ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings (search-map)
+         ("M-s f" . consult-find)
+         ("M-s F" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s m" . consult-multi-occur)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
 
   ;; Enable automatic preview at point in the *Completions* buffer. This is
   ;; relevant when you use the default completion UI. You may want to also
@@ -478,7 +504,7 @@ targets."
   ;; preview for `consult-register', `consult-register-load',
   ;; `consult-register-store' and the Emacs built-ins.
   (setq register-preview-delay 0
-		register-preview-function #'consult-register-format)
+        register-preview-function #'consult-register-format)
 
   ;; Optionally tweak the register preview window.
   ;; This adds thin lines, sorting and hides the mode line of the window.
@@ -489,16 +515,16 @@ targets."
 
   ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
-		xref-show-definitions-function #'consult-xref)
+        xref-show-definitions-function #'consult-xref)
 
   ;; Use `consult-completion-in-region' if Vertico is enabled.
   ;; Otherwise use the default `completion--in-region' function.
   (setq completion-in-region-function
-		(lambda (&rest args)
-		  (apply (if vertico-mode
-					 #'consult-completion-in-region
-				   #'completion--in-region)
-				 args)))
+        (lambda (&rest args)
+          (apply (if vertico-mode
+                     #'consult-completion-in-region
+                   #'completion--in-region)
+                 args)))
 
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
@@ -521,10 +547,10 @@ targets."
 
   ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
   (consult-customize consult-theme
-					 :preview-key
-					 (list (kbd "M-.")
-						   :debounce 0.5 (kbd "<up>") (kbd "<down>")
-						   :debounce 1 'any))
+                     :preview-key
+                     (list (kbd "M-.")
+                           :debounce 0.5 (kbd "<up>") (kbd "<down>")
+                           :debounce 1 'any))
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
   (setq consult-narrow-key "<") ;; (kbd "C-+")
@@ -539,17 +565,17 @@ targets."
   (consult-customize consult-recent-file :preview-key '([S-up] [S-down]))
   ;; Optionally configure a function which returns the project root directory.
   ;; There are multiple reasonable alternatives to chose from.
-	;;;; 1. project.el (project-roots)
+    ;;;; 1. project.el (project-roots)
   (setq consult-project-root-function
-		(lambda ()
-		  (when-let (project (project-current))
-			(car (project-roots project)))))
-	;;;; 2. projectile.el (projectile-project-root)
+        (lambda ()
+          (when-let (project (project-current))
+            (car (project-roots project)))))
+    ;;;; 2. projectile.el (projectile-project-root)
   ;; (autoload 'projectile-project-root "projectile")
   ;; (setq consult-project-root-function #'projectile-project-root)
-	;;;; 3. vc.el (vc-root-dir)
+    ;;;; 3. vc.el (vc-root-dir)
   ;; (setq consult-project-root-function #'vc-root-dir)
-	;;;; 4. locate-dominating-file
+    ;;;; 4. locate-dominating-file
   ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
   )
 #+end_src
@@ -640,17 +666,17 @@ targets."
 
 **** Git Gutter
 #+BEGIN_SRC emacs-lisp
-  (use-package git-gutter-fringe+
-    :config
-    (setq git-gutter-fr+-side 'right-fringe) ;; left side is for flycheck
-    (set-face-foreground 'git-gutter-fr+-modified "#e77818")
-    (set-face-background 'git-gutter-fr+-modified "#e77818")
-    (set-face-foreground 'git-gutter-fr+-deleted "#a20417")
-    (set-face-background 'git-gutter-fr+-deleted "#a20417")
-    (set-face-foreground 'git-gutter-fr+-added "#007144")
-    (set-face-background 'git-gutter-fr+-added "#007144")
-    (setq-default right-fringe-width 10)
-    :init (global-git-gutter+-mode))
+(use-package git-gutter-fringe+
+  :config
+  (setq git-gutter-fr+-side 'right-fringe) ;; left side is for flycheck
+  (set-face-foreground 'git-gutter-fr+-modified "#e77818")
+  (set-face-background 'git-gutter-fr+-modified "#e77818")
+  (set-face-foreground 'git-gutter-fr+-deleted "#a20417")
+  (set-face-background 'git-gutter-fr+-deleted "#a20417")
+  (set-face-foreground 'git-gutter-fr+-added "#007144")
+  (set-face-background 'git-gutter-fr+-added "#007144")
+  (setq-default right-fringe-width 5)
+  :hook (prog-mode . git-gutter+-mode))
 #+END_SRC
 *** Highlight indent guards
 #+begin_src emacs-lisp
@@ -780,35 +806,127 @@ targets."
 #+end_src
 
 * Org
-** Org-mode
+** install
 #+begin_src emacs-lisp
-(setq org-startup-indented t
-      org-ellipsis "  "
-      org-pretty-entities t
-      org-hide-emphasis-markers t
-      org-fontify-whole-heading-line t
-      org-fontify-done-headline t
-      org-hide-emphasis-markers t
-      org-edit-src-content-indentation 0
-      org-src-tab-acts-natively t
-      org-src-fontify-natively t
-      org-src-preserve-indentation t
-      org-support-shift-select 'always
-      org-edit-src-persistent-message nil
-      org-fontify-quote-and-verse-blocks t)
-(font-lock-add-keywords 'org-mode
-						'(("^ *\\([-]\\) "
-						   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+(use-package org
+  :defer t
+  :ensure org-contrib)
+#+end_src
+** Org modern
+#+begin_src emacs-lisp
+(use-package org-modern
+  :init (global-org-modern-mode)
+  :config
+  (setq org-catch-invisible-edits 'show-and-error
+        org-edit-src-content-indentation 0
+        org-edit-src-persistent-message nil
+        org-ellipsis "  "
+        org-fontify-done-headline t
+        org-fontify-whole-heading-line t
+        org-hide-emphasis-markers t
+        org-hide-leading-stars t
+        org-insert-heading-respect-content t
+        org-odd-levels-only t
+        org-pretty-entities t
+        header-line-format ""
+        org-src-fontify-natively t
+        org-src-preserve-indentation t
+        org-src-tab-acts-natively t
+        org-startup-indented t
+        line-spacing 0.3
+        org-startup-folded 'content
+        org-adapt-indentation nil
+        org-return-follows-link t
+        org-cycle-separator-lines 2
+        org-support-shift-select 'always
+        org-outline-path-complete-in-steps nil
+        org-refile-use-outline-path t
+        org-refile-targets '((nil :maxlevel . 1)
+                             (org-agenda-files :maxlevel . 1))))
+
+
+#+end_src
+** Custom faces
+
+*** variable pitch
+#+begin_src emacs-lisp
+(use-package org-variable-pitch
+  :hook org-mode-hook)
+#+end_src
+
+*** fixed pitch
+#+begin_src emacs-lisp
+(require 'org-indent)
 (custom-theme-set-faces
  'user
  '(org-code ((t (:inherit (shadow fixed-pitch)))))
  '(org-indent ((t (:inherit (org-hide fixed-pitch))))))
+
+(set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+(set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
+(set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+(set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+(set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+(set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
 #+end_src
-** Org bullets
+
+*** column views
 #+begin_src emacs-lisp
-(use-package org-bullets
-  :hook (org-mode . org-bullets-mode)
-  :init (org-bullets-mode 1))
+(set-face-attribute 'org-column nil :background nil)
+(set-face-attribute 'org-column-title nil :background nil)
+#+end_src
+
+*** window dividers
+#+begin_src emacs-lisp
+(dolist (face '(window-divider
+                window-divider-first-pixel
+                window-divider-last-pixel))
+  (face-spec-reset-face face)
+  (set-face-foreground face (face-attribute 'default :background)))
+(set-face-background 'fringe (face-attribute 'default :background))
+#+end_src
+
+** bigger font in titles
+#+begin_src emacs-lisp
+(set-face-attribute 'org-document-title nil :font "CaskaydiaCove Nerd Font" :weight 'bold :height 1.3)
+(dolist (face '((org-level-1 . 1.2)
+                (org-level-2 . 1.1)
+                (org-level-3 . 1.05)
+                (org-level-4 . 1.0)
+                (org-level-5 . 1.1)
+                (org-level-6 . 1.1)
+                (org-level-7 . 1.1)
+                (org-level-8 . 1.1)))
+  (set-face-attribute (car face) nil :font "CaskaydiaCove Nerd Font" :weight 'medium :height (cdr face)))
+#+end_src
+
+** Org superstar
+#+begin_src emacs-lisp
+(use-package org-superstar
+  :after org
+  :hook (org-mode . org-superstar-mode)
+  :custom
+  (org-superstar-remove-leading-stars t)
+  :config (org-superstar-configure-like-org-bullets))
+
+(defun my-auto-lightweight-mode ()
+  "Start Org Superstar differently depending on the number of lists items."
+  (let ((list-items
+         (count-matches "^[ \t]*?\\([+-]\\|[ \t]\\*\\)"
+                        (point-min) (point-max))))
+    (unless (< list-items 100)
+      (org-superstar-toggle-lightweight-lists)))
+  (org-superstar-mode))
+
+(add-hook 'org-mode-hook #'my-auto-lightweight-mode)
+#+end_src
+** make invisible parts visible
+#+begin_src emacs-lisp
+(use-package org-appear
+  :hook org-mode-hook)
 #+end_src
 ** Org mode as the *scratch* buffer
 #+begin_src emacs-lisp
@@ -826,6 +944,12 @@ targets."
     1 'org-checkbox-done-text prepend))
  'append)
 #+end_src
+** Pretty bullet list
+#+begin_src emacs-lisp
+(font-lock-add-keywords 'org-mode
+                        '(("^ *\\([-]\\) "
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+#+end_src
 ** Centralized
 #+begin_src emacs-lisp
 (use-package olivetti
@@ -833,6 +957,66 @@ targets."
   :config (setq-default olivetti-body-width 120))
 
 (setq-default default-justification 'full)
+#+end_src
+** Org-roam
+*** Install it
+#+begin_src emacs-lisp
+(use-package org-roam
+  :custom
+  (org-roam-directory (file-truename "~/projects/brainiac"))
+  (org-roam-dailies-directory "dailies/")
+  (org-roam-completion-everywhere t)
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry
+      "\n\n* %<%I:%M %p>: %?"
+      :if-new (file+head "%<%Y-%m-%d>.org"
+                         "#+OPTIONS: ^:nil\n#+title: %<%Y-%m-%d>\n"))))
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+date: %U")
+      :unnarrowed t) 
+     ("p" "paper notes" plain
+      "\n\n* Reference\nAuthors: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: paper")
+      :unnarrowed t)
+     ("s" "project notes" plain
+      "\n\n* Description\n%?\n* Tasks"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: project"))
+     ("t" "task" plain
+      "\n\n* Description\n\n** Context\n%?\n**What we need to do\n\n*Subtasks"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: task"))))
+  :bind (("C-c b f" . org-roam-node-find)
+         ("C-c b i" . org-roam-node-insert)
+         ("C-c b c" . org-roam-capture)
+         ("C-c b d" . org-roam-dailies-capture-today)
+         ("C-c b D" . org-roam-dailies-goto-today)
+         ("C-c b y" . org-roam-dailies-goto-previous))
+  :config
+  (setq org-roam-node-display-template
+        (concat "${title:*} "
+                (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode))
+#+end_src
+*** Org-roam-ui
+#+begin_src emacs-lisp
+(use-package org-roam-ui
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t)
+  (defun open-org-roam-ui ()
+    (interactive)
+    (when (not(bound-and-true-p org-roam-ui-mode))
+          (org-roam-ui-mode))
+    (org-roam-ui-open))
+  :bind
+  ("C-c b g" . open-org-roam-ui))
 #+end_src
 * Utils
 ** Easy increase/decrease font size
@@ -882,7 +1066,7 @@ targets."
 *** Preserve screen position
 #+begin_src emacs-lisp
 (setq scroll-preserve-screen-position t
-	  scroll-conservatively 101)
+      scroll-conservatively 101)
 #+end_src
 ** Backup files
 #+begin_src emacs-lisp
@@ -979,4 +1163,9 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 ** Hide native compile logs
 #+begin_src emacs-lisp
 (setq native-comp-async-report-warnings-errors nil)
+#+end_src
+
+** no bell
+#+begin_src emacs-lisp
+(setq ring-bell-function 'ignore)
 #+end_src
