@@ -35,7 +35,7 @@
 #+end_src
 *** Load theme
 #+begin_src emacs-lisp
-(load-theme 'doom-horizon
+(load-theme 'doom-one
              :no-confirm)
 #+end_src
 ** UI
@@ -94,24 +94,21 @@
                                            (svg-tag-make tag :beg 1 :end -1
                                                          :margin 0 :crop-left t))))
      ;; :XXX:
-     ("\\(:[A-Za-z]+:\\)" . ((lambda (tag)
-                               (svg-tag-make tag :beg 1 :end -1))))
+     ("\\([^:]:[A-Za-z0-9]+:\\)" . ((lambda (tag)
+                               (svg-tag-make tag :beg 1 :end -1 :margin 1))))
      ;; #+TITLE: Something
      ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
                                     (svg-tag-make tag :beg 2 :end -1 :margin 1))))
      ;; :#TAG1:#TAG2:…:$
      ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-                                     (svg-tag-make tag :beg 2))))
-
-     ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
-                                       (svg-tag-make tag :beg 2 :end -1))))))
+                                     (svg-tag-make tag :beg 2))))))
   :hook (org-mode . svg-tag-mode))
 #+end_src
 ** Font
 *** Set font
 #+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(font . "CaskaydiaCove Nerd Font-13"))
-(set-face-attribute 'default t :font "CaskaydiaCove Nerd Font")
+(add-to-list 'default-frame-alist '(font . "BlexMono Nerd Font-12"))
+(set-face-attribute 'default t :font "BlexMono Nerd Font")
 (global-auto-composition-mode t)
 #+end_src
 *** Italic comments
@@ -293,7 +290,7 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
 ** Avy
 #+begin_src emacs-lisp
 (use-package avy
-  :bind ("C-:" . avy-goto-char))
+  :bind ("C-:" . avy-goto-char-timer))
 #+end_src
 
 ** Embark
@@ -456,8 +453,6 @@ targets."
          ;; C-x bindings (ctl-x-map)
          ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
          ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
          ;; Custom M-# bindings for fast register access
          ("M-#" . consult-register-load)
          ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
@@ -476,8 +471,6 @@ targets."
          ;; M-s bindings (search-map)
          ("M-s f" . consult-find)
          ("M-s F" . consult-locate)
-         ("M-s g" . consult-grep)
-         ("M-s G" . consult-git-grep)
          ("M-s r" . consult-ripgrep)
          ("M-s l" . consult-line)
          ("M-s L" . consult-line-multi)
@@ -529,22 +522,6 @@ targets."
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
-
-  ;; Optionally configure preview. The default value
-  ;; is 'any, such that any key triggers the preview.
-  (setq consult-preview-key (list :debounce 0.5 'any))
-  ;; (setq consult-preview-key (kbd "M-."))
-  ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
-  ;; For some commands and buffer sources it is useful to configure the
-  ;; :preview-key on a per-command basis using the `consult-customize' macro.
-  (consult-customize
-   consult-theme
-   :preview-key '(:debounce 0.2 any)
-   consult-ripgrep consult-git-grep consult-grep
-   consult-bookmark consult-recent-file consult-xref
-   consult--source-recent-file consult--source-project-recent-file consult--source-bookmark
-   :preview-key (kbd "M-."))
-
   ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
   (consult-customize consult-theme
                      :preview-key
@@ -569,15 +546,7 @@ targets."
   (setq consult-project-root-function
         (lambda ()
           (when-let (project (project-current))
-            (car (project-roots project)))))
-    ;;;; 2. projectile.el (projectile-project-root)
-  ;; (autoload 'projectile-project-root "projectile")
-  ;; (setq consult-project-root-function #'projectile-project-root)
-    ;;;; 3. vc.el (vc-root-dir)
-  ;; (setq consult-project-root-function #'vc-root-dir)
-    ;;;; 4. locate-dominating-file
-  ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
-  )
+            (car (project-roots project))))))
 #+end_src
 
 *** Consult flycheck
@@ -678,6 +647,20 @@ targets."
   (setq-default right-fringe-width 5)
   :hook (prog-mode . git-gutter+-mode))
 #+END_SRC
+
+**** blame
+#+begin_src emacs-lisp
+(use-package blamer
+  :bind (("C-M-b" . blamer-show-commit-info))
+  :custom
+  (blamer-idle-time 0.3)
+  (blamer-min-offset 30)
+  (blamer-prettify-time-p t)
+  (blamer-max-commit-message-length 72)
+  (blamer-tooltip-function 'blamer-tooltip-commit-message)
+  :config
+  (global-blamer-mode 1))
+#+end_src
 *** Highlight indent guards
 #+begin_src emacs-lisp
 (use-package highlight-indent-guides
@@ -755,13 +738,18 @@ targets."
 **** When creating news language bugs
 [[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
 #+begin_src emacs-lisp
-(setq
- lsp-rust-analyzer-rustfmt-override-command ["./build/$TARGET_TRIPLE/stage0/bin/rustfmt", "--edition=2021"]
- lsp-rust-analyzer-cargo-run-build-scripts nil
- lsp-rust-analyzer-cargo-run-build-scripts nil
- lsp-rust-analyzer-rustc-source "./Cargo.toml"
- lsp-rust-analyzer-proc-macro-enable nil)
+;; (setq
+;;  lsp-rust-analyzer-rustfmt-override-command ["./build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021"]
+;;  lsp-rust-analyzer-cargo-run-build-scripts t
+;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
+;;  lsp-rust-analyzer-proc-macro-enable t)
 #+end_src
+*** Unison
+**** Unison mode
+#+begin_src emacs-lisp
+(use-package unisonlang-mode)
+#+end_src
+
 *** Elixir
 **** Elixir mode
 #+begin_src emacs-lisp
@@ -954,11 +942,15 @@ targets."
 #+begin_src emacs-lisp
 (use-package olivetti
   :hook (org-mode . olivetti-mode)
-  :config (setq-default olivetti-body-width 120))
+  :config (setq-default olivetti-body-width 140))
 
 (setq-default default-justification 'full)
 #+end_src
 ** Org-roam
+*** Load org-fold
+#+begin_src emacs-lisp
+(require 'org-fold)
+#+end_src
 *** Install it
 #+begin_src emacs-lisp
 (use-package org-roam
@@ -978,7 +970,7 @@ targets."
                          "#+OPTIONS: ^:nil\n#+title: ${title}\n#+date: %U")
       :unnarrowed t) 
      ("p" "paper notes" plain
-      "\n\n* Reference\nAuthors: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n%?"
+      "\n\n* Reference\nAuthors: %^{Author}\nTitle: ${title}\nYear: %^{year}\nLink: %^{link}\n\n* Summary\n%?"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: paper")
       :unnarrowed t)
@@ -987,7 +979,7 @@ targets."
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: project"))
      ("t" "task" plain
-      "\n\n* Description\n\n** Context\n%?\n**What we need to do\n\n*Subtasks"
+      "\n\n* Description\n\n** Context\n%?\n** What we need to do\n\n* Subtasks"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: task"))))
   :bind (("C-c b f" . org-roam-node-find)

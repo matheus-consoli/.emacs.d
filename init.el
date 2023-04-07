@@ -47,6 +47,8 @@
 ;; Always use straight to install on systems other than Linux
 (setq straight-use-package-by-default (not (eq system-type 'gnu/linux)))
 
+(straight-use-package 'org)
+
 ;; Use straight.el for use-package expressions
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
@@ -61,7 +63,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("1278c5f263cdb064b5c86ab7aa0a76552082cf0189acf6df17269219ba496053" "234dbb732ef054b109a9e5ee5b499632c63cc24f7c2383a849815dacc1727cb6" "c2aeb1bd4aa80f1e4f95746bda040aafb78b1808de07d340007ba898efa484f5" default)))
+   '("ae426fc51c58ade49774264c17e666ea7f681d8cae62570630539be3d06fd964" "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" "1278c5f263cdb064b5c86ab7aa0a76552082cf0189acf6df17269219ba496053" "234dbb732ef054b109a9e5ee5b499632c63cc24f7c2383a849815dacc1727cb6" "c2aeb1bd4aa80f1e4f95746bda040aafb78b1808de07d340007ba898efa484f5" default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -69,7 +71,7 @@
  ;; If there is more than one, they won't work right.
  '(ahs-definition-face ((t (:background "dark orange" :foreground "black"))))
  '(ahs-face ((t (:background "orange" :foreground "black"))))
- '(ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))) t)
+ '(ahs-plugin-default-face ((t (:background "#1E2029" :foreground "dark orange"))))
  '(company-tooltip-common ((t (:inhirit company-tooltip :weight bold :underline nil))))
  '(company-tooltip-common-selection ((t (:inhirit company-tooltip-selection :weight bold :underline nil))))
  '(font-lock-comment-face ((t (:slant italic))))
