@@ -635,17 +635,19 @@ targets."
 
 **** Git Gutter
 #+BEGIN_SRC emacs-lisp
-(use-package git-gutter-fringe+
+(use-package git-gutter
+  :hook (prog-mode . git-gutter-mode)
   :config
-  (setq git-gutter-fr+-side 'right-fringe) ;; left side is for flycheck
-  (set-face-foreground 'git-gutter-fr+-modified "#e77818")
-  (set-face-background 'git-gutter-fr+-modified "#e77818")
-  (set-face-foreground 'git-gutter-fr+-deleted "#a20417")
-  (set-face-background 'git-gutter-fr+-deleted "#a20417")
-  (set-face-foreground 'git-gutter-fr+-added "#007144")
-  (set-face-background 'git-gutter-fr+-added "#007144")
-  (setq-default right-fringe-width 5)
-  :hook (prog-mode . git-gutter+-mode))
+  (use-package git-gutter-fringe
+    :config
+    (setq git-gutter-fr:side 'right-fringe)
+    (setq-default right-fringe-width 15)
+    (set-face-foreground 'git-gutter-fr:modified "#f5a97f")
+    (set-face-background 'git-gutter-fr:modified "#f5a97f")
+    (set-face-foreground 'git-gutter-fr:added    "#a6da95")
+    (set-face-background 'git-gutter-fr:added    "#a6da95")
+    (set-face-foreground 'git-gutter-fr:deleted  "#ed8796")
+    (set-face-background 'git-gutter-fr:deleted  "#ed8796")))
 #+END_SRC
 
 **** blame
