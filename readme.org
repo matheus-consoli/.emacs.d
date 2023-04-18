@@ -812,7 +812,7 @@ targets."
 #+begin_src emacs-lisp
   (setq
    ;; adapt indentation of content to match its heading
-   org-adapt-indentation nil
+   org-adapt-indentation t
    org-ellipsis "  "
    org-hide-emphasis-markers t
    ;; non-nil = utf-8
@@ -825,6 +825,7 @@ targets."
    org-support-shift-select 'always
    ;; no help message when editing code
    org-edit-src-persistent-message nil
+   org-insert-heading-respect-content t
    line-spacing 0.5)
 #+end_src
 ** Custom faces
@@ -1064,10 +1065,6 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
               "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
               "\\)"))
 #+end_src
-** org-indent
-   #+begin_src emacs-lisp
-     (add-hook 'org-mode-hook 'org-indent-mode)
-   #+end_src
 * Utils
 ** Easy increase/decrease font size
 #+begin_src emacs-lisp
@@ -1218,4 +1215,4 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 ** no bell
 #+begin_src emacs-lisp
 (setq ring-bell-function 'ignore)
-#+end_src
+#+end_src    
