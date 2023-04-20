@@ -1216,3 +1216,12 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 #+begin_src emacs-lisp
 (setq ring-bell-function 'ignore)
 #+end_src    
+** Spell checking
+*** Jinx
+    #+begin_src emacs-lisp 
+      (use-package jinx
+        :hook (emacs-startup . global-jinx-mode)
+        ;; `M-$` correct the word at point
+        :custom (jinx-languages "en_UK en_US pt_BR")
+        :bind ([remap ispell-word] . jinx-correct))
+    #+end_src
