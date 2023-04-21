@@ -670,16 +670,19 @@ targets."
 
 **** blame
 #+begin_src emacs-lisp
-(use-package blamer
-  :bind (("C-M-b" . blamer-show-commit-info))
-  :custom
-  (blamer-idle-time 0.3)
-  (blamer-min-offset 30)
-  (blamer-prettify-time-p t)
-  (blamer-max-commit-message-length 72)
-  (blamer-tooltip-function 'blamer-tooltip-commit-message)
-  :init
-  (global-blamer-mode 1))
+  (use-package blamer
+    :bind (("C-M-b" . blamer-show-posframe-commit-info))
+    :custom
+    (blamer-idle-time 0.3)
+    (blamer-min-offset 30)
+    (blamer-prettify-time-p t)
+    (blamer-max-commit-message-length 72)
+    (blamer-show-avatar-p t)
+    (blamer-tooltip-function 'blamer-tooltip-commit-message)
+    :custom-face
+    (blamer-face ((t :italic t :height 120)))
+    :init
+    (global-blamer-mode 1))
 #+end_src
 *** Highlight indent guards
 #+begin_src emacs-lisp
