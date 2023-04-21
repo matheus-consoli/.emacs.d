@@ -730,6 +730,10 @@ targets."
   (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
   :hook (prog-mode . auto-highlight-symbol-mode))
 #+end_src
+*** Continue commenting on enter
+    #+begin_src emacs-lisp
+      (global-set-key (kbd "RET") 'default-indent-new-line)
+    #+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
@@ -1155,7 +1159,7 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 (use-package exec-path-from-shell
   :init (exec-path-from-shell-initialize))
 #+end_src
-** Smart go to beggining of line
+** Smart go to beginning of line
 #+begin_src emacs-lisp
 (defun smarter-beginning-of-line (arg)
   "Move point back to indentation of beginning of line.
