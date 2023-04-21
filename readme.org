@@ -596,18 +596,30 @@ targets."
 #+end_src
 *** Parens
 **** Smartparens
-#+begin_src emacs-lisp
-  (use-package smartparens
-    :bind ("C-M-f" . 'sp-forward-sexp)
-    ("C-M-b" . 'sp-backward-sexp)
-    :config (smartparens-global-mode)
-    :init (smartparens-strict-mode t))
-
-;; easy <'lifetime>
-(sp-with-modes 'rust-mode
-  (sp-local-pair "<" ">")
-  (sp-local-pair "'" nil :actions nil))
-#+end_src
+     #+begin_src emacs-lisp
+       (use-package smartparens
+         :bind ("C-M-f" . 'sp-forward-sexp)
+         ("C-M-b" . 'sp-backward-sexp)
+         :config (smartparens-global-mode)
+         :init (smartparens-strict-mode t))
+       ;; easy <'lifetime>
+       (sp-with-modes 'rust-mode
+         (sp-local-pair "<" ">")
+         (sp-local-pair "'" nil :actions nil))
+     #+end_src
+***** easy generics
+      #+begin_src emacs-lisp
+        (sp-with-modes 'rust-mode
+          (sp-local-pair "<" ">")
+          ;; easy lifetimes
+          (sp-local-pair "'" nil :actions nil))
+      #+end_src
+***** close parens in new line
+      #+begin_src emacs-lisp
+        (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
+      #+end_src
 
 **** Show matches
 #+begin_src emacs-lisp
@@ -1164,44 +1176,26 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 
 (global-set-key [remap move-beginning-of-line] 'smarter-beginning-of-line)
 #+end_src
-** Smart new line
-#+begin_src emacs-lisp
-(defun consoli/smart-newline ()
-  "Add two newlines and put the cursor at the right indentation
-     between them if a newline is attempted when the cursor is between
-     two curly braces, otherwise do a regular newline and indent"
-  (interactive)
-  (if (or
-       (and (equal (char-before) 123) ; {
-            (equal (char-after) 125)) ; }
-       (and (equal (char-before) 40)  ; (
-            (equal (char-after) 41))) ; )
-      (progn (newline-and-indent)
-             (split-line)
-             (indent-for-tab-command))
-    (newline-and-indent)))
-(global-set-key (kbd "RET") 'consoli/smart-newline)
-#+end_src
 ** Open lines around
-#+begin_src emacs-lisp
-(defun consoli/insert-new-line-bellow ()
-  (interactive)
-  (let ((current-point (point)))
-    (move-end-of-line 1)
-    (open-line 1)
-    (goto-char current-point)))
-(global-set-key (kbd "C-S-<down>") 'consoli/insert-new-line-bellow)
+   #+begin_src emacs-lisp
+     (defun consoli/insert-new-line-bellow ()
+       (interactive)
+       (let ((current-point (point)))
+         (move-end-of-line 1)
+         (open-line 1)
+         (goto-char current-point)))
+     (global-set-key (kbd "C-S-<down>") 'consoli/insert-new-line-bellow)
 
-(defun consoli/insert-new-line-above ()
-  (interactive)
-  (let ((current-point (point)))
-    (move-beginning-of-line 1)
-    (newline-and-indent)
-    (indent-according-to-mode)
-    (goto-char current-point)
-    (forward-char)))
-(global-set-key (kbd "C-S-<up>") 'consoli/insert-new-line-above)
-#+end_src
+     (defun consoli/insert-new-line-above ()
+       (interactive)
+       (let ((current-point (point)))
+         (move-beginning-of-line 1)
+         (newline-and-indent)
+         (indent-according-to-mode)
+         (goto-char current-point)
+         (forward-char)))
+     (global-set-key (kbd "C-S-<up>") 'consoli/insert-new-line-above)
+   #+end_src
 ** Hide unwanted buffers when cycling
 #+begin_src emacs-lisp
 (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
