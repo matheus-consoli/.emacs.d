@@ -737,6 +737,14 @@ targets."
     #+begin_src emacs-lisp
       (global-set-key (kbd "RET") 'default-indent-new-line)
     #+end_src
+*** Get ansi-term
+    #+begin_src emacs-lisp
+      (use-package multi-term
+        :custom (multi-term-program "/bin/zsh")
+        :bind
+        ("<f11>" . multi-term-dedicated-toggle)
+        ("<f10>" . multi-term-dedicated-select))
+    #+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
@@ -995,64 +1003,65 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 (require 'org-fold)
 #+end_src
 *** Install it
-#+begin_src emacs-lisp
-(use-package org-roam
-  :custom
-  (org-roam-directory (file-truename "~/projects/brainiac"))
-  (org-roam-dailies-directory "dailies/")
-  (org-roam-completion-everywhere t)
-  (org-roam-dailies-capture-templates
-   '(("d" "default" entry
-      "\n\n* %<%I:%M %p>: %?"
-      :if-new (file+head "%<%Y-%m-%d>.org"
-                         "#+OPTIONS: ^:nil\n#+title: %<%Y-%m-%d>\n"))))
-  (org-roam-capture-templates
-   '(("d" "default" plain
-      "%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+date: %U")
-      :unnarrowed t) 
-     ("p" "paper notes" plain
-      "\n\n* Reference\nAuthors: %^{Author}\nTitle: ${title}\nYear: %^{year}\nLink: %^{link}\n\n* Summary\n%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: paper")
-      :unnarrowed t)
-     ("s" "project notes" plain
-      "\n\n* Description\n%?\n* Tasks"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: project"))
-     ("t" "task" plain
-      "\n\n* Description\n\n** Context\n%?\n** What we need to do\n\n* Subtasks"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: task"))))
-  :bind (("C-c b f" . org-roam-node-find)
-         ("C-c b i" . org-roam-node-insert)
-         ("C-c b c" . org-roam-capture)
-         ("C-c b d" . org-roam-dailies-capture-today)
-         ("C-c b D" . org-roam-dailies-goto-today)
-         ("C-c b y" . org-roam-dailies-goto-previous))
-  :config
-  (setq org-roam-node-display-template
-        (concat "${title:*} "
-                (propertize "${tags:10}" 'face 'org-tag)))
-  (org-roam-db-autosync-mode))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package org-roam
+        :custom
+        (org-roam-directory (file-truename "~/projects/brainiac/"))
+        (org-roam-db-location (file-truename "~/projects/brainiac/org-roam.db"))
+        (org-roam-dailies-directory "dailies/")
+        (org-roam-completion-everywhere t)
+        (org-roam-dailies-capture-templates
+         '(("d" "default" entry
+            "\n\n* %<%I:%M %p>: %?"
+            :if-new (file+head "%<%Y-%m-%d>.org"
+                               "#+OPTIONS: ^:nil\n#+title: %<%Y-%m-%d>\n"))))
+        (org-roam-capture-templates
+         '(("d" "default" plain
+            "%?"
+            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+date: %U")
+            :unnarrowed t) 
+           ("p" "paper notes" plain
+            "\n\n* Reference\nAuthors: %^{Author}\nTitle: ${title}\nYear: %^{year}\nLink: %^{link}\n\n* Summary\n%?"
+            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: paper")
+            :unnarrowed t)
+           ("s" "project notes" plain
+            "\n\n* Description\n%?\n* Tasks"
+            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: project"))
+           ("t" "task" plain
+            "\n\n* Description\n\n** Context\n%?\n** What we need to do\n\n* Subtasks"
+            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: task"))))
+        :bind (("C-c b f" . org-roam-node-find)
+               ("C-c b i" . org-roam-node-insert)
+               ("C-c b c" . org-roam-capture)
+               ("C-c b d" . org-roam-dailies-capture-today)
+               ("C-c b D" . org-roam-dailies-goto-today)
+               ("C-c b y" . org-roam-dailies-goto-previous))
+        :config
+        (setq org-roam-node-display-template
+              (concat "${title:*} "
+                      (propertize "${tags:10}" 'face 'org-tag)))
+        (org-roam-db-autosync-mode))
+    #+end_src
 *** Org-roam-ui
-#+begin_src emacs-lisp
-(use-package org-roam-ui
-  :config
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t)
-  (defun open-org-roam-ui ()
-    (interactive)
-    (when (not(bound-and-true-p org-roam-ui-mode))
-          (org-roam-ui-mode))
-    (org-roam-ui-open))
-  :bind
-  ("C-c b g" . open-org-roam-ui))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package org-roam-ui
+        :config
+        (setq org-roam-ui-sync-theme t
+              org-roam-ui-follow t
+              org-roam-ui-update-on-save t
+              org-roam-ui-open-on-start t)
+        (defun open-org-roam-ui ()
+          (interactive)
+          (when (not(bound-and-true-p org-roam-ui-mode))
+            (org-roam-ui-mode))
+          (org-roam-ui-open))
+        :bind
+        ("C-c b g" . open-org-roam-ui))
+    #+end_src
 *** Deft
 #+begin_src emacs-lisp
 (use-package deft
@@ -1084,6 +1093,12 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
               "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
               "\\)"))
 #+end_src
+** Code blocks framing
+   #+begin_src emacs-lisp
+     (use-package org-modern-indent
+       :hook (org-mode . org-modern-indent-mode)
+       :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent"))
+   #+end_src
 * Utils
 ** Easy increase/decrease font size
 #+begin_src emacs-lisp
