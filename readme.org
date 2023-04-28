@@ -1,18 +1,20 @@
-* Appearence
+* Appearance
 ** Modeline
-#+begin_src emacs-lisp
-  (use-package doom-modeline
-    :custom
-    (doom-modeline-height 50)
-    (doom-modeline-hud t)
-    (doom-modeline-enable-word-count t)
-    :init (doom-modeline-mode 1))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package doom-modeline
+       :custom
+       (doom-modeline-height 50)
+       (doom-modeline-hud nil)
+       (doom-modeline-enable-word-count t)
+       (doom-modeline-buffer-encoding nil)
+       :hook (after-init . doom-modeline-mode))
+   #+end_src
 *** Clock
-#+BEGIN_SRC emacs-lisp
-(setq-default display-time-default-load-average nil)
-(display-time-mode 1)
-#+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (setq-default display-time-default-load-average nil)
+      (setq display-time-format "%I:%M %p")
+      (display-time-mode 1)
+    #+END_SRC
 
 ** All the icons
 #+begin_src emacs-lisp
@@ -20,30 +22,30 @@
 #+end_src
 ** Themes
 *** Doom themes
-#+begin_src emacs-lisp
-  (use-package doom-themes
-    :config (doom-themes-org-config)
-    :custom
-    (doom-themes-enable-bold   nil)
-    (doom-themes-enable-italic t))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package doom-themes
+        :config (doom-themes-org-config)
+        :custom
+        (doom-themes-enable-bold t)
+        (doom-themes-enable-italic t))
+    #+end_src
 **** Solaire-mode
-#+begin_src emacs-lisp
-  (use-package solaire-mode
-    :config (solaire-global-mode t))
-  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-#+end_src
+     #+begin_src emacs-lisp
+       (use-package solaire-mode
+         :config (solaire-global-mode t))
+       (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+     #+end_src
 *** catppuccin
-#+begin_src emacs-lisp
-(use-package catppuccin-theme
-  :init
-  (setq catppuccin-flavor 'macchiato))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package catppuccin-theme
+        :init
+        (setq catppuccin-flavor 'macchiato))
+    #+end_src
 *** Load theme
-#+begin_src emacs-lisp
-(load-theme 'catppuccin
-             :no-confirm)
-#+end_src
+    #+begin_src emacs-lisp
+      (load-theme 'catppuccin
+                  :no-confirm)
+    #+end_src
 ** UI
 *** Splash screen
 #+begin_src emacs-lisp
@@ -89,26 +91,26 @@
 #+end_src
 *** svg tags
 #+begin_src emacs-lisp
-(use-package svg-tag-mode
-  :custom
-  (svg-tag-tags
-   ;; :XXX|YYY:
-   '(("\\(:[A-Za-z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
-                                           (svg-tag-make tag :beg 1 :inverse t
-                                                         :margin 0 :crop-right t))))
-     (":[A-Za-z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
-                                           (svg-tag-make tag :beg 1 :end -1
-                                                         :margin 0 :crop-left t))))
-     ;; :XXX:
-     ("\\([^:]:[A-Za-z0-9]+:\\)" . ((lambda (tag)
-                               (svg-tag-make tag :beg 1 :end -1 :margin 1))))
-     ;; #+TITLE: Something
-     ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
-                                    (svg-tag-make tag :beg 2 :end -1 :margin 1))))
-     ;; :#TAG1:#TAG2:…:$
-     ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-                                     (svg-tag-make tag :beg 2))))))
-  :hook (org-mode . svg-tag-mode))
+  ;; (use-package svg-tag-mode
+  ;;   :custom
+  ;;   (svg-tag-tags
+  ;;    ;; :XXX|YYY:
+  ;;    '(("\\(:[A-Za-z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
+  ;;                                            (svg-tag-make tag :beg 1 :inverse t
+  ;;                                                          :margin 0 :crop-right t))))
+  ;;      (":[A-Za-z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
+  ;;                                            (svg-tag-make tag :beg 1 :end -1
+  ;;                                                          :margin 0 :crop-left t))))
+  ;;      ;; :XXX:
+  ;;      ("\\([^:]:[A-Za-z0-9]+:\\)" . ((lambda (tag)
+  ;;                                (svg-tag-make tag :beg 1 :end -1 :margin 1))))
+  ;;      ;; #+TITLE: Something
+  ;;      ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
+  ;;                                     (svg-tag-make tag :beg 2 :end -1 :margin 1))))
+  ;;      ;; :#TAG1:#TAG2:…:$
+  ;;      ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+  ;;                                      (svg-tag-make tag :beg 2))))))
+  ;;   :hook (org-mode . svg-tag-mode))
 #+end_src
 ** Font
 *** Set font
@@ -669,35 +671,23 @@ targets."
 #+END_SRC
 
 **** blame
-#+begin_src emacs-lisp
-  (use-package blamer
-    :bind (("C-M-b" . blamer-show-posframe-commit-info))
-    :custom
-    (blamer-idle-time 0.3)
-    (blamer-min-offset 30)
-    (blamer-prettify-time-p t)
-    (blamer-max-commit-message-length 72)
-    (blamer-show-avatar-p t)
-    (blamer-tooltip-function 'blamer-tooltip-commit-message)
-    :custom-face
-    (blamer-face ((t :italic t :height 120)))
-    :init
-    (global-blamer-mode 1))
-#+end_src
-*** Highlight indent guards
-#+begin_src emacs-lisp
-(use-package highlight-indent-guides
-  :custom (highlight-indent-guides-method 'bitmap)
-  (highlight-indent-guides-auto-enabled t)
-  (highlight-indent-guides-delay 0)
-  (highlight-indent-guides-responsive 'stack)
-  :hook (prog-mode . highlight-indent-guides-mode))
-(defun my-highlighter (level responsive display)
-  (if (> 1 level)
-      nil
-    (highlight-indent-guides--highlighter-default level responsive display)))
-(setq highlight-indent-guides-highlighter-function 'my-highlighter)
-#+end_src
+     #+begin_src emacs-lisp
+       (use-package blamer
+         :bind (("C-M-b" . blamer-show-posframe-commit-info))
+         :defer 20
+         :custom
+         (blamer-idle-time 0.3)
+         (blamer-min-offset 10)
+         (blamer-type 'visual)
+         (blamer-prettify-time-p t)
+         (blamer-max-commit-message-length 72)
+         (blamer-show-avatar-p t)
+         (blamer-tooltip-function 'blamer-tooltip-commit-message)
+         :custom-face
+         (blamer-face ((t :italic nil)))
+         :init
+         (global-blamer-mode 1))
+     #+end_src
 *** Region Expansion
 #+begin_src emacs-lisp
   (use-package expand-region
@@ -739,11 +729,23 @@ targets."
     #+end_src
 *** Get ansi-term
     #+begin_src emacs-lisp
+      (defvar toggle-term-state nil)
+      (defun toggle-term ()
+        (interactive)
+        (progn
+          (if toggle-term-state
+              (term-line-mode)
+            (term-char-mode))
+          (setq toggle-term-state (not toggle-term-state))))
+
       (use-package multi-term
         :custom (multi-term-program "/bin/zsh")
-        :bind
-        ("<f11>" . multi-term-dedicated-toggle)
-        ("<f10>" . multi-term-dedicated-select))
+        :bind (("<f11>" . multi-term-dedicated-toggle)
+               ("<f10>" . multi-term-dedicated-select)
+               (:map term-mode-map
+                     ("C-," . toggle-term))
+               (:map term-raw-map
+                     ("C-," . toggle-term))))
     #+end_src
 ** Languages specifics
 *** Rust
@@ -1241,3 +1243,4 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
         :custom (jinx-languages "en_UK en_US pt_BR")
         :bind ([remap ispell-word] . jinx-correct))
     #+end_src
+   
