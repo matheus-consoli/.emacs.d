@@ -39,7 +39,7 @@
     #+begin_src emacs-lisp
       (use-package catppuccin-theme
         :init
-        (setq catppuccin-flavor 'macchiato))
+        (setq catppuccin-flavor 'latte))
     #+end_src
 *** Load theme
     #+begin_src emacs-lisp
@@ -372,12 +372,13 @@ targets."
             :around #'embark-hide-which-key-indicator)
 #+end_src
 ** Projectile
-#+begin_src emacs-lisp
-(use-package projectile
-  :ensure t
-  :init (projectile-mode +1)
-  :bind ("C-c p" . projectile-command-map))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package projectile
+       :ensure t
+       :init (projectile-mode +1)
+       :config (push "~/.cargo/registry/src" projectile-globally-ignored-directories)
+       :bind ("C-c p" . projectile-command-map))
+   #+end_src
 ** Yasnippet
 #+begin_src emacs-lisp
 (use-package yasnippet
@@ -685,8 +686,7 @@ targets."
          (blamer-tooltip-function 'blamer-tooltip-commit-message)
          :custom-face
          (blamer-face ((t :italic nil)))
-         :init
-         (global-blamer-mode 1))
+         :hook (prog-mode . blamer-mode))
      #+end_src
 *** Region Expansion
 #+begin_src emacs-lisp
