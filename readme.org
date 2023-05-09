@@ -1,138 +1,3 @@
-* Appearance
-** Modeline
-   #+begin_src emacs-lisp
-     (use-package doom-modeline
-       :custom
-       (doom-modeline-height 50)
-       (doom-modeline-hud nil)
-       (doom-modeline-enable-word-count t)
-       (doom-modeline-buffer-encoding nil)
-       :hook (after-init . doom-modeline-mode))
-   #+end_src
-*** Clock
-    #+BEGIN_SRC emacs-lisp
-      (setq-default display-time-default-load-average nil)
-      (setq display-time-format "%I:%M %p")
-      (display-time-mode 1)
-    #+END_SRC
-
-** All the icons
-#+begin_src emacs-lisp
-  (use-package all-the-icons)
-#+end_src
-** Themes
-*** Doom themes
-    #+begin_src emacs-lisp
-      (use-package doom-themes
-        :config (doom-themes-org-config)
-        :custom
-        (doom-themes-enable-bold t)
-        (doom-themes-enable-italic t))
-    #+end_src
-**** Solaire-mode
-     #+begin_src emacs-lisp
-       (use-package solaire-mode
-         :config (solaire-global-mode t))
-       (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-     #+end_src
-*** catppuccin
-    #+begin_src emacs-lisp
-      (use-package catppuccin-theme
-        :init
-        (setq catppuccin-flavor 'latte))
-    #+end_src
-*** Load theme
-    #+begin_src emacs-lisp
-      (load-theme 'catppuccin
-                  :no-confirm)
-    #+end_src
-** UI
-*** Splash screen
-#+begin_src emacs-lisp
-  (setq inhibit-startup-screen t)
-#+end_src
-*** Scratch buffer message
-#+begin_src emacs-lisp
-  (setq initial-scratch-message nil
-    inhibit-startup-echo-area-message t)
-#+end_src
-*** Scroll bar
-#+begin_src emacs-lisp
-  (scroll-bar-mode -1)
-#+end_src
-*** Menu bar
-#+begin_src emacs-lisp
-  (menu-bar-mode -1)
-#+end_src
-*** Tool bar
-#+begin_src emacs-lisp
-  (tool-bar-mode -1)
-#+end_src
-*** Cursor type
-#+begin_src emacs-lisp
-  (setq-default cursor-type 'bar)
-#+end_src
-*** Highlight line
-#+begin_src emacs-lisp
-  (global-hl-line-mode t)
-#+end_src
-*** Only highlight text region
-#+begin_src emacs-lisp
-(set-face-attribute 'region nil :extend nil)
-#+end_src
-*** Line numbers
-**** Hook
-#+begin_src emacs-lisp
-  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-#+end_src
-**** Format
-#+begin_src emacs-lisp
-  (fringe-mode '(15 . 10))
-#+end_src
-*** svg tags
-#+begin_src emacs-lisp
-  ;; (use-package svg-tag-mode
-  ;;   :custom
-  ;;   (svg-tag-tags
-  ;;    ;; :XXX|YYY:
-  ;;    '(("\\(:[A-Za-z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
-  ;;                                            (svg-tag-make tag :beg 1 :inverse t
-  ;;                                                          :margin 0 :crop-right t))))
-  ;;      (":[A-Za-z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
-  ;;                                            (svg-tag-make tag :beg 1 :end -1
-  ;;                                                          :margin 0 :crop-left t))))
-  ;;      ;; :XXX:
-  ;;      ("\\([^:]:[A-Za-z0-9]+:\\)" . ((lambda (tag)
-  ;;                                (svg-tag-make tag :beg 1 :end -1 :margin 1))))
-  ;;      ;; #+TITLE: Something
-  ;;      ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
-  ;;                                     (svg-tag-make tag :beg 2 :end -1 :margin 1))))
-  ;;      ;; :#TAG1:#TAG2:…:$
-  ;;      ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-  ;;                                      (svg-tag-make tag :beg 2))))))
-  ;;   :hook (org-mode . svg-tag-mode))
-#+end_src
-** Font
-*** Set font
-#+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(font . "BlexMono Nerd Font-12"))
-(set-face-attribute 'default t :font "BlexMono Nerd Font")
-(global-auto-composition-mode t)
-#+end_src
-*** Italic comments
-#+begin_src emacs-lisp
-(custom-set-faces
- '(font-lock-comment-face ((t (:slant italic)))))
-#+end_src
-*** Pretty symbols
-#+begin_src emacs-lisp
-(when window-system
-  (add-hook 'prog-mode-hook 'prettify-symbols-mode))
-#+end_src
-*** Fix org mode tables
-#+begin_src emacs-lisp
-(set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-#+end_src
 * Completion system
 ** Vertico
 #+begin_src emacs-lisp
@@ -1101,6 +966,45 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
        :hook (org-mode . org-modern-indent-mode)
        :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent"))
    #+end_src
+** Automatically set task to DONE when all children are complete
+   [[https://orgmode.org/manual/Breaking-Down-Tasks.html][doc]]
+   #+begin_src emacs-lisp
+     (defun org-summary-todo (n-done n-not-done)
+       "Switch entry to DONE when all subentries are done, to TODO otherwise."
+       (let (org-log-done org-log-states)   ; turn off logging
+         (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+     (add-hook 'org-after-todo-statistics-hook #'org-summary-todo)
+   #+end_src
+*** automatically set task DONE when all checkboxes are complete
+    [[https://emacs.stackexchange.com/a/22147][source]]
+    #+begin_src emacs-lisp
+      (defun my/org-checkbox-todo ()
+        "Switch header TODO state to DONE when all checkboxes are ticked, to TODO otherwise"
+        (let ((todo-state (org-get-todo-state)) beg end)
+          (unless (not todo-state)
+            (save-excursion
+          (org-back-to-heading t)
+          (setq beg (point))
+          (end-of-line)
+          (setq end (point))
+          (goto-char beg)
+          (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]"
+                         end t)
+              (if (match-end 1)
+              (if (equal (match-string 1) "100%")
+                  (unless (string-equal todo-state "DONE")
+                    (org-todo 'done))
+                (unless (string-equal todo-state "TODO")
+                  (org-todo 'todo)))
+                (if (and (> (match-end 2) (match-beginning 2))
+                     (equal (match-string 2) (match-string 3)))
+                (unless (string-equal todo-state "DONE")
+                  (org-todo 'done))
+              (unless (string-equal todo-state "TODO")
+                (org-todo 'todo)))))))))
+
+      (add-hook 'org-checkbox-statistics-hook 'my/org-checkbox-todo)
+    #+end_src
 * Utils
 ** Easy increase/decrease font size
 #+begin_src emacs-lisp
@@ -1244,3 +1148,138 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
         :bind ([remap ispell-word] . jinx-correct))
     #+end_src
    
+* Appearance
+** Modeline
+   #+begin_src emacs-lisp
+     (use-package doom-modeline
+       :custom
+       (doom-modeline-height 50)
+       (doom-modeline-hud nil)
+       (doom-modeline-enable-word-count t)
+       (doom-modeline-buffer-encoding nil)
+       :hook (after-init . doom-modeline-mode))
+   #+end_src
+*** Clock
+    #+BEGIN_SRC emacs-lisp
+      (setq-default display-time-default-load-average nil)
+      (setq display-time-format "%I:%M %p")
+      (display-time-mode 1)
+    #+END_SRC
+
+** All the icons
+#+begin_src emacs-lisp
+  (use-package all-the-icons)
+#+end_src
+** Themes
+*** Doom themes
+    #+begin_src emacs-lisp
+      (use-package doom-themes
+        :config (doom-themes-org-config)
+        :custom
+        (doom-themes-enable-bold t)
+        (doom-themes-enable-italic t))
+    #+end_src
+**** Solaire-mode
+     #+begin_src emacs-lisp
+       (use-package solaire-mode
+         :config (solaire-global-mode t))
+       (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+     #+end_src
+*** catppuccin
+    #+begin_src emacs-lisp
+      (use-package catppuccin-theme
+        :init
+        (setq catppuccin-flavor 'macchiato))
+    #+end_src
+*** Load theme
+    #+begin_src emacs-lisp
+      (load-theme 'catppuccin
+                  :no-confirm)
+    #+end_src
+** UI
+*** Splash screen
+#+begin_src emacs-lisp
+  (setq inhibit-startup-screen t)
+#+end_src
+*** Scratch buffer message
+#+begin_src emacs-lisp
+  (setq initial-scratch-message nil
+    inhibit-startup-echo-area-message t)
+#+end_src
+*** Scroll bar
+#+begin_src emacs-lisp
+  (scroll-bar-mode -1)
+#+end_src
+*** Menu bar
+#+begin_src emacs-lisp
+  (menu-bar-mode -1)
+#+end_src
+*** Tool bar
+#+begin_src emacs-lisp
+  (tool-bar-mode -1)
+#+end_src
+*** Cursor type
+#+begin_src emacs-lisp
+  (setq-default cursor-type 'bar)
+#+end_src
+*** Highlight line
+#+begin_src emacs-lisp
+  (global-hl-line-mode t)
+#+end_src
+*** Only highlight text region
+#+begin_src emacs-lisp
+(set-face-attribute 'region nil :extend nil)
+#+end_src
+*** Line numbers
+**** Hook
+#+begin_src emacs-lisp
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+#+end_src
+**** Format
+#+begin_src emacs-lisp
+  (fringe-mode '(15 . 10))
+#+end_src
+*** svg tags
+#+begin_src emacs-lisp
+  ;; (use-package svg-tag-mode
+  ;;   :custom
+  ;;   (svg-tag-tags
+  ;;    ;; :XXX|YYY:
+  ;;    '(("\\(:[A-Za-z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
+  ;;                                            (svg-tag-make tag :beg 1 :inverse t
+  ;;                                                          :margin 0 :crop-right t))))
+  ;;      (":[A-Za-z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
+  ;;                                            (svg-tag-make tag :beg 1 :end -1
+  ;;                                                          :margin 0 :crop-left t))))
+  ;;      ;; :XXX:
+  ;;      ("\\([^:]:[A-Za-z0-9]+:\\)" . ((lambda (tag)
+  ;;                                (svg-tag-make tag :beg 1 :end -1 :margin 1))))
+  ;;      ;; #+TITLE: Something
+  ;;      ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
+  ;;                                     (svg-tag-make tag :beg 2 :end -1 :margin 1))))
+  ;;      ;; :#TAG1:#TAG2:…:$
+  ;;      ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+  ;;                                      (svg-tag-make tag :beg 2))))))
+  ;;   :hook (org-mode . svg-tag-mode))
+#+end_src
+** Font
+*** Set font
+#+begin_src emacs-lisp
+(add-to-list 'default-frame-alist '(font . "BlexMono Nerd Font-12"))
+(set-face-attribute 'default t :font "BlexMono Nerd Font")
+(global-auto-composition-mode t)
+#+end_src
+*** Italic comments
+#+begin_src emacs-lisp
+(custom-set-faces
+ '(font-lock-comment-face ((t (:slant italic)))))
+#+end_src
+*** Pretty symbols
+#+begin_src emacs-lisp
+(when window-system
+  (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+#+end_src
+*** Fix org mode tables
+#+begin_src emacs-lisp
+(set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+#+end_src
