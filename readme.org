@@ -612,6 +612,16 @@ targets."
                (:map term-raw-map
                      ("C-," . toggle-term))))
     #+end_src
+*** Code folding
+    #+begin_src emacs-lisp
+      (use-package ts-fold
+        :straight (ts-fold :type git :host github :repo "emacs-tree-sitter/ts-fold")
+        :hook ((prog-mode . ts-fold-mode)
+               (ts-fold-mode . ts-fold-line-comment-mode))
+        :bind ("C-(" . ts-fold-toggle)
+        :init (global-ts-fold-indicators-mode 1)
+        :config (setq ts-fold-summary-format " summary: %s "))
+    #+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
@@ -1036,9 +1046,14 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 ;; (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
 #+end_src
 ** Don't freeze
-#+begin_src emacs-lisp
-(global-unset-key (kbd "C-z"))
-#+end_src
+   #+begin_src emacs-lisp
+     (defun suspend-if-in-shell ()
+       "suspend process if the instance is not running in GUI"
+       (progn
+         (when (not (display-graphic-p))
+           (suspend-emacs))))
+     (global-set-key (kbd "C-z") (lambda () (interactive) (suspend-if-in-shell)))
+   #+end_src
 ** Delete selection
 #+begin_src emacs-lisp
 (pending-delete-mode t)
@@ -1264,11 +1279,11 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 #+end_src
 ** Font
 *** Set font
-#+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(font . "BlexMono Nerd Font-12"))
-(set-face-attribute 'default t :font "BlexMono Nerd Font")
-(global-auto-composition-mode t)
-#+end_src
+    #+begin_src emacs-lisp
+      (add-to-list 'default-frame-alist '(font . "BlexMono Nerd Font-14"))
+      (set-face-attribute 'default t :font "BlexMono Nerd Font")
+      (global-auto-composition-mode t)
+    #+end_src
 *** Italic comments
 #+begin_src emacs-lisp
 (custom-set-faces
