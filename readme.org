@@ -474,6 +474,10 @@ targets."
        (sp-with-modes 'rust-mode
          (sp-local-pair "<" ">")
          (sp-local-pair "'" nil :actions nil))
+       ;; easy ~code~
+       (sp-with-modes 'org-mode
+         (sp-local-pair "~" "~")
+         (sp-local-pair "=" "="))
      #+end_src
 ***** easy generics
       #+begin_src emacs-lisp
@@ -866,11 +870,13 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 #+end_src
 ** Centralized
 #+begin_src emacs-lisp
-(use-package olivetti
-  :hook (org-mode . olivetti-mode)
-  :config (setq-default olivetti-body-width 140))
+  (use-package olivetti
+    :hook
+    (org-mode . olivetti-mode)
+    (markdown-mode . olivetti-mode)
+    :config (setq-default olivetti-body-width 140))
 
-(setq-default default-justification 'full)
+  (setq-default default-justification 'full)
 #+end_src
 ** Org-roam
 *** Load org-fold
@@ -1038,12 +1044,13 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
                                      ("#+end_src"   . ?□)
                                      ("#+header:" . ,rasmus/ob-header-symbol)
                                      ("#+begin_quote" . ?»)
-                                     ("#+end_quote" . ?«)))))
+                                     ("#+end_quote" . ?«)
+                                     ("#+begin_comment" . ?💭)
+                                     ("#+end_comment" . ?□)))))
           (turn-on-prettify-symbols-mode)
           (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
         (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
     #+end_src
-
 ** Automatically set task to DONE when all children are complete
    [[https://orgmode.org/manual/Breaking-Down-Tasks.html][doc]]
    #+begin_src emacs-lisp
@@ -1139,28 +1146,64 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
       scroll-conservatively 101)
 #+end_src
 ** Backup files
-#+begin_src emacs-lisp
-(setq make-backup-files nil)
-#+end_src
-** Don't auto-save files
-#+begin_src emacs-lisp
-(setq auto-save-default nil)
-#+end_src
+*** Change backup directory
+    By default, emacs saves the ~backup~~ files in the same directory the file is.
+   #+begin_src emacs-lisp
+     (setq backup-directory-alist `(("." . "~/.emacs.d/backup/per-save")))
+   #+end_src
+*** More backup files
+    #+begin_src emacs-lisp
+      (setq delete-old-versions t
+            ;; number of new versions of a file to kept
+            kept-new-versions 4
+            ;; number of old version to kept
+            kept-old-versions 3
+            ;; numeric version control
+            version-control t
+            ;; copy files, dont rename them
+            backup-by-copying t)
+    #+end_src
+*** Auto-save files
+    Auto-save files are temporary files that Emacs creates until a file is saved.
+    Emacs auto-saves whenever it crashes, after ~N~ keystrokes and after a timeout.
+    #+begin_src emacs-lisp
+      (setq auto-save-timeout 10 ;; seconds
+            ;; keystrokes
+            auto-save-interval 200)
+    #+end_src
+*** force backup of buffer
+    https://stackoverflow.com/a/20824625
+    #+begin_src emacs-lisp
+      (defun force-backup-of-buffer ()
+        ;; Make a special "per session" backup at the first save of each
+        ;; emacs session.
+        (when (not buffer-backed-up)
+          ;; Override the default parameters for per-session backups.
+          (let ((backup-directory-alist '(("" . "~/.emacs.d/backup/per-session")))
+                (kept-new-versions 3))
+            (backup-buffer)))
+        ;; Make a "per save" backup on each save.  The first save results in
+        ;; both a per-session and a per-save backup, to keep the numbering
+        ;; of per-save backups consistent.
+        (let ((buffer-backed-up nil))
+          (backup-buffer)))
+      (add-hook 'before-save-hook  'force-backup-of-buffer)
+    #+end_src
 ** Do what I mean
-#+begin_src emacs-lisp
-(global-set-key (kbd "M-u") 'upcase-dwim)
-(global-set-key (kbd "M-l") 'downcase-dwim)
-(global-set-key (kbd "M-c") 'capitalize-dwim)
-#+end_src
+   #+begin_src emacs-lisp
+     (global-set-key (kbd "M-u") 'upcase-dwim)
+     (global-set-key (kbd "M-l") 'downcase-dwim)
+     (global-set-key (kbd "M-c") 'capitalize-dwim)
+   #+end_src
 ** A [C]ollection of [R]idiculous [U]seful e[X]tensions
-#+begin_src emacs-lisp
-(use-package crux
-  :bind ([remap kill-line] . crux-smart-kill-line)
-  ([remap kill-whole-line] . crux-kill-whole-line)
-  ("C-c n" . crux-cleanup-buffer-or-region)
-  ("C-c d" . crux-duplicate-current-line-or-region)
-  ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package crux
+       :bind ([remap kill-line] . crux-smart-kill-line)
+       ([remap kill-whole-line] . crux-kill-whole-line)
+       ("C-c n" . crux-cleanup-buffer-or-region)
+       ("C-c d" . crux-duplicate-current-line-or-region)
+       ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
+   #+end_src
 ** Read $PATH
 #+begin_src emacs-lisp
 (use-package exec-path-from-shell
@@ -1230,7 +1273,6 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
         :custom (jinx-languages "en_UK en_US pt_BR")
         :bind ([remap ispell-word] . jinx-correct))
     #+end_src
-   
 * Appearance
 ** Modeline
    #+begin_src emacs-lisp
@@ -1248,6 +1290,12 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
       (setq display-time-format "%I:%M %p")
       (display-time-mode 1)
     #+END_SRC
+*** Only render the modeline in the active window
+    #+begin_src emacs-lisp
+      (set-face-attribute 'mode-line-inactive nil
+                          :underline nil
+                          :background (face-background 'default))
+    #+end_src
 
 ** All the icons
 #+begin_src emacs-lisp
@@ -1321,29 +1369,6 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 **** Format
 #+begin_src emacs-lisp
   (fringe-mode '(15 . 10))
-#+end_src
-*** svg tags
-#+begin_src emacs-lisp
-  ;; (use-package svg-tag-mode
-  ;;   :custom
-  ;;   (svg-tag-tags
-  ;;    ;; :XXX|YYY:
-  ;;    '(("\\(:[A-Za-z]+\\)\|[a-zA-Z#0-9]+:" . ((lambda (tag)
-  ;;                                            (svg-tag-make tag :beg 1 :inverse t
-  ;;                                                          :margin 0 :crop-right t))))
-  ;;      (":[A-Za-z]+\\(\|[a-zA-Z#0-9]+:\\)" . ((lambda (tag)
-  ;;                                            (svg-tag-make tag :beg 1 :end -1
-  ;;                                                          :margin 0 :crop-left t))))
-  ;;      ;; :XXX:
-  ;;      ("\\([^:]:[A-Za-z0-9]+:\\)" . ((lambda (tag)
-  ;;                                (svg-tag-make tag :beg 1 :end -1 :margin 1))))
-  ;;      ;; #+TITLE: Something
-  ;;      ("\\(#\\+[A-Z]+:\\)" . ((lambda (tag)
-  ;;                                     (svg-tag-make tag :beg 2 :end -1 :margin 1))))
-  ;;      ;; :#TAG1:#TAG2:…:$
-  ;;      ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-  ;;                                      (svg-tag-make tag :beg 2))))))
-  ;;   :hook (org-mode . svg-tag-mode))
 #+end_src
 ** Font
 *** Set font
