@@ -245,36 +245,39 @@ targets."
        :bind ("C-c p" . projectile-command-map))
    #+end_src
 ** Yasnippet
-#+begin_src emacs-lisp
-(use-package yasnippet
-  :config (yas-reload-all)
-  (use-package yasnippet-snippets)
-  :hook (prog-mode . yas-minor-mode))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package yasnippet
+       :config (yas-reload-all)
+       (use-package yasnippet-snippets)
+       :hook (prog-mode . yas-minor-mode))
+   #+end_src
 ** Language Server Protocol
 *** LSP mode
 #+begin_src emacs-lisp
-(use-package lsp-mode
-  :init (setq lsp-keymap-prefix "C-c l"
-              lsp-eldoc-render-all nil
-              ;; lsp-modeline-code-actions-mode t
-              lsp-modeline-code-actions-segments '(count icon name)
-              lsp-enable-on-type-formatting t
-              lsp-enable-indentation t
-              lsp-enable-folding t
-              lsp-enable-snippet t
-              lsp-semantic-tokens-enable nil
-              lsp-lens-enable t
-              lsp-log-io nil
-              lsp-headerline-breadcrumb-icons-enable t
-              lsp-idle-delay 0.2)
-  :bind (:map lsp-mode-map
-              ("C-c l r" . lsp-rename)
-              ("C-c l a" . lsp-execute-code-action)
-              ("C-c l t" . lsp-find-type-definition)
-              ("C-c l e" . lsp-iedit-highlights))
-  :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
-  :commands lsp)
+  (use-package lsp-mode
+    :init (setq lsp-keymap-prefix "C-c l"
+                lsp-eldoc-render-all nil
+                eldoc-echo-area-use-multiline-p nil
+                lsp-eldoc-enable-hover nil
+                lsp-signature-doc-lines 0
+                ;; lsp-modeline-code-actions-mode t
+                lsp-modeline-code-actions-segments '(count icon name)
+                lsp-enable-on-type-formatting t
+                lsp-enable-indentation t
+                lsp-enable-folding t
+                lsp-enable-snippet t
+                lsp-semantic-tokens-enable nil
+                lsp-lens-enable t
+                lsp-log-io nil
+                lsp-headerline-breadcrumb-icons-enable t
+                lsp-idle-delay 0.2)
+    :bind (:map lsp-mode-map
+                ("C-c l r" . lsp-rename)
+                ("C-c l a" . lsp-execute-code-action)
+                ("C-c l t" . lsp-find-type-definition)
+                ("C-c l e" . lsp-iedit-highlights))
+    :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
+    :commands lsp)
 #+end_src
 *** LSP UI
 #+begin_src emacs-lisp
@@ -733,7 +736,9 @@ targets."
    ;; no help message when editing code
    org-edit-src-persistent-message nil
    org-insert-heading-respect-content t
-   line-spacing 0.5)
+   line-spacing 0.5
+   ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
+   org-export-with-sub-superscripts nil)
 #+end_src
 ** Custom faces
 *** variable pitch
@@ -886,35 +891,6 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 *** Install it
     #+begin_src emacs-lisp
       (use-package org-roam
-        :custom
-        (org-roam-directory (file-truename "~/projects/brainiac/"))
-        (org-roam-db-location (file-truename "~/projects/brainiac/org-roam.db"))
-        (org-roam-dailies-directory "dailies/")
-        (org-roam-completion-everywhere t)
-        (org-roam-dailies-capture-templates
-         '(("d" "default" entry
-            "\n\n* %<%I:%M %p>: %?"
-            :if-new (file+head "%<%Y-%m-%d>.org"
-                               "#+OPTIONS: ^:nil\n#+title: %<%Y-%m-%d>\n"))))
-        (org-roam-capture-templates
-         '(("d" "default" plain
-            "%?"
-            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+date: %U")
-            :unnarrowed t) 
-           ("p" "paper notes" plain
-            "\n\n* Reference\nAuthors: %^{Author}\nTitle: ${title}\nYear: %^{year}\nLink: %^{link}\n\n* Summary\n%?"
-            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: paper")
-            :unnarrowed t)
-           ("s" "project notes" plain
-            "\n\n* Description\n%?\n* Tasks"
-            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: project"))
-           ("t" "task" plain
-            "\n\n* Description\n\n** Context\n%?\n** What we need to do\n\n* Subtasks"
-            :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                               "#+OPTIONS: ^:nil\n#+title: ${title}\n#+filetags: task"))))
         :bind (("C-c b f" . org-roam-node-find)
                ("C-c b i" . org-roam-node-insert)
                ("C-c b c" . org-roam-capture)
@@ -922,11 +898,114 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
                ("C-c b D" . org-roam-dailies-goto-today)
                ("C-c b y" . org-roam-dailies-goto-previous))
         :config
+        (cl-defmethod org-roam-node-keywords ((node org-roam-node))
+          "Return the currently set category for the NODE."
+          (cdr (assoc-string "KEYWORDS" (org-roam-node-properties node))))
+        (cl-defmethod org-roam-node-authors ((node org-roam-node))
+          "Return the currently set category for the NODE."
+          (cdr (assoc-string "AUTHORS" (org-roam-node-properties node))))
         (setq org-roam-node-display-template
               (concat "${title:*} "
-                      (propertize "${tags:10}" 'face 'org-tag)))
+                      (propertize "${tags:15}" 'face 'org-tag)
+                      (propertize "${keywords:20}" 'face 'org-tag)
+                      (propertize "${authors:15}" 'face 'org-tag)))
         (org-roam-db-autosync-mode))
     #+end_src
+*** Config
+    #+begin_src emacs-lisp
+      (setq
+       org-roam-directory (file-truename "~/projects/brainiac/")
+       org-roam-db-location (file-truename "~/projects/brainiac/org-roam.db")
+       org-roam-dailies-directory "dailies/"
+       org-roam-completion-everywhere t)
+    #+end_src
+*** Templates
+**** Dailies
+     #+begin_src emacs-lisp
+       (setq
+        org-roam-dailies-capture-templates
+        '(("d" "default" entry
+           "\n\n* %<%I:%M %p>: %?"
+           :target (file+head "%<%Y-%m-%d>.org"
+                              "#+TITLE: %<%Y-%m-%d>\n"))))
+     #+end_src
+**** Custom templates
+***** Uncategorized
+      #+begin_src emacs-lisp
+        (setq org-roam-capture-templates
+                     '(("u" "uncategorized" plain
+                        "* %?"
+                        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                           "#+FILETAGS: :uncategorized #+TITLE: ${title}\n#+DATE: %U\n\n")
+                        :unnarrowed t)))
+      #+end_src
+***** Book
+      #+begin_src emacs-lisp 
+        (add-to-list 'org-roam-capture-templates
+                     '("b" "book" plain
+                        "\n\n* Contents%?"
+                        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                           ":PROPERTIES:
+        :AUTHORS: %^{authors}
+        :KEYWORDS: %^{keywords}
+        :END:
+        #+FILETAGS: :book:
+        #+TITLE: ${title}
+        #+DATE: %U\n")
+                        :unnarrowed t))
+      #+end_src
+****** COMMENT Chapter
+       TODO: i don't know how to capture inside the current buffer
+       #+begin_src emacs-lisp
+         (add-to-list 'org-roam-capture-templates
+                      '("c" "Book chapter" entry
+                         "** %?"))
+       #+end_src
+       
+***** Paper
+      #+begin_src emacs-lisp
+        (add-to-list 'org-roam-capture-templates
+                     '("p" "paper" plain
+                        "* Reference
+        Year: %^{year}
+        Link: %^{Link}\n\n* Abstract\n%?"
+                        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                           ":PROPERTIES:
+        :AUTHORS: %^{authors}
+        :KEYWORDS: %^{keywords}
+        :END:
+        #+FILETAGS: :paper:
+        #+TITLE: ${title}
+        #+DATE: %U\n")
+                        :unnarrowed t))
+      #+end_src
+      
+***** Blog post
+      #+begin_src emacs-lisp
+        (add-to-list 'org-roam-capture-templates
+                     '("b" "blog post" plain
+                        "* Reference
+        Year: %^{year}
+        Link: %^{link}\n\n* %?"
+                        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                           ":PROPERTIES:
+        :AUTHORS: %^{authors}
+        :KEYWORDS: %^{keywords}
+        :END:
+        #+FILETAGS: :blog:
+        #+TITLE: ${title}
+        #+DATE: %U\n\n* %?")
+                        :unnarrowed t))
+      #+end_src
+***** COMMENT Project
+      #+begin_src emacs-lisp
+        (add-to-list 'org-roam-capture-templates
+                     '(("" "paper" plain
+                        "..."
+                        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                           "#+TITLE: ${title}\n#+DATE: %U\n#+FILETAGS: :paper")
+                        :unnarrowed t)))
+      #+end_src
 *** Org-roam-ui
     #+begin_src emacs-lisp
       (use-package org-roam-ui
@@ -1149,7 +1228,7 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 *** Change backup directory
     By default, emacs saves the ~backup~~ files in the same directory the file is.
    #+begin_src emacs-lisp
-     (setq backup-directory-alist `(("." . "~/.emacs.d/backup/per-save")))
+     (setq backup-directory-alist '(("." . "~/.emacs.d/backup/per-save")))
    #+end_src
 *** More backup files
     #+begin_src emacs-lisp
@@ -1278,11 +1357,16 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
    #+begin_src emacs-lisp
      (use-package doom-modeline
        :custom
-       (doom-modeline-height 50)
+       (doom-modeline-height 40)
+       (doom-modeline-bar-width 10)
        (doom-modeline-hud nil)
        (doom-modeline-enable-word-count t)
        (doom-modeline-buffer-encoding nil)
+       (doom-modeline-support-imenu t)
        :hook (after-init . doom-modeline-mode))
+     (custom-set-faces
+      '(mode-line ((t (:family "Iosevka Nerd Font" :height 110))))
+      '(mode-line-inactive ((t (:height 100 :underline nil :weight light)))))
    #+end_src
 *** Clock
     #+BEGIN_SRC emacs-lisp
@@ -1293,6 +1377,7 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 *** Only render the modeline in the active window
     #+begin_src emacs-lisp
       (set-face-attribute 'mode-line-inactive nil
+                          :height 100
                           :underline nil
                           :background (face-background 'default))
     #+end_src
@@ -1370,11 +1455,45 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 #+begin_src emacs-lisp
   (fringe-mode '(15 . 10))
 #+end_src
+** Tabs
+*** Install
+    #+begin_src emacs-lisp
+      (use-package centaur-tabs
+        :config
+        (centaur-tabs-mode t)
+        :custom
+        (centaur-tabs-group-by-projectile-project)
+        (centaur-tabs-headline-match)
+        (centaur-tabs-enable-key-bindings t)
+        (centaur-tabs-style "bar")
+        (centaur-tabs-height 24)
+        (centaur-tabs-set-icons t)
+        (centaur-tabs-gray-out-icons t)
+        (centaur-tabs-set-bar 'left)
+        (centaur-tabs-set-modified-marker t)
+        (centaur-tabs-cycle-scope 'tabs)
+        (centaur-tabs-label-fixed-length 15))
+    #+end_src
+*** Disabled modes
+    #+begin_src emacs-lisp
+      (add-to-list 'centaur-tabs-excluded-prefixes "*Org")
+      (add-to-list 'centaur-tabs-excluded-prefixes "*MULTI")
+      (add-to-list 'centaur-tabs-excluded-prefixes "*Backtrace")
+      (add-to-list 'centaur-tabs-excluded-prefixes "*scratch*")
+      (add-to-list 'centaur-tabs-excluded-prefixes "*Process List")
+    #+end_src
+*** Appearance
+    #+begin_src emacs-lisp
+      (custom-set-faces
+      	 '(centaur-tabs-selected-modified ((t (:slant italic))))
+      	 '(centaur-tabs-unselected-modified ((t (:slant italic)))))
+    #+end_src
+
 ** Font
 *** Set font
     #+begin_src emacs-lisp
-      (add-to-list 'default-frame-alist '(font . "BlexMono Nerd Font-14"))
-      (set-face-attribute 'default t :font "BlexMono Nerd Font")
+      (add-to-list 'default-frame-alist '(font . "Iosevka SS02")) ;; Iosevka SS02
+      (set-face-attribute 'default t :font "Iosevka SS02")
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
