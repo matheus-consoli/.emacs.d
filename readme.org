@@ -942,16 +942,10 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 ***** Book
       #+begin_src emacs-lisp 
         (add-to-list 'org-roam-capture-templates
-                     '("b" "book" plain
+                     '("k" "book" plain
                         "\n\n* Contents%?"
                         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                                           ":PROPERTIES:
-        :AUTHORS: %^{authors}
-        :KEYWORDS: %^{keywords}
-        :END:
-        #+FILETAGS: :book:
-        #+TITLE: ${title}
-        #+DATE: %U\n")
+                                           ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :book:\n#+TITLE: ${title}\n#+DATE: %U\n")
                         :unnarrowed t))
       #+end_src
 ****** COMMENT Chapter
@@ -966,17 +960,9 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
       #+begin_src emacs-lisp
         (add-to-list 'org-roam-capture-templates
                      '("p" "paper" plain
-                        "* Reference
-        Year: %^{year}
-        Link: %^{Link}\n\n* Abstract\n%?"
+                        "* Reference\nYear: %^{year}\nLink: %^{Link}\n\n* Abstract\n%?"
                         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                                           ":PROPERTIES:
-        :AUTHORS: %^{authors}
-        :KEYWORDS: %^{keywords}
-        :END:
-        #+FILETAGS: :paper:
-        #+TITLE: ${title}
-        #+DATE: %U\n")
+                                           ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :paper:\n#+TITLE: ${title}\n#+DATE: %U\n")
                         :unnarrowed t))
       #+end_src
       
@@ -984,17 +970,9 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
       #+begin_src emacs-lisp
         (add-to-list 'org-roam-capture-templates
                      '("b" "blog post" plain
-                        "* Reference
-        Year: %^{year}
-        Link: %^{link}\n\n* %?"
+                        "* Reference\nYear: %^{year}\nLink: %^{link}\n\n* %?"
                         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                                           ":PROPERTIES:
-        :AUTHORS: %^{authors}
-        :KEYWORDS: %^{keywords}
-        :END:
-        #+FILETAGS: :blog:
-        #+TITLE: ${title}
-        #+DATE: %U\n\n* %?")
+                                           ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :blog:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
                         :unnarrowed t))
       #+end_src
 ***** COMMENT Project
