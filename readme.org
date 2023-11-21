@@ -150,15 +150,16 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
 #+end_src
 
 ** Which-key
-#+begin_src emacs-lisp
-(use-package which-key
-  :config
-  (setq which-key-idle-delay 0.25
-        which-key-idle-secondary-delay 0.05
-        which-key-show-remaining-keys nil)
-  :init (which-key-mode)
-  :bind ("C-c c w" . which-key-show-major-mode))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package which-key
+       :config
+       (setq which-key-idle-delay 0.25
+             which-key-max-description-length 45
+             which-key-idle-secondary-delay 0.05
+             which-key-show-remaining-keys t)
+       :init (which-key-mode)
+       :bind ("C-c c w" . which-key-show-major-mode))
+   #+end_src
 
 ** Avy
 #+begin_src emacs-lisp
@@ -253,60 +254,73 @@ targets."
    #+end_src
 ** Language Server Protocol
 *** LSP mode
-#+begin_src emacs-lisp
-  (use-package lsp-mode
-    :init (setq lsp-keymap-prefix "C-c l"
-                lsp-eldoc-render-all nil
-                eldoc-echo-area-use-multiline-p nil
-                lsp-eldoc-enable-hover nil
-                lsp-signature-doc-lines 0
-                ;; lsp-modeline-code-actions-mode t
-                lsp-modeline-code-actions-segments '(count icon name)
-                lsp-enable-on-type-formatting t
-                lsp-enable-indentation t
-                lsp-enable-folding t
-                lsp-enable-snippet t
-                lsp-semantic-tokens-enable nil
-                lsp-lens-enable t
-                lsp-log-io nil
-                lsp-headerline-breadcrumb-icons-enable t
-                lsp-idle-delay 0.2)
-    :bind (:map lsp-mode-map
-                ("C-c l r" . lsp-rename)
-                ("C-c l a" . lsp-execute-code-action)
-                ("C-c l t" . lsp-find-type-definition)
-                ("C-c l e" . lsp-iedit-highlights))
-    :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
-    :commands lsp)
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package lsp-mode
+        :init (setq lsp-keymap-prefix "C-c l"
+                    lsp-eldoc-render-all nil
+                    eldoc-echo-area-use-multiline-p nil
+                    lsp-eldoc-enable-hover nil
+                    lsp-signature-doc-lines 0
+                    ;; lsp-modeline-code-actions-mode t
+                    lsp-enable-folding t
+                    lsp-enable-indentation t
+                    lsp-enable-on-type-formatting t
+                    lsp-enable-snippet t
+                    lsp-headerline-breadcrumb-icons-enable t
+                    lsp-idle-delay 0.2
+                    lsp-lens-enable t
+                    lsp-log-io nil
+                    lsp-rust-analyzer-display-chaining-hints t
+                    lsp-rust-analyzer-display-closure-return-type-hints t
+                    lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
+                    lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
+                    lsp-rust-analyzer-display-parameter-hints t
+                    lsp-rust-analyzer-display-reborrow-hints "always"
+                    lsp-rust-analyzer-hide-closure-initialization t
+                    lsp-rust-analyzer-hide-named-constructor t
+                    lsp-rust-analyzer-lru-capacity (* 128 3) ;; default = 128
+                    lsp-rust-analyzer-max-inlay-hint-length 40
+                    lsp-rust-analyzer-server-display-inlay-hints t
+                    lsp-semantic-tokens-enable nil
+                    lsp-modeline-code-actions-segments '(count icon name)
+                    lsp-rust-analyzer-proc-macro-enable t)
+        :bind (:map lsp-mode-map
+                    ("C-c l r" . lsp-rename)
+                    ("C-c l a" . lsp-execute-code-action)
+                    ("C-c l t" . lsp-find-type-definition)
+                    ("C-c l e" . lsp-iedit-highlights))
+        :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
+        :commands lsp)
+    #+end_src
 *** LSP UI
-#+begin_src emacs-lisp
-(use-package lsp-ui
-  :init (setq lsp-ui-doc-enable nil
-              ;; lsp-ui-doc-delay 0.2
-              ;; lsp-ui-doc-show-with-cursor t
-              ;; lsp-ui-doc-show-with-mouse t
+    #+begin_src emacs-lisp
+      (use-package lsp-ui
+        :init (setq lsp-ui-doc-enable nil
+                    ;; lsp-ui-doc-delay 0.2
+                    ;; lsp-ui-doc-show-with-cursor t
+                    ;; lsp-ui-doc-show-with-mouse t
 
-              lsp-ui-sideline-show-diagnostics t
-              lsp-ui-sideline-show-hover t
-              lsp-ui-sideline-show-code-actions t
+                    lsp-ui-sideline-show-diagnostics t
+                    lsp-ui-sideline-show-hover t
+                    lsp-ui-sideline-show-code-actions t
 
-              lsp-ui-peek-enable t
-              lsp-ui-peek-show-directory t
+                    lsp-ui-peek-enable t
+                    lsp-ui-peek-show-directory t
 
-              lsp-completion-show-kind t
-              lsp-completion-show-detail t)
-  :bind (:map lsp-ui-mode-map
-              ("M-." . lsp-ui-peek-find-definitions)
-              ("M-?" . lsp-ui-peek-find-references)
-              ("C-c l i" . lsp-ui-imenu)
-              ("C-c l d" . lsp-ui-doc-show)))
-;; (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-;; (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
-#+end_src
+                    lsp-completion-show-kind t
+                    lsp-completion-show-detail t)
+        :bind (:map lsp-ui-mode-map
+                    ("M-." . lsp-ui-peek-find-definitions)
+                    ("M-?" . lsp-ui-peek-find-references)
+                    ("C-c l i" . lsp-ui-imenu)
+                    ("C-c l d" . lsp-ui-doc-show)))
+      ;; (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+      ;; (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+    #+end_src
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
-     (use-package dap-mode)
+     (use-package dap-mode
+       :bind ("<f5>" . dap-breakpoint-toggle))
    #+end_src
 ** Linter
 *** Flycheck
@@ -640,22 +654,22 @@ targets."
     :hook (rust-mode . lsp))
 #+end_src
 **** LSP config
-#+begin_src emacs-lisp
-(setq lsp-rust-analyzer-lru-capacity (* 128 3) ;; default = 128
-      lsp-rust-analyzer-server-display-inlay-hints t
-      lsp-rust-analyzer-display-chaining-hints t
-      lsp-rust-analyzer-display-parameter-hints t
-      lsp-rust-analyzer-display-chaining-hints t
-      lsp-rust-analyzer-display-closure-return-type-hints t
-      lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
-      lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
-      lsp-rust-analyzer-display-parameter-hints t
-      lsp-rust-analyzer-display-reborrow-hints "always"
-      lsp-rust-analyzer-max-inlay-hint-length 40
-      lsp-rust-analyzer-hide-closure-initialization t
-      lsp-rust-analyzer-hide-named-constructor t
-      lsp-rust-analyzer-proc-macro-enable t)
-#+end_src
+     #+begin_src emacs-lisp
+       (setq lsp-rust-analyzer-lru-capacity (* 128 3) ;; default = 128
+             lsp-rust-analyzer-server-display-inlay-hints t
+             lsp-rust-analyzer-display-chaining-hints t
+             lsp-rust-analyzer-display-parameter-hints t
+             lsp-rust-analyzer-display-chaining-hints t
+             lsp-rust-analyzer-display-closure-return-type-hints t
+             lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
+             lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
+             lsp-rust-analyzer-display-parameter-hints t
+             lsp-rust-analyzer-display-reborrow-hints "always"
+             lsp-rust-analyzer-max-inlay-hint-length 40
+             lsp-rust-analyzer-hide-closure-initialization t
+             lsp-rust-analyzer-hide-named-constructor t
+             lsp-rust-analyzer-proc-macro-enable t)
+     #+end_src
 **** DAP config
      #+begin_src emacs-lisp
        (require 'dap-lldb)
@@ -736,74 +750,89 @@ targets."
 
 * Org
 ** install
-#+begin_src emacs-lisp
-(use-package org
-  :defer t
-  :ensure org-contrib)
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package org
+       :defer t
+       :ensure org-contrib)
+   #+end_src
 ** basic settings
-#+begin_src emacs-lisp
-  (setq
-   ;; adapt indentation of content to match its heading
-   org-adapt-indentation t
-   org-ellipsis "  "
-   org-hide-emphasis-markers t
-   ;; non-nil = utf-8
-   org-pretty-entities t
-   org-startup-folded 'fold
-   org-return-follows-link t
-   ;; only needs one empty line to show an empty line when collapsed
-   org-cycle-separator-lines 2
-   ;; shift-select with mouse
-   org-support-shift-select 'always
-   ;; no help message when editing code
-   org-edit-src-persistent-message nil
-   org-insert-heading-respect-content t
-   line-spacing 0.5
-   ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
-   org-export-with-sub-superscripts nil)
-#+end_src
+   #+begin_src emacs-lisp
+     (setq
+      ;; adapt indentation of content to match its heading
+      org-adapt-indentation t
+      org-ellipsis "  "
+      org-hide-emphasis-markers t
+      ;; non-nil = utf-8
+      org-pretty-entities t
+      org-startup-folded 'fold
+      org-return-follows-link t
+      ;; only needs one empty line to show an empty line when collapsed
+      org-cycle-separator-lines 2
+      ;; shift-select with mouse
+      org-support-shift-select 'always
+      ;; no help message when editing code
+      org-edit-src-persistent-message nil
+      line-spacing 0.5
+      ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
+      org-export-with-sub-superscripts nil)
+   #+end_src
 ** Custom faces
 *** variable pitch
-#+begin_src emacs-lisp
-(use-package org-variable-pitch
-  :hook org-mode-hook)
-#+end_src
-
+    #+begin_src emacs-lisp
+      (use-package org-variable-pitch
+        :hook org-mode-hook)
+    #+end_src
 *** fixed pitch
-#+begin_src emacs-lisp
-(require 'org-indent)
-(custom-theme-set-faces
- 'user
- '(org-code ((t (:inherit (shadow fixed-pitch)))))
- '(org-indent ((t (:inherit (org-hide fixed-pitch))))))
-
-(set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-(set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
-(set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-(set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
-(set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-(set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-(set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-(set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
-#+end_src
+    #+begin_src emacs-lisp
+      (require 'org-indent)
+      (custom-theme-set-faces
+       'user
+       '(org-code ((t (:inherit (shadow fixed-pitch)))))
+       '(org-indent ((t (:inherit (org-hide fixed-pitch))))))
+      (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+      (set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
+      (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+      (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+      (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
+    #+end_src
 
 *** column views
-#+begin_src emacs-lisp
-(set-face-attribute 'org-column nil :background nil)
-(set-face-attribute 'org-column-title nil :background nil)
-#+end_src
+    #+begin_src emacs-lisp
+      (set-face-attribute 'org-column nil :background nil)
+      (set-face-attribute 'org-column-title nil :background nil)
+    #+end_src
 
 *** window dividers
-#+begin_src emacs-lisp
-(dolist (face '(window-divider
-                window-divider-first-pixel
-                window-divider-last-pixel))
-  (face-spec-reset-face face)
-  (set-face-foreground face (face-attribute 'default :background)))
-(set-face-background 'fringe (face-attribute 'default :background))
-#+end_src
+    #+begin_src emacs-lisp
+      (dolist (face '(window-divider
+                      window-divider-first-pixel
+                      window-divider-last-pixel))
+        (face-spec-reset-face face)
+        (set-face-foreground face (face-attribute 'default :background)))
+      (set-face-background 'fringe (face-attribute 'default :background))
+    #+end_src
+
+*** foo
+    #+begin_src emacs-lisp
+      (custom-theme-set-faces
+         'user
+         '(org-block ((t (:inherit fixed-pitch))))
+         '(org-code ((t (:inherit (shadow fixed-pitch)))))
+         '(org-document-info ((t (:foreground "dark orange"))))
+         '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+         '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+         '(org-link ((t (:foreground "royal blue" :underline t))))
+         '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+         '(org-property-value ((t (:inherit fixed-pitch))) t)
+         '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+         '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+         '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+         '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
+    #+end_src
 ** bigger font in titles
 Use latex style headings, https://github.com/integral-dw/org-superstar-mode/blob/master/DEMO.org#latex-style-headings
 #+begin_src emacs-lisp
@@ -840,77 +869,77 @@ Use latex style headings, https://github.com/integral-dw/org-superstar-mode/blob
 #+end_src
 
 ** Org superstar
-#+begin_src emacs-lisp
-  ;; org-superstar needs this way
-  (setq org-hide-leading-stars nil)
-
-  (use-package org-superstar
-    :after org
-    :init
-    (setq org-superstar-headline-bullets-list '(?● ?○ ?◉)
-          ;; fancy todo headings
-          org-superstar-special-todo-items t
-          ;; i use my own
-          org-superstar-prettify-item-bullets nil)
-    :hook (org-mode . org-superstar-mode))
-
-  ;; This line is necessary.
-  (setq org-superstar-leading-bullet ?\s)
-  ;; If you use Org Indent you also need to add this, otherwise the
-  ;; above has no effect while Indent is enabled.
-  (setq org-indent-mode-turns-on-hiding-stars nil)
-#+end_src
+   #+begin_src emacs-lisp
+     ;; org-superstar needs this way
+     (setq org-hide-leading-stars nil)
+      
+     (use-package org-superstar
+       :after org
+       :init
+       (setq org-superstar-headline-bullets-list '(?● ?○ ?◉)
+             ;; fancy todo headings
+             org-superstar-special-todo-items t
+             ;; i use my own
+             org-superstar-prettify-item-bullets nil)
+       :hook (org-mode . org-superstar-mode))
+      
+     ;; This line is necessary.
+     (setq org-superstar-leading-bullet ?\s)
+     ;; If you use Org Indent you also need to add this, otherwise the
+     ;; above has no effect while Indent is enabled.
+     (setq org-indent-mode-turns-on-hiding-stars nil)
+   #+end_src
 
 ** make invisible parts visible
-#+begin_src emacs-lisp
-(use-package org-appear
-  :hook org-mode-hook)
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package org-appear
+       :hook org-mode-hook)
+   #+end_src
 ** Org mode as the *scratch* buffer
-#+begin_src emacs-lisp
-(setq initial-major-mode 'org-mode)
-#+end_src
+   #+begin_src emacs-lisp
+     (setq initial-major-mode 'org-mode)
+   #+end_src
 ** Pretty checkboxes
-https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkboxes/
-#+begin_src emacs-lisp
-  (defface org-checkbox-done-text
-      '((t (:foreground "#71696A" :strike-through t)))
-      "Face for the text part of a checked org-mode checkbox.")
-
-    (font-lock-add-keywords
-     'org-mode
-     `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)"
-        1 'org-checkbox-done-text prepend))
-     'append)
-
-  (add-hook 'org-mode-hook (lambda ()
-    "Beautify Org Checkbox Symbol"
-    (push '("[ ]" . "☐") prettify-symbols-alist)
-    (push '("[X]" . "☑" ) prettify-symbols-alist)
-    (push '("[-]" . "❍" ) prettify-symbols-alist)
-    (prettify-symbols-mode)))
-#+end_src
+   https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkboxes/
+   #+begin_src emacs-lisp
+     (defface org-checkbox-done-text
+       '((t (:foreground "#71696A" :strike-through t)))
+       "Face for the text part of a checked org-mode checkbox.")
+      
+     (font-lock-add-keywords
+      'org-mode
+      `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)"
+         1 'org-checkbox-done-text prepend))
+      'append)
+      
+     (add-hook 'org-mode-hook (lambda ()
+                                "Beautify Org Checkbox Symbol"
+                                (push '("[ ]" . "") prettify-symbols-alist)
+                                (push '("[X]" . "" ) prettify-symbols-alist)
+                                (push '("[-]" . "" ) prettify-symbols-alist)
+                                (prettify-symbols-mode)))
+   #+end_src
 ** Pretty bullet list
-#+begin_src emacs-lisp
-(font-lock-add-keywords 'org-mode
-                        '(("^ *\\([-]\\) "
-                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-#+end_src
+   #+begin_src emacs-lisp
+     (font-lock-add-keywords 'org-mode
+                             '(("^ *\\([-]\\) "
+                                (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+   #+end_src
 ** Centralized
-#+begin_src emacs-lisp
-  (use-package olivetti
-    :hook
-    (org-mode . olivetti-mode)
-    (markdown-mode . olivetti-mode)
-    :config (setq-default olivetti-body-width 140))
+   #+begin_src emacs-lisp
+     (use-package olivetti
+       :hook
+       (org-mode . olivetti-mode)
+       (markdown-mode . olivetti-mode)
+       :config (setq-default olivetti-body-width 140))
 
-  (setq-default default-justification 'full)
-#+end_src
+     (setq-default default-justification 'full)
+   #+end_src
 ** Org-roam
 *** Load org-fold
-#+begin_src emacs-lisp
-(require 'org-fold)
-#+end_src
+    #+begin_src emacs-lisp
+      (require 'org-fold)
+    #+end_src
 *** Install it
     #+begin_src emacs-lisp
       (use-package org-roam
@@ -1010,6 +1039,7 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
 *** Org-roam-ui
     #+begin_src emacs-lisp
       (use-package org-roam-ui
+        :after org-roam
         :config
         (setq org-roam-ui-sync-theme t
               org-roam-ui-follow t
@@ -1017,43 +1047,43 @@ https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkbox
               org-roam-ui-open-on-start t)
         (defun open-org-roam-ui ()
           (interactive)
-          (when (not(bound-and-true-p org-roam-ui-mode))
+          (when (not (bound-and-true-p org-roam-ui-mode))
             (org-roam-ui-mode))
           (org-roam-ui-open))
         :bind
         ("C-c b g" . open-org-roam-ui))
     #+end_src
 *** Deft
-#+begin_src emacs-lisp
-(use-package deft
-  :after org
-  :bind
-  ("<f8>" . deft)
-  :custom
-  (deft-recursive t)
-  (deft-use-filter-string-for-filename t)
-  (deft-default-extension "org")
-  (deft-directory (file-truename "~/projects/brainiac")))
+    #+begin_src emacs-lisp
+      (use-package deft
+        :after org
+        :bind
+        ("<f8>" . deft)
+        :custom
+        (deft-recursive t)
+        (deft-use-filter-string-for-filename t)
+        (deft-default-extension "org")
+        (deft-directory (file-truename "~/projects/brainiac")))
 
-(defun cm/deft-parse-title (file contents)
-  "Parse the given FILE and CONTENTS and determine the title.
-   If `deft-use-filename-as-title' is nil, the title is taken to
-   be the first non-empty line of the FILE.  Else the base name of the FILE is
-   used as title."
-  (let ((begin (string-match "^#\\+[tT][iI][tT][lL][eE]: .*$" contents)))
-    (if begin
-        (string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
-      (deft-base-filename file))))
+      (defun cm/deft-parse-title (file contents)
+        "Parse the given FILE and CONTENTS and determine the title.
+         If `deft-use-filename-as-title' is nil, the title is taken to
+         be the first non-empty line of the FILE.  Else the base name of the FILE is
+         used as title."
+        (let ((begin (string-match "^#\\+[tT][iI][tT][lL][eE]: .*$" contents)))
+          (if begin
+              (string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
+            (deft-base-filename file))))
 
-(advice-add 'deft-parse-title :override #'cm/deft-parse-title)
+      (advice-add 'deft-parse-title :override #'cm/deft-parse-title)
 
-(setq deft-strip-summary-regexp
-      (concat "\\("
-              "[\n\t]" ;; blank
-              "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
-              "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
-              "\\)"))
-#+end_src
+      (setq deft-strip-summary-regexp
+            (concat "\\("
+                    "[\n\t]" ;; blank
+                    "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
+                    "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
+                    "\\)"))
+    #+end_src
 ** Code blocks
 *** Framing
    #+begin_src emacs-lisp
@@ -1366,7 +1396,7 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
        (doom-modeline-support-imenu t)
        :hook (after-init . doom-modeline-mode))
      (custom-set-faces
-      '(mode-line ((t (:family "Iosevka Nerd Font" :height 110))))
+      '(mode-line ((t (:family "Martian Mono" :height 120))))
       '(mode-line-inactive ((t (:height 100 :underline nil :weight light)))))
    #+end_src
 *** Clock
@@ -1384,9 +1414,10 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
     #+end_src
 
 ** All the icons
-#+begin_src emacs-lisp
-  (use-package all-the-icons)
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package all-the-icons
+       :custom (setq inhibit-compacting-font-caches t))
+   #+end_src
 ** Themes
 *** Doom themes
     #+begin_src emacs-lisp
@@ -1398,15 +1429,14 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
     #+end_src
 **** Solaire-mode
      #+begin_src emacs-lisp
-       (use-package solaire-mode
-         :config (solaire-global-mode t))
+       (use-package solaire-mode)
        (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
      #+end_src
 *** catppuccin
     #+begin_src emacs-lisp
       (use-package catppuccin-theme
         :init
-        (setq catppuccin-flavor 'macchiato))
+        (setq catppuccin-flavor 'latte))
     #+end_src
 *** Load theme
     #+begin_src emacs-lisp
@@ -1415,47 +1445,47 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
     #+end_src
 ** UI
 *** Splash screen
-#+begin_src emacs-lisp
-  (setq inhibit-startup-screen t)
-#+end_src
+    #+begin_src emacs-lisp
+      (setq inhibit-startup-screen t)
+    #+end_src
 *** Scratch buffer message
-#+begin_src emacs-lisp
-  (setq initial-scratch-message nil
-    inhibit-startup-echo-area-message t)
-#+end_src
+    #+begin_src emacs-lisp
+      (setq initial-scratch-message nil
+            inhibit-startup-echo-area-message t)
+    #+end_src
 *** Scroll bar
-#+begin_src emacs-lisp
-  (scroll-bar-mode -1)
-#+end_src
+    #+begin_src emacs-lisp
+      (scroll-bar-mode -1)
+    #+end_src
 *** Menu bar
-#+begin_src emacs-lisp
-  (menu-bar-mode -1)
-#+end_src
+    #+begin_src emacs-lisp
+      (menu-bar-mode -1)
+    #+end_src
 *** Tool bar
-#+begin_src emacs-lisp
-  (tool-bar-mode -1)
-#+end_src
+    #+begin_src emacs-lisp
+      (tool-bar-mode -1)
+    #+end_src
 *** Cursor type
-#+begin_src emacs-lisp
-  (setq-default cursor-type 'bar)
-#+end_src
+    #+begin_src emacs-lisp
+      (setq-default cursor-type 'bar)
+    #+end_src
 *** Highlight line
-#+begin_src emacs-lisp
-  (global-hl-line-mode t)
-#+end_src
+    #+begin_src emacs-lisp
+      (global-hl-line-mode t)
+    #+end_src
 *** Only highlight text region
-#+begin_src emacs-lisp
-(set-face-attribute 'region nil :extend nil)
-#+end_src
+    #+begin_src emacs-lisp
+      (set-face-attribute 'region nil :extend nil)
+    #+end_src
 *** Line numbers
 **** Hook
-#+begin_src emacs-lisp
-  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-#+end_src
+     #+begin_src emacs-lisp
+       (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+     #+end_src
 **** Format
-#+begin_src emacs-lisp
-  (fringe-mode '(15 . 10))
-#+end_src
+     #+begin_src emacs-lisp
+       (fringe-mode '(15 . 10))
+     #+end_src
 ** Tabs
 *** Install
     #+begin_src emacs-lisp
@@ -1473,6 +1503,7 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
         (centaur-tabs-set-bar 'left)
         (centaur-tabs-set-modified-marker t)
         (centaur-tabs-cycle-scope 'tabs)
+        (centaur-tabs-change-fonts "VictorMono Nerd Font Propo" 120)
         (centaur-tabs-label-fixed-length 15))
     #+end_src
 *** Disabled modes
@@ -1484,6 +1515,10 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
       (add-to-list 'centaur-tabs-excluded-prefixes "*Process List")
       (add-to-list 'centaur-tabs-excluded-prefixes "*compilation")
       (add-to-list 'centaur-tabs-excluded-prefixes "*ansi-term*")
+      ;; dap-mode ui
+      (add-to-list 'centaur-tabs-excluded-prefixes "Locals")
+      (add-to-list 'centaur-tabs-excluded-prefixes "Expressions")
+      (add-to-list 'centaur-tabs-excluded-prefixes "Debug Sessions")
     #+end_src
 *** Appearance
     #+begin_src emacs-lisp
@@ -1495,21 +1530,22 @@ If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the b
 ** Font
 *** Set font
     #+begin_src emacs-lisp
-      (add-to-list 'default-frame-alist '(font . "Iosevka SS02")) ;; Iosevka SS02
-      (set-face-attribute 'default t :font "Iosevka SS02")
+      (set-face-attribute 'default nil
+                          :font "CaskaydiaCove Nerd Font"
+                          :height 130)
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
-#+begin_src emacs-lisp
-(custom-set-faces
- '(font-lock-comment-face ((t (:slant italic)))))
-#+end_src
+    #+begin_src emacs-lisp
+      (custom-set-faces
+       '(font-lock-comment-face ((t (:slant italic)))))
+    #+end_src
 *** Pretty symbols
-#+begin_src emacs-lisp
-(when window-system
-  (add-hook 'prog-mode-hook 'prettify-symbols-mode))
-#+end_src
+    #+begin_src emacs-lisp
+      (when window-system
+        (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+    #+end_src
 *** Fix org mode tables
-#+begin_src emacs-lisp
-(set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-#+end_src
+    #+begin_src emacs-lisp
+      (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+    #+end_src
