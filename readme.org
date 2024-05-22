@@ -162,10 +162,25 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
    #+end_src
 
 ** Avy
-#+begin_src emacs-lisp
-(use-package avy
-  :bind ("C-:" . avy-goto-char-timer))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package avy
+       :bind ("C-:" . avy-goto-char-timer))
+   #+end_src
+
+*** using treesit with avy
+    #+begin_src emacs-lisp
+      (use-package treesit-jump
+        :straight (:host github :repo "dmille56/treesit-jump" :files ("*.el" "treesit-queries"))
+        :bind
+        ("C-, ," . treesit-jump-jump)
+        ("C-, j" . treesit-jump-jump)
+        ("C-, s" . treesit-jump-select)
+        ("C-, d" . treesit-jump-delete)
+        ("C-, p" . treesit-jump-parent)
+        ("C-, t" . treesit-jump-transient)
+        :config
+        (setq treesit-jump-queries-filter-list '("inner" "test" "param")))
+    #+end_src
 
 ** Embark
 #+begin_src emacs-lisp
@@ -256,68 +271,72 @@ targets."
 *** LSP mode
     #+begin_src emacs-lisp
       (use-package lsp-mode
-        :init (setq lsp-keymap-prefix "C-c l"
-                    lsp-eldoc-render-all nil
-                    eldoc-echo-area-use-multiline-p nil
-                    lsp-eldoc-enable-hover nil
-                    lsp-signature-doc-lines 0
-                    ;; lsp-modeline-code-actions-mode t
-                    lsp-enable-folding t
-                    lsp-enable-indentation t
-                    lsp-enable-on-type-formatting t
-                    lsp-enable-snippet t
-                    lsp-headerline-breadcrumb-icons-enable t
-                    lsp-idle-delay 0.2
-                    lsp-lens-enable t
-                    lsp-log-io nil
-                    lsp-rust-analyzer-display-chaining-hints t
-                    lsp-rust-analyzer-display-closure-return-type-hints t
-                    lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
-                    lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
-                    lsp-rust-analyzer-display-parameter-hints t
-                    lsp-rust-analyzer-display-reborrow-hints "always"
-                    lsp-rust-analyzer-hide-closure-initialization t
-                    lsp-rust-analyzer-hide-named-constructor t
-                    lsp-rust-analyzer-lru-capacity (* 128 1) ;; default = 128
-                    lsp-rust-analyzer-max-inlay-hint-length 40
-                    lsp-rust-analyzer-server-display-inlay-hints t
-                    lsp-semantic-tokens-enable nil
-                    lsp-modeline-code-actions-segments '(count icon name)
-                    lsp-rust-analyzer-proc-macro-enable t)
+        :init 
         :bind (:map lsp-mode-map
                     ("C-c l r" . lsp-rename)
                     ("C-c l a" . lsp-execute-code-action)
                     ("C-c l t" . lsp-find-type-definition)
-                    ("C-c l e" . lsp-iedit-highlights))
+                    ("C-c l e" . lsp-iedit-highlights)
+                    ("<f4>" . lsp-inlay-hints-mode))
         :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
         :commands lsp)
+
+      (setq lsp-keymap-prefix "C-c l"
+            lsp-eldoc-render-all nil
+            eldoc-echo-area-use-multiline-p nil
+            lsp-eldoc-enable-hover nil
+            lsp-signature-doc-lines 0
+            ;; lsp-modeline-code-actions-mode t
+            lsp-enable-folding t
+            lsp-enable-indentation t
+            lsp-enable-on-type-formatting t
+            lsp-enable-snippet t
+            lsp-headerline-breadcrumb-icons-enable t
+            lsp-idle-delay 0.2
+            lsp-lens-enable t
+            lsp-inlay-hint-enable t
+            lsp-log-io nil
+            lsp-modeline-code-actions-segments '(count icon name))
     #+end_src
+**** hint face
+     #+begin_src emacs-lisp
+       (custom-set-faces
+        '(lsp-inlay-hint-parameter-face  ((t :inherit lsp-inlay-hint-face
+                                             :height 90)))
+        '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
+                                       :height 90))))
+     #+end_src
 *** LSP UI
     #+begin_src emacs-lisp
       (use-package lsp-ui
-        :init (setq lsp-ui-doc-enable nil
-                    ;; lsp-ui-doc-delay 0.2
-                    ;; lsp-ui-doc-show-with-cursor t
-                    ;; lsp-ui-doc-show-with-mouse t
+        :init
+        (setq lsp-ui-doc-enable t
+              lsp-ui-doc-position 'top
+              ;; lsp-ui-doc-use-webkit nil
+              ;; lsp-ui-doc-delay 0.2
+              lsp-ui-doc-show-with-cursor t
+              lsp-ui-doc-show-with-mouse t
 
-                    lsp-ui-sideline-show-diagnostics t
-                    lsp-ui-sideline-show-hover t
-                    lsp-ui-sideline-show-code-actions t
-                    lsp-ui-sideline-delay 2 ;; 2seconds before showing sideline
+              ;;lsp-ui-sideline-show-diagnostics t
+              ;;lsp-ui-sideline-show-hover t
+              ;;lsp-ui-sideline-show-code-actions t
+              ;;lsp-ui-sideline-delay 2 ;; 2seconds before showing sideline
 
-                    lsp-ui-peek-enable t
-                    lsp-ui-peek-show-directory t
+              lsp-ui-peek-enable t
+              lsp-ui-peek-show-directory t
 
-                    lsp-completion-show-kind t
-                    lsp-completion-show-detail t)
+              lsp-completion-show-kind t
+              lsp-completion-show-detail t)
         :bind (:map lsp-ui-mode-map
                     ("M-." . lsp-ui-peek-find-definitions)
                     ("M-?" . lsp-ui-peek-find-references)
+                    ("M-<right>" . lsp-ui-peek-jump-backward)
+                    ("M-<left>" . lsp-ui-peek-jump-forward)
                     ("C-c l i" . lsp-ui-imenu)
                     ("C-c l d" . lsp-ui-doc-show)
                     ("C-c l s" . consult-lsp-symbols)))
-      ;; (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-      ;; (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+
+      ;;(lsp-ui-doc-frame-mode 1)
     #+end_src
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
@@ -516,6 +535,15 @@ targets."
         (global-tree-sitter-mode)
         :hook (tree-sitter-after-on-hook #'tree-sitter-hl-mode))
     #+end_src
+*** treesit-auto
+    #+begin_src emacs-lisp
+      (use-package treesit-auto
+        :custom
+        (treesit-auto-install 'prompt)
+        :config
+        (treesit-auto-add-to-auto-mode-alist 'all)
+        (global-treesit-auto-mode))
+    #+end_src
 *** Parens
 **** Smartparens
      #+begin_src emacs-lisp
@@ -607,10 +635,11 @@ targets."
          (blamer-show-avatar-p t)
          (blamer-tooltip-function 'blamer-tooltip-commit-message)
          :custom-face
-         (blamer-face ((t :italic nil)))
+         (blamer-face ((t :height 100
+                          :italic nil)))
          :hook (prog-mode . blamer-mode))
      #+end_src
-*** Region Expansion
+*** COMMENT Region Expansion
     #+begin_src emacs-lisp
       (use-package expand-region
         :bind ("C-c e =" . 'er/expand-region)
@@ -621,6 +650,40 @@ targets."
         ("C-c e m" . 'er/mark-method-call)
         ("C-c e c" . 'er/mark-comment)
         ("C-c e -" . 'er/contract-region))
+    #+end_src
+*** multiple-cursors
+    #+begin_src emacs-lisp
+      (use-package multiple-cursors
+        :config (define-key mc/keymap (kbd "RET") nil)
+        :bind
+        (:map multiple-cursors-mode
+              ("C-> ." . 'mc/mark-next-like-this)
+              ("C-> >" . 'mc/skip-to-next-like-this)
+              ("C-< ." . 'mc/mark-previous-like-this)
+              ("C-< <" . 'mc/skip-previous-like-this)
+              ("C-x SPC" . 'set-rectangular-region-anchor)))
+    #+end_src
+*** ts-movement
+    #+begin_src emacs-lisp
+      (use-package ts-movement
+        :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
+        :ensure multiple-cursors
+        :init
+        (define-key ts-movement-map (kbd "C-c . d") #'tsm/delete-overlay-at-point)
+        (define-key ts-movement-map (kbd "C-c . D") #'tsm/clear-overlays-of-type)
+        (define-key ts-movement-map (kbd "C-c . b") #'tsm/node-prev)
+        (define-key ts-movement-map (kbd "C-c . C-b") #'tsm/backward-overlay)
+        (define-key ts-movement-map (kbd "C-c . C-f") #'tsm/forward-overlay)
+        (define-key ts-movement-map (kbd "C-c . f") #'tsm/node-next)
+        (define-key ts-movement-map (kbd "C-c . p") #'tsm/node-parent)
+        (define-key ts-movement-map (kbd "C-c . n") #'tsm/node-child)
+        (define-key ts-movement-map (kbd "C-c . N") #'tsm/node-children)
+        (define-key ts-movement-map (kbd "C-c . s") #'tsm/node-children-of-type)
+        (define-key ts-movement-map (kbd "C-c . a") #'tsm/node-start)
+        (define-key ts-movement-map (kbd "C-c . e") #'tsm/node-end)
+        (define-key ts-movement-map (kbd "C-c . m") #'tsm/node-mark)
+        (define-key ts-movement-map (kbd "C-c . c") #'tsm/mc/mark-all-overlays)
+        :hook (rust-ts-mode . ts-movement-mode))
     #+end_src
 *** Moving lines around
     #+begin_src emacs-lisp
@@ -678,36 +741,57 @@ targets."
         :bind ("C-(" . ts-fold-toggle)
         :config (setq ts-fold-summary-format " summary: %s "))
     #+end_src
+**** folding indicators
+     #+begin_src emacs-lisp
+       (use-package ts-fold-indicators
+         :straight (ts-fold-indicators
+                    :type git
+                    :host github
+                    :repo "emacs-tree-sitter/ts-fold"))
+     #+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
      #+begin_src emacs-lisp
-       (use-package rust-mode
-         :init (setq rust-format-on-save nil)
-         :hook (rust-mode . lsp))
+       ;; (use-package rust-mode
+       ;;   :init (setq rust-format-on-save nil)
+       ;;   :hook (rust-mode . lsp))
+
+       (use-package rust-ts-mode
+            :hook (rust-ts-mode . lsp))
      #+end_src
 **** Better cargo integration
      #+begin_src emacs-lisp
        (use-package cargo-transient
-         :bind (:map rust-mode-map
-                     ("C-c C-c C-c" . cargo-transient)))
+         :bind (:map rust-ts-mode
+                     ("C-c C-c t" . cargo-transient)
+                     ("C-c C-c c" . cargo-transient-check)
+                     ("C-c C-c l" . cargo-transient-clippy)
+                     ("C-c C-c f" . cargo-transient-clippy-fix)
+                     ("C-c C-c t" . cargo-transient-clippy-test)
+                     ("C-c C-c r" . cargo-transient-run)))
      #+end_src
 **** LSP config
      #+begin_src emacs-lisp
-       (setq lsp-rust-analyzer-lru-capacity (* 128 3) ;; default = 128
-             lsp-rust-analyzer-server-display-inlay-hints t
-             lsp-rust-analyzer-display-chaining-hints t
-             lsp-rust-analyzer-display-parameter-hints t
+       (setq lsp-rust-analyzer-lru-capacity (* 128 1) ;; default = 128
              lsp-rust-analyzer-display-chaining-hints t
              lsp-rust-analyzer-display-closure-return-type-hints t
+             lsp-rust-analyzer-closure-capture-hints t
+             lsp-rust-analyzer-discriminants-hints "always"
+             lsp-rust-analyzer-display-parameter-hints t
+             lsp-rust-analyzer-expression-adjustment-hints "always"
+             lsp-rust-analyzer-implicit-drops t
              lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
              lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
              lsp-rust-analyzer-display-parameter-hints t
              lsp-rust-analyzer-display-reborrow-hints "always"
-             lsp-rust-analyzer-max-inlay-hint-length 40
              lsp-rust-analyzer-hide-closure-initialization t
              lsp-rust-analyzer-hide-named-constructor t
-             lsp-rust-analyzer-proc-macro-enable t)
+             lsp-rust-analyzer-max-inlay-hint-length 20
+             lsp-rust-analyzer-closing-brace-hints-min-lines 25
+             lsp-rust-analyzer-proc-macro-enable t
+             lsp-rust-analyzer-server-display-inlay-hints t
+             lsp-semantic-tokens-enable nil)
      #+end_src
 **** DAP config
      #+begin_src emacs-lisp
@@ -730,14 +814,14 @@ targets."
                                           :cwd nil))
      #+end_src
 **** When creating news language bugs
-[[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
-#+begin_src emacs-lisp
-;; (setq
-;;  lsp-rust-analyzer-rustfmt-override-command ["./build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021"]
-;;  lsp-rust-analyzer-cargo-run-build-scripts t
-;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
-;;  lsp-rust-analyzer-proc-macro-enable t)
-#+end_src
+     [[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
+     #+begin_src emacs-lisp
+       ;; (setq
+       ;;  lsp-rust-analyzer-rustfmt-override-command ["./build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021"]
+       ;;  lsp-rust-analyzer-cargo-run-build-scripts t
+       ;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
+       ;;  lsp-rust-analyzer-proc-macro-enable t)
+     #+end_src
 *** Unison
 **** Unison mode
      #+begin_src emacs-lisp
@@ -828,12 +912,12 @@ targets."
 ** Custom faces
 *** variable pitch
     #+begin_src emacs-lisp
-            (set-face-attribute 'variable-pitch nil
-                                :family "VictorMono Nerd Font Propo"
-                                :height 130)
+      (set-face-attribute 'variable-pitch nil
+                          :family "Monoid Nerd Font"
+                          :height 120)
 
-            (use-package org-variable-pitch
-              :hook (org-mode . variable-pitch-mode))
+      (use-package org-variable-pitch
+        :hook (org-mode . variable-pitch-mode))
     #+end_src
 *** fixed pitch
     #+begin_src emacs-lisp
@@ -1529,10 +1613,26 @@ targets."
     #+begin_src emacs-lisp
       (use-package kaolin-themes)
     #+end_src
-*** Load theme
+*** base16
     #+begin_src emacs-lisp
-      (load-theme 'kaolin-bubblegum
+      (use-package base16-theme)
+    #+end_src
+*** COMMENT Load theme
+    #+begin_src emacs-lisp
+      ;; 'kaolin-bubblegum ;; 'ef-summer ;; 'catppuccin ;; 'doom-feather-light
+      (load-theme 'kaolin-breeze ;; 'doom-feather-light ;; 'kaolin-breeze
                   :no-confirm)
+    #+end_src
+*** Theme rotation
+    #+begin_src emacs-lisp
+      (use-package theme-rotation
+        :straight (:host github :repo "pedroangelo/theme-rotation.el" :files ("*.el"))
+        :custom
+        (theme-rotation-config
+         '(("08:00" . kaolin-breeze)
+           ("18:00" . kaolin-aurora)))
+        :config
+        (theme-rotation-mode))
     #+end_src
 ** UI
 *** Splash screen
@@ -1623,15 +1723,14 @@ targets."
     #+begin_src emacs-lisp
       (set-face-attribute 'default nil
                           ;; "Space Grotesk" ;; "Iosevka Curly" ;; "Monoid Nerd Font"
-                          :font "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
-                          :height 110)
+                          :font" Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
+                          :height 120)
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
     #+begin_src emacs-lisp
       (custom-set-faces
-       '(font-lock-comment-face ((t (:family "Monoid Nerd Font" ;; "VictorMono Nerd Font"
-                                     :slant italic)))))
+       '(font-lock-comment-face ((t :slant italic)))) ;; to set the font family, use the variable-pitch face-attribute
     #+end_src
 *** Pretty symbols
     #+begin_src emacs-lisp
