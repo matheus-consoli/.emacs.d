@@ -1,6 +1,9 @@
 ;; The default is 800 kilobytes.  Measured in bytes.
-(setq gc-cons-threshold (* 200 1024 1024))
-(setq read-process-output-max (* 200 1024 1024 ))
+;; emacs-lsp performance improvements
+;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+(setq gc-cons-threshold (* 200 1024 1024)) ;; 200mb
+(setq read-process-output-max (* 3 1024 1024 )) ;; 3mb
+
 
 ;; Profile emacs startup
 (add-hook 'emacs-startup-hook

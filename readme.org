@@ -1,35 +1,35 @@
 * Completion system
 ** Vertico
-#+begin_src emacs-lisp
-(use-package vertico
-  :custom (vertico-cycle t)
-  :init (vertico-mode))
+   #+begin_src emacs-lisp
+     (use-package vertico
+       :custom (vertico-cycle t)
+       :init (vertico-mode))
 
-(use-package savehist
-  :init (savehist-mode))
+     (use-package savehist
+       :init (savehist-mode))
 
-;; A few more useful configurations...
-(use-package emacs
-  :init
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; Alternatively try `consult-completing-read-multiple'.
-  (defun crm-indicator (args)
-    (cons (concat "[CRM] " (car args)) (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+     ;; A few more useful configurations...
+     (use-package emacs
+       :init
+       ;; Add prompt indicator to `completing-read-multiple'.
+       ;; Alternatively try `consult-completing-read-multiple'.
+       (defun crm-indicator (args)
+         (cons (concat "[CRM] " (car args)) (cdr args)))
+       (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+       ;; Do not allow the cursor in the minibuffer prompt
+       (setq minibuffer-prompt-properties
+             '(read-only t cursor-intangible t face minibuffer-prompt))
+       (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
-  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
-  ;; Vertico commands are hidden in normal buffers.
-  (setq read-extended-command-predicate
-        #'command-completion-default-include-p)
+       ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+       ;; Vertico commands are hidden in normal buffers.
+       (setq read-extended-command-predicate
+             #'command-completion-default-include-p)
 
-  ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
-#+end_src
+       ;; Enable recursive minibuffers
+       (setq enable-recursive-minibuffers t))
+   #+end_src
 *** Orderless
 https://github.com/minad/consult/wiki#minads-orderless-configuration
 #+begin_src emacs-lisp
@@ -183,23 +183,23 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
     #+end_src
 
 ** Embark
-#+begin_src emacs-lisp
-(use-package embark
-  :ensure t
-  :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-  :init
-  ;; Optionally replace the key help with a completing-read interface
-  (setq prefix-help-command #'embark-prefix-help-command)
-  :config
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none)))))
-#+end_src
+   #+begin_src emacs-lisp
+     (use-package embark
+       :ensure t
+       :bind
+       (("C-." . embark-act)         ;; pick some comfortable binding
+        ("C-;" . embark-dwim)        ;; good alternative: M-.
+        ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+       :init
+       ;; Optionally replace the key help with a completing-read interface
+       (setq prefix-help-command #'embark-prefix-help-command)
+       :config
+       ;; Hide the mode line of the Embark live/completions buffers
+       (add-to-list 'display-buffer-alist
+                    '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                      nil
+                      (window-parameters (mode-line-format . none)))))
+   #+end_src
 
 *** Embark consult
 #+begin_src emacs-lisp
@@ -276,7 +276,6 @@ targets."
                     ("C-c l r" . lsp-rename)
                     ("C-c l a" . lsp-execute-code-action)
                     ("C-c l t" . lsp-find-type-definition)
-                    ("C-c l e" . lsp-iedit-highlights)
                     ("<f4>" . lsp-inlay-hints-mode))
         :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
         :commands lsp)
@@ -296,6 +295,7 @@ targets."
             lsp-lens-enable t
             lsp-inlay-hint-enable t
             lsp-log-io nil
+            lsp-use-plists t
             lsp-modeline-code-actions-segments '(count icon name))
     #+end_src
 **** hint face
@@ -312,10 +312,13 @@ targets."
         :init
         (setq lsp-ui-doc-enable t
               lsp-ui-doc-position 'top
-              ;; lsp-ui-doc-use-webkit nil
-              ;; lsp-ui-doc-delay 0.2
+              lsp-ui-doc-header t
+              lsp-ui-doc-use-webkit nil
+              ;; lsp-ui-doc-webkit-max-width-px 300 ;; default: 600
+              lsp-ui-doc-frame-mode nil
+              lsp-ui-doc-delay 0.5
               lsp-ui-doc-show-with-cursor t
-              lsp-ui-doc-show-with-mouse t
+              lsp-ui-doc-show-with-mouse nil
 
               ;;lsp-ui-sideline-show-diagnostics t
               ;;lsp-ui-sideline-show-hover t
@@ -328,14 +331,14 @@ targets."
               lsp-completion-show-kind t
               lsp-completion-show-detail t)
         :bind (:map lsp-ui-mode-map
+                    ("C-M-q". lsp-ui-doc-unfocus-frame)
                     ("M-." . lsp-ui-peek-find-definitions)
                     ("M-?" . lsp-ui-peek-find-references)
                     ("M-<right>" . lsp-ui-peek-jump-backward)
                     ("M-<left>" . lsp-ui-peek-jump-forward)
                     ("C-c l i" . lsp-ui-imenu)
-                    ("C-c l d" . lsp-ui-doc-show)
+                    ("C-c l d" . lsp-ui-doc-glance)
                     ("C-c l s" . consult-lsp-symbols)))
-
       ;;(lsp-ui-doc-frame-mode 1)
     #+end_src
 ** DAP - Debug Adapter Protocol
@@ -360,141 +363,129 @@ targets."
 
 ** Consult and integrations
 *** Consult
-#+begin_src emacs-lisp
-(use-package consult
-  ;; Replace bindings. Lazily loaded due by `use-package'.
-  :bind (;; C-c bindings (mode-specific-map)
-         ("C-c h" . consult-history)
-         ("C-c m" . consult-mode-command)
-         ;; C-x bindings (ctl-x-map)
-         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-         ;; Custom M-# bindings for fast register access
-         ("M-#" . consult-register-load)
-         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-         ("C-M-#" . consult-register)
-         ;; Other custom bindings
-         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-         ;; M-g bindings (goto-map)
-         ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
-         ("M-g g" . consult-goto-line)             ;; orig. goto-line
-         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-         ("M-g m" . consult-mark)
-         ("M-g k" . consult-global-mark)
-         ("M-g i" . consult-imenu)
-         ("M-g I" . consult-imenu-multi)
-         ;; M-s bindings (search-map)
-         ("M-s f" . consult-find)
-         ("M-s F" . consult-locate)
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)
-         ("M-s L" . consult-line-multi)
-         ("M-s m" . consult-multi-occur)
-         ("M-s k" . consult-keep-lines)
-         ("M-s u" . consult-focus-lines)
-         ;; Isearch integration
-         ("M-s e" . consult-isearch-history)
-         :map isearch-mode-map
-         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-         ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+    #+begin_src emacs-lisp
+      (use-package consult
+        ;; Replace bindings. Lazily loaded due by `use-package'.
+        :bind (;; C-c bindings (mode-specific-map)
+               ("C-c h" . consult-history)
+               ("C-c m" . consult-mode-command)
+               ;; C-x bindings (ctl-x-map)
+               ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+               ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+               ;; Custom M-# bindings for fast register access
+               ("M-#" . consult-register-load)
+               ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+               ("C-M-#" . consult-register)
+               ;; Other custom bindings
+               ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+               ;; M-g bindings (goto-map)
+               ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
+               ("M-g g" . consult-goto-line)             ;; orig. goto-line
+               ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+               ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+               ("M-g m" . consult-mark)
+               ("M-g k" . consult-global-mark)
+               ("M-g i" . consult-imenu)
+               ("M-g I" . consult-imenu-multi)
+               ;; M-s bindings (search-map)
+               ("M-s f" . consult-find)
+               ("M-s F" . consult-locate)
+               ("M-s r" . consult-ripgrep)
+               ("M-s l" . consult-line)
+               ("M-s L" . consult-line-multi)
+               ("M-s m" . consult-multi-occur)
+               ("M-s k" . consult-keep-lines)
+               ("M-s u" . consult-focus-lines)
+               ;; Isearch integration
+               ("M-s e" . consult-isearch-history)
+               :map isearch-mode-map
+               ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+               ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+               ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+               ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
 
-  ;; Enable automatic preview at point in the *Completions* buffer. This is
-  ;; relevant when you use the default completion UI. You may want to also
-  ;; enable `consult-preview-at-point-mode` in Embark Collect buffers.
-  :hook (completion-list-mode . consult-preview-at-point-mode)
+        ;; Enable automatic preview at point in the *Completions* buffer. This is
+        ;; relevant when you use the default completion UI. You may want to also
+        ;; enable `consult-preview-at-point-mode` in Embark Collect buffers.
+        :hook (completion-list-mode . consult-preview-at-point-mode)
 
-  ;; The :init configuration is always executed (Not lazy)
-  :init
+        ;; The :init configuration is always executed (Not lazy)
+        :init
 
-  ;; Optionally configure the register formatting. This improves the register
-  ;; preview for `consult-register', `consult-register-load',
-  ;; `consult-register-store' and the Emacs built-ins.
-  (setq register-preview-delay 0
-        register-preview-function #'consult-register-format)
+        ;; Optionally configure the register formatting. This improves the register
+        ;; preview for `consult-register', `consult-register-load',
+        ;; `consult-register-store' and the Emacs built-ins.
+        (setq register-preview-delay 0
+              register-preview-function #'consult-register-format)
 
-  ;; Optionally tweak the register preview window.
-  ;; This adds thin lines, sorting and hides the mode line of the window.
-  (advice-add #'register-preview :override #'consult-register-window)
+        ;; Optionally tweak the register preview window.
+        ;; This adds thin lines, sorting and hides the mode line of the window.
+        (advice-add #'register-preview :override #'consult-register-window)
 
-  ;; Optionally replace `completing-read-multiple' with an enhanced version.
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+        ;; Optionally replace `completing-read-multiple' with an enhanced version.
+        (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
 
-  ;; Use Consult to select xref locations with preview
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
+        ;; Use Consult to select xref locations with preview
+        (setq xref-show-xrefs-function #'consult-xref
+              xref-show-definitions-function #'consult-xref)
 
-  ;; Use `consult-completion-in-region' if Vertico is enabled.
-  ;; Otherwise use the default `completion--in-region' function.
-  (setq completion-in-region-function
-        (lambda (&rest args)
-          (apply (if vertico-mode
-                     #'consult-completion-in-region
-                   #'completion--in-region)
-                 args)))
+        ;; Use `consult-completion-in-region' if Vertico is enabled.
+        ;; Otherwise use the default `completion--in-region' function.
+        (setq completion-in-region-function
+              (lambda (&rest args)
+                (apply (if vertico-mode
+                           #'consult-completion-in-region
+                         #'completion--in-region)
+                       args)))
 
-  ;; Configure other variables and modes in the :config section,
-  ;; after lazily loading the package.
-  :config
-  ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
-  (consult-customize consult-theme
-                     :preview-key
-                     (list (kbd "M-.")
-                           :debounce 0.5 (kbd "<up>") (kbd "<down>")
-                           :debounce 1 'any))
-  ;; Optionally configure the narrowing key.
-  ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; (kbd "C-+")
+        ;; Configure other variables and modes in the :config section,
+        ;; after lazily loading the package.
+        :config
+        ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
+        (consult-customize consult-theme
+                           :preview-key
+                           (list (kbd "M-.")
+                                 :debounce 0.5 (kbd "<up>") (kbd "<down>")
+                                 :debounce 1 'any))
+        ;; Optionally configure the narrowing key.
+        ;; Both < and C-+ work reasonably well.
+        (setq consult-narrow-key "<") ;; (kbd "C-+")
 
-  ;; Optionally make narrowing help available in the minibuffer.
-  ;; You may want to use `embark-prefix-help-command' or which-key instead.
-  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+        ;; Optionally make narrowing help available in the minibuffer.
+        ;; You may want to use `embark-prefix-help-command' or which-key instead.
+        ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
-  ;; Configure S-up/S-down preview keys
-  (define-key vertico-map [S-up] #'vertico-previous)
-  (define-key vertico-map [S-down] #'vertico-next)
-  (consult-customize consult-recent-file :preview-key '([S-up] [S-down]))
-  ;; Optionally configure a function which returns the project root directory.
-  ;; There are multiple reasonable alternatives to chose from.
-    ;;;; 1. project.el (project-roots)
-  (setq consult-project-root-function
-        (lambda ()
-          (when-let (project (project-current))
-            (car (project-roots project))))))
-#+end_src
+        ;; Configure S-up/S-down preview keys
+        (define-key vertico-map [S-up] #'vertico-previous)
+        (define-key vertico-map [S-down] #'vertico-next)
+        (consult-customize consult-recent-file :preview-key '([S-up] [S-down]))
+        ;; Optionally configure a function which returns the project root directory.
+        ;; There are multiple reasonable alternatives to chose from.
+          ;;;; 1. project.el (project-roots)
+        (setq consult-project-root-function
+              (lambda ()
+                (when-let (project (project-current))
+                  (car (project-roots project))))))
+    #+end_src
 
 *** Consult flycheck
-#+begin_src emacs-lisp
-  (use-package consult-flycheck
-    :after (flycheck consult))
-#+end_src
-
-*** Consult company
-#+begin_src emacs-lisp
-  (use-package consult-company
-    :after (company consult)
-    :custom (define-key company-mode-map [remap completion-at-point] #'consult-company))
-#+end_src
-
-*** Consult projectile
-#+begin_src emacs-lisp
-  (use-package consult-projectile
-    :after (consult projectile))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package consult-flycheck
+        :after (flycheck consult))
+    #+end_src
 
 *** Consult yasnippet
-#+begin_src emacs-lisp
-  (use-package consult-yasnippet
-    :after (yasnippet consult))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package consult-yasnippet
+        :after (yasnippet consult))
+    #+end_src
 
 *** Consult LSP
-#+begin_src emacs-lisp
-  (use-package consult-lsp
-    :after (consult marginalia lsp-mode))
-#+end_src
+    #+begin_src emacs-lisp
+      (use-package consult-lsp
+        :after (consult marginalia lsp-mode)
+        :bind ("C-c l e" . consult-lsp-diagnostics))
+    #+end_src
 
 *** Consult org-roam
     #+begin_src emacs-lisp
@@ -553,7 +544,7 @@ targets."
          :config (smartparens-global-mode)
          :init (smartparens-strict-mode t))
        ;; easy <'lifetime>
-       (sp-with-modes 'rust-mode
+       (sp-with-modes 'rust-ts-mode
          (sp-local-pair "<" ">")
          (sp-local-pair "'" nil :actions nil))
        ;; easy ~code~
@@ -605,33 +596,31 @@ targets."
          :ensure t)
      #+END_SRC
 
-**** Git Gutter
-     #+BEGIN_SRC emacs-lisp
+**** git gutter
+     #+begin_src emacs-lisp
        (use-package git-gutter
          :hook (prog-mode . git-gutter-mode)
          :config
-         (use-package git-gutter-fringe
-           :config
-           (setq git-gutter-fr:side 'right-fringe)
-           (setq-default right-fringe-width 15)
-           (set-face-foreground 'git-gutter-fr:modified "#f5a97f")
-           (set-face-background 'git-gutter-fr:modified "#f5a97f")
-           (set-face-foreground 'git-gutter-fr:added    "#a6da95")
-           (set-face-background 'git-gutter-fr:added    "#a6da95")
-           (set-face-foreground 'git-gutter-fr:deleted  "#ed8796")
-           (set-face-background 'git-gutter-fr:deleted  "#ed8796")))
-     #+END_SRC
+         (setq git-gutter:update-interval 0.02))
+
+       (use-package git-gutter-fringe
+         :config
+         (setq git-gutter-fr:side 'right-fringe)
+         (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
+         (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
+         (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom))
+     #+end_src
 
 **** blame
      #+begin_src emacs-lisp
        (use-package blamer
          :defer 20
          :custom
-         (blamer-idle-time 0.3)
-         (blamer-min-offset 10)
+         (blamer-idle-time 0.7)
+         (blamer-min-offset 40)
          (blamer-type 'visual)
          (blamer-prettify-time-p t)
-         (blamer-max-commit-message-length 72)
+         (blamer-max-commit-message-length 30)
          (blamer-show-avatar-p t)
          (blamer-tooltip-function 'blamer-tooltip-commit-message)
          :custom-face
@@ -699,7 +688,7 @@ targets."
     #+begin_src emacs-lisp
       (save-place-mode 1)
     #+end_src
-*** Auto highlight symbol
+*** COMMENT Auto highlight symbol
     #+begin_src emacs-lisp
       (use-package auto-highlight-symbol
         :ensure t
@@ -732,7 +721,8 @@ targets."
                (:map term-raw-map
                      ("C-," . toggle-term))))
     #+end_src
-*** Code folding
+*** COMMENT Code folding
+    i'm currently using rust-ts-mode (with the native treesit), but both this packages needs tree-sitter-mode
     #+begin_src emacs-lisp
       (use-package ts-fold
         :straight (ts-fold :type git :host github :repo "emacs-tree-sitter/ts-fold")
@@ -1663,6 +1653,10 @@ targets."
 *** Highlight line
     #+begin_src emacs-lisp
       (global-hl-line-mode t)
+    #+end_src
+*** highlight todo
+    #+begin_src emacs-lisp
+      (global-hl-todo-mode t)
     #+end_src
 *** Only highlight text region
     #+begin_src emacs-lisp
