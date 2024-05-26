@@ -79,3 +79,7 @@ bookmarks
 straight/
 history
 backup/
+
+org-roam.db
+roam-backup
+tree-sitter
