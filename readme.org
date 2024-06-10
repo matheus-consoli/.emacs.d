@@ -589,7 +589,13 @@ targets."
         (use-package magit-todos
           :config (magit-todos-mode t))
       #+end_src
-
+**** magit delta
+     #+begin_src emacs-lisp
+       (use-package magit-delta
+         :after magit
+         :commands magit-delta-mode
+         :hook (magit-mode . magit-delta-mode))
+     #+end_src
 **** Fringe Helper
      #+BEGIN_SRC emacs-lisp
        (use-package fringe-helper
@@ -721,6 +727,18 @@ targets."
                (:map term-raw-map
                      ("C-," . toggle-term))))
     #+end_src
+*** subword mode
+    #+begin_src emacs-lisp
+      ;; CamelCase words as individual words
+      (add-hook 'prog-mode-hook 'subword-mode)
+    #+end_src
+*** editorconfig compat
+    #+begin_src emacs-lisp
+      (use-package editorconfig
+        :ensure t
+        :config
+        (editore 1))
+    #+end_src
 *** COMMENT Code folding
     i'm currently using rust-ts-mode (with the native treesit), but both this packages needs tree-sitter-mode
     #+begin_src emacs-lisp
@@ -763,13 +781,14 @@ targets."
      #+end_src
 **** LSP config
      #+begin_src emacs-lisp
-       (setq lsp-rust-analyzer-lru-capacity (* 128 1) ;; default = 128
+       (setq lsp-rust-analyzer-lru-capacity (* 10 128)
              lsp-rust-analyzer-display-chaining-hints t
              lsp-rust-analyzer-display-closure-return-type-hints t
              lsp-rust-analyzer-closure-capture-hints t
              lsp-rust-analyzer-discriminants-hints "always"
              lsp-rust-analyzer-display-parameter-hints t
              lsp-rust-analyzer-expression-adjustment-hints "always"
+             lsp-rust-analyzer-expression-adjustment-hints-mode "always"
              lsp-rust-analyzer-implicit-drops t
              lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
              lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
@@ -781,7 +800,7 @@ targets."
              lsp-rust-analyzer-closing-brace-hints-min-lines 25
              lsp-rust-analyzer-proc-macro-enable t
              lsp-rust-analyzer-server-display-inlay-hints t
-             lsp-semantic-tokens-enable nil)
+             lsp-semantic-tokens-enable t)
      #+end_src
 **** DAP config
      #+begin_src emacs-lisp
@@ -835,15 +854,13 @@ targets."
      #+end_src
 
 *** Haskell
-**** Haskell mode
-     #+begin_src emacs-lisp
-       (use-package haskell-mode)
-     #+end_src
 **** LSP
      #+begin_src emacs-lisp
        (use-package lsp-haskell
-         :hook (haskell-mode . lsp)
-         (haskell-literate-mode . lsp))
+         :config
+         (setq lsp-haskell-server-path "haskell-language-server-wrapper")
+         (setq lsp-haskell-server-args ())
+         :hook (haskell-mode . lsp))
      #+end_src
 
 *** OCaml
@@ -1376,7 +1393,7 @@ targets."
              (tab-count (how-many "^\t" (point-min) (point-max))))
          (if (> space-count tab-count) (setq indent-tabs-mode nil))
          (if (> tab-count space-count) (setq indent-tabs-mode t))))
-     ;; (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
+     (add-hook 'prog-mode-hook #'consoli/infer-indentation-style)
    #+end_src
 ** Don't freeze
    #+begin_src emacs-lisp
@@ -1397,6 +1414,11 @@ targets."
      (use-package good-scroll
        :custom (redisplay-dont-pause 1)
        :config (good-scroll-mode 1))
+
+     ;; always redraw immediately when scrolling
+     ;; more responsive and doesn't hang
+     (setq fast-but-imprecise-scrolling t
+           jit-lock-defer-time 0)
    #+end_src
 *** Preserve screen position
     #+begin_src emacs-lisp
@@ -1425,7 +1447,7 @@ targets."
     Auto-save files are temporary files that Emacs creates until a file is saved.
     Emacs auto-saves whenever it crashes, after ~N~ keystrokes and after a timeout.
     #+begin_src emacs-lisp
-      (setq auto-save-timeout 10 ;; seconds
+      (setq auto-save-timeout 30 ;; seconds
             ;; keystrokes
             auto-save-interval 200)
     #+end_src
@@ -1447,21 +1469,24 @@ targets."
           (backup-buffer)))
       (add-hook 'before-save-hook  'force-backup-of-buffer)
     #+end_src
-** Do what I mean
+** lockfiles
+   #+begin_src emacs-lisp
+     (setq create-lockfiles nil)
+   #+end_src
+** Do what i mean
    #+begin_src emacs-lisp
      (global-set-key (kbd "M-u") 'upcase-dwim)
      (global-set-key (kbd "M-l") 'downcase-dwim)
      (global-set-key (kbd "M-c") 'capitalize-dwim)
    #+end_src
-** A [C]ollection of [R]idiculous [U]seful e[X]tensions
+** A Collection of Ridiculous Useful eXtensions
    #+begin_src emacs-lisp
      (use-package crux
        :bind ([remap kill-line] . crux-smart-kill-line)
        ([remap kill-whole-line] . crux-kill-whole-line)
-       ("C-c n" . crux-cleanup-buffer-or-region)
        ("C-c d" . crux-duplicate-current-line-or-region)
        ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
-   #+end_src
+       #+end_src
 ** Read $PATH
    #+begin_src emacs-lisp
      (use-package exec-path-from-shell
@@ -1575,6 +1600,7 @@ targets."
 *** Doom themes
     #+begin_src emacs-lisp
       (use-package doom-themes
+        :defer t
         :config (doom-themes-org-config)
         :custom
         (doom-themes-enable-bold t)
@@ -1583,11 +1609,12 @@ targets."
 **** Solaire-mode
      #+begin_src emacs-lisp
        (use-package solaire-mode)
-       (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+       ;;(add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
      #+end_src
 *** catppuccin
     #+begin_src emacs-lisp
       (use-package catppuccin-theme
+        :defer t
         :init
         (setq catppuccin-flavor
               ;; 'macchiato
@@ -1597,15 +1624,27 @@ targets."
     #+end_src
 *** Ef-themes
     #+begin_src emacs-lisp
-      (use-package ef-themes)
+      (use-package ef-themes
+        :defer t)
     #+end_src
 *** Kaolin themes
     #+begin_src emacs-lisp
-      (use-package kaolin-themes)
+      (use-package kaolin-themes
+        :defer t)
     #+end_src
 *** base16
     #+begin_src emacs-lisp
-      (use-package base16-theme)
+      (use-package base16-theme
+        :defer t)
+    #+end_src
+*** spacemacs themes
+    #+begin_src emacs-lisp
+      (use-package spacemacs-theme
+        :defer t
+        :custom
+        (spacemacs-theme-keyword-italic t)
+        (spacemacs-theme-comment-bg nil)
+        (spacemacs-theme-comment-italic t))
     #+end_src
 *** COMMENT Load theme
     #+begin_src emacs-lisp
@@ -1619,8 +1658,8 @@ targets."
         :straight (:host github :repo "pedroangelo/theme-rotation.el" :files ("*.el"))
         :custom
         (theme-rotation-config
-         '(("08:00" . kaolin-breeze)
-           ("18:00" . kaolin-aurora)))
+         '(("08:00" . spacemacs-light)
+           ("17:00" . spacemacs-dark)))
         :config
         (theme-rotation-mode))
     #+end_src
@@ -1657,6 +1696,9 @@ targets."
 *** highlight todo
     #+begin_src emacs-lisp
       (global-hl-todo-mode t)
+      (define-key prog-mode-map (kbd "C-|") (lambda ()
+                                              (interactive)
+                                              (hl-todo-insert "TODO(matheus-consoli): ")))
     #+end_src
 *** Only highlight text region
     #+begin_src emacs-lisp
@@ -1671,6 +1713,17 @@ targets."
      #+begin_src emacs-lisp
        (fringe-mode '(15 . 10))
      #+end_src
+*** fix color display when loading emacs in terminal
+    #+begin_src emacs-lisp
+      (defun enable-256color-term ()
+        (interactive)
+        (load-library "term/xterm")
+        (terminal-init-xterm))
+
+      (unless (display-graphic-p)
+        (if (string-suffix-p "256color" (getenv "TERM"))
+          (enable-256color-term)))
+    #+end_src
 ** Tabs
 *** Install
     #+begin_src emacs-lisp
@@ -1734,4 +1787,29 @@ targets."
 *** Fix org mode tables
     #+begin_src emacs-lisp
       (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+    #+end_src
+*** ligatures
+    #+begin_src emacs-lisp
+      (use-package ligature
+        :straight (:host github :repo "mickeynp/ligature.el")
+        :defer 1
+        :config
+        (ligature-set-ligatures 't '("www"))
+        (ligature-set-ligatures
+         'prog-mode
+         '("-->" "//" "/**" "/*" "*/" "<!--" ":=" "->>" "<<-" "->" "<-"
+           "<=>" "==" "!=" "<=" ">=" "=:=" "!==" "&&" "||" "..." ".."
+           "|||" "///" "&&&" "===" "++" "--" "=>" "|>" "<|" "||>" "<||"
+           "|||>" "<|||" ">>" "<<" "::=" "|]" "[|" "{|" "|}"
+           "[<" ">]" ":?>" ":?" "/=" "[||]" "!!" "?:" "?." "::"
+           "+++" "??" "###" "##" ":::" "####" ".?" "?=" "=!=" "<|>"
+           "<:" ":<" ":>" ">:" "<>" "***" ";;" "/==" ".=" ".-" "__"
+           "=/=" "<-<" "<<<" ">>>" "<=<" "<<=" "<==" "<==>" "==>" "=>>"
+           ">=>" ">>=" ">>-" ">-" "<~>" "-<" "-<<" "=<<" "---" "<-|"
+           "<=|" "/\\" "\\/" "|=>" "|~>" "<~~" "<~" "~~" "~~>" "~>"
+           "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</>" "</" "/>"
+           "<->" "..<" "~=" "~-" "-~" "~@" "^=" "-|" "_|_" "|-" "||-"
+           "|=" "||=" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
+           "&="))
+        (global-ligature-mode t))
     #+end_src
