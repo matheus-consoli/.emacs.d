@@ -59,10 +59,10 @@
 
 ;; Always use straight to install on systems other than Linux
 (setq straight-use-package-by-default t
-      use-package-always-defer t
+      use-package-always-defer nil
       straight-cache-autoloads t
       straight-vc-git-default-clone-depth 1
-      package-enable-at-startup nil)
+      package-enable-at-startup t)
 
 (straight-use-package 'org)
 

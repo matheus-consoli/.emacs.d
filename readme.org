@@ -176,10 +176,8 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
         ("C-, j" . treesit-jump-jump)
         ("C-, s" . treesit-jump-select)
         ("C-, d" . treesit-jump-delete)
-        ("C-, p" . treesit-jump-parent)
-        ("C-, t" . treesit-jump-transient)
-        :config
-        (setq treesit-jump-queries-filter-list '("inner" "test" "param")))
+        ("C-, p" . treesit-jump-parent-jump)
+        ("C-, t" . treesit-jump-transient))
     #+end_src
 
 ** Embark
@@ -291,6 +289,7 @@ targets."
             lsp-enable-on-type-formatting t
             lsp-enable-snippet t
             lsp-headerline-breadcrumb-icons-enable t
+            lsp-headerline-breadcrumb-segments '(project file symbols)
             lsp-idle-delay 0.2
             lsp-lens-enable t
             lsp-inlay-hint-enable t
@@ -554,7 +553,7 @@ targets."
      #+end_src
 ***** easy generics
       #+begin_src emacs-lisp
-        (sp-with-modes 'rust-mode
+        (sp-with-modes 'rust-ts-mode
           (sp-local-pair "<" ">")
           ;; easy lifetimes
           (sp-local-pair "'" nil :actions nil))
@@ -589,13 +588,13 @@ targets."
         (use-package magit-todos
           :config (magit-todos-mode t))
       #+end_src
-**** magit delta
-     #+begin_src emacs-lisp
-       (use-package magit-delta
-         :after magit
-         :commands magit-delta-mode
-         :hook (magit-mode . magit-delta-mode))
-     #+end_src
+***** magit delta
+      #+begin_src emacs-lisp
+        (use-package magit-delta
+          :after magit
+          :commands magit-delta-mode
+          :hook (magit-mode . magit-delta-mode))
+      #+end_src
 **** Fringe Helper
      #+BEGIN_SRC emacs-lisp
        (use-package fringe-helper
@@ -606,33 +605,36 @@ targets."
      #+begin_src emacs-lisp
        (use-package git-gutter
          :hook (prog-mode . git-gutter-mode)
-         :config
-         (setq git-gutter:update-interval 0.02))
+         :custom
+         (git-gutter:update-interval 0.02))
 
        (use-package git-gutter-fringe
-         :config
-         (setq git-gutter-fr:side 'right-fringe)
-         (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
-         (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
-         (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom))
+         :custom
+         (git-gutter-fr:side 'right-fringe))
+       (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
+       (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
+       (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom)
      #+end_src
 
 **** blame
      #+begin_src emacs-lisp
        (use-package blamer
          :defer 20
+         :bind (("C-c i" . blamer-show-posframe-commit-info))
          :custom
-         (blamer-idle-time 0.7)
-         (blamer-min-offset 40)
-         (blamer-type 'visual)
+         (blamer-datetime-formatter ", %s ")
+         (blamer-author-formatter "  %s")
+         (blamer-idle-time 1)
+         (blamer-smart-background-p t)
+         (blamer-min-offset 20)
+         (blamer-type 'visual) ;; only about one line
          (blamer-prettify-time-p t)
          (blamer-max-commit-message-length 30)
          (blamer-show-avatar-p t)
-         (blamer-tooltip-function 'blamer-tooltip-commit-message)
          :custom-face
          (blamer-face ((t :height 100
                           :italic nil)))
-         :hook (prog-mode . blamer-mode))
+         :config (global-blamer-mode 1))
      #+end_src
 *** COMMENT Region Expansion
     #+begin_src emacs-lisp
@@ -652,9 +654,9 @@ targets."
         :config (define-key mc/keymap (kbd "RET") nil)
         :bind
         (:map multiple-cursors-mode
-              ("C-> ." . 'mc/mark-next-like-this)
+              ("C-> ." . 'mc/mark-next-like-this-symbol)
               ("C-> >" . 'mc/skip-to-next-like-this)
-              ("C-< ." . 'mc/mark-previous-like-this)
+              ("C-< ." . 'mc/mark-previous-like-this-symbol)
               ("C-< <" . 'mc/skip-previous-like-this)
               ("C-x SPC" . 'set-rectangular-region-anchor)))
     #+end_src
@@ -663,21 +665,22 @@ targets."
       (use-package ts-movement
         :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
         :ensure multiple-cursors
-        :init
-        (define-key ts-movement-map (kbd "C-c . d") #'tsm/delete-overlay-at-point)
-        (define-key ts-movement-map (kbd "C-c . D") #'tsm/clear-overlays-of-type)
-        (define-key ts-movement-map (kbd "C-c . b") #'tsm/node-prev)
-        (define-key ts-movement-map (kbd "C-c . C-b") #'tsm/backward-overlay)
-        (define-key ts-movement-map (kbd "C-c . C-f") #'tsm/forward-overlay)
-        (define-key ts-movement-map (kbd "C-c . f") #'tsm/node-next)
-        (define-key ts-movement-map (kbd "C-c . p") #'tsm/node-parent)
-        (define-key ts-movement-map (kbd "C-c . n") #'tsm/node-child)
-        (define-key ts-movement-map (kbd "C-c . N") #'tsm/node-children)
-        (define-key ts-movement-map (kbd "C-c . s") #'tsm/node-children-of-type)
-        (define-key ts-movement-map (kbd "C-c . a") #'tsm/node-start)
-        (define-key ts-movement-map (kbd "C-c . e") #'tsm/node-end)
-        (define-key ts-movement-map (kbd "C-c . m") #'tsm/node-mark)
-        (define-key ts-movement-map (kbd "C-c . c") #'tsm/mc/mark-all-overlays)
+        :bind
+        (:map ts-movement-map
+              ("C-c . d" . 'tsm/delete-overlay-at-point)
+              ("C-c . D" . 'tsm/clear-overlays-of-type)
+              ("C-c . b" . 'tsm/node-prev)
+              ("C-c . C-b" . 'tsm/backward-overlay)
+              ("C-c . C-f" . 'tsm/forward-overlay)
+              ("C-c . f" . 'tsm/node-next)
+              ("C-c . p" . 'tsm/node-parent)
+              ("C-c . n" . 'tsm/node-child)
+              ("C-c . N" . 'tsm/node-children)
+              ("C-c . s" . 'tsm/node-children-of-type)
+              ("C-c . a" . 'tsm/node-start)
+              ("C-c . e" . 'tsm/node-end)
+      	("C-c . m" . 'tsm/node-mark)
+              ("C-c . c" . 'tsm/mc/mark-all-overlays))
         :hook (rust-ts-mode . ts-movement-mode))
     #+end_src
 *** Moving lines around
@@ -737,34 +740,38 @@ targets."
       (use-package editorconfig
         :ensure t
         :config
-        (editore 1))
+        (editorconfig-mode 1))
     #+end_src
 *** COMMENT Code folding
-    i'm currently using rust-ts-mode (with the native treesit), but both this packages needs tree-sitter-mode
     #+begin_src emacs-lisp
-      (use-package ts-fold
-        :straight (ts-fold :type git :host github :repo "emacs-tree-sitter/ts-fold")
-        :hook ((prog-mode . ts-fold-mode)
-               (ts-fold-mode . ts-fold-line-comment-mode))
-        :bind ("C-(" . ts-fold-toggle)
-        :config (setq ts-fold-summary-format " summary: %s "))
+      (use-package treesit-fold
+        :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
+        :hook ((prog-mode . treesit-fold-mode)
+               (treesit-fold-mode . treesit-fold-line-comment-mode))
+        :bind ("C-(" . treesit-fold-toggle)
+        :custom
+        (treesit-fold-summary-format "   %s "))
     #+end_src
-**** folding indicators
-     #+begin_src emacs-lisp
-       (use-package ts-fold-indicators
-         :straight (ts-fold-indicators
-                    :type git
-                    :host github
-                    :repo "emacs-tree-sitter/ts-fold"))
-     #+end_src
+*** treesitter context
+    #+begin_src emacs-lisp
+      (use-package treesitter-context
+        :straight (treesitter-context-mode :type git :host github :repo "zbelial/treesitter-context.el" :files ("*.el"))
+        :hook (rust-ts-mode . treesitter-context-mode)
+        :bind
+        (:map treesitter-context-mode
+         ("C-(" . treesitter-context-fold-toggle))
+        :custom
+        (treesitter-context-show-context-always t) ;; only show when the outmost parent is invisible
+        (treesitter-context-frame-autohide-timeout 5)
+        (treesitter-context-frame-min-height 1)
+        (treesitter-context-fold-show-fringe-marks nil)
+        (treesitter-context-border-color (face-attribute 'default :frontend))
+        (treesitter-context-background-color (face-attribute 'default :background)))
+    #+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
      #+begin_src emacs-lisp
-       ;; (use-package rust-mode
-       ;;   :init (setq rust-format-on-save nil)
-       ;;   :hook (rust-mode . lsp))
-
        (use-package rust-ts-mode
             :hook (rust-ts-mode . lsp))
      #+end_src
@@ -892,7 +899,6 @@ targets."
 ** install
    #+begin_src emacs-lisp
      (use-package org
-       :defer t
        :ensure org-contrib)
    #+end_src
 ** basic settings
@@ -1090,6 +1096,7 @@ targets."
         :bind (("C-c b f" . org-roam-node-find)
                ("C-c b i" . org-roam-node-insert)
                ("C-c b c" . org-roam-capture)
+               ("C-c b g" . org-roam-graph)
                ("C-c b d" . org-roam-dailies-capture-today)
                ("C-c b D" . org-roam-dailies-goto-today)
                ("C-c b y" . org-roam-dailies-goto-previous))
@@ -1561,17 +1568,26 @@ targets."
      (global-set-key (kbd "ć") (lambda () (interactive) (insert "ç")))
      (global-set-key (kbd "Ć") (lambda () (interactive) (insert "Ç")))
    #+end_src
+** garbage collector magic hack
+   #+begin_src emacs-lisp
+     (use-package gcmh
+       :config (gcmh-mode t))
+   #+end_src
 * Appearance
 ** Modeline
    #+begin_src emacs-lisp
      (use-package doom-modeline
+       :ensure ghub
        :custom
        (doom-modeline-height 40)
        (doom-modeline-bar-width 10)
-       (doom-modeline-hud nil)
+       (doom-modeline-hud t)
        (doom-modeline-enable-word-count t)
        (doom-modeline-buffer-encoding nil)
        (doom-modeline-support-imenu t)
+       (doom-modeline-irc nil)
+       (doom-modeline-gnus nil)
+       (doom-modeline-github t) ;; requires ghub package
        :hook (after-init . doom-modeline-mode))
      (custom-set-faces
       '(mode-line ((t (:family "Martian Mono" :height 120))))
@@ -1600,7 +1616,6 @@ targets."
 *** Doom themes
     #+begin_src emacs-lisp
       (use-package doom-themes
-        :defer t
         :config (doom-themes-org-config)
         :custom
         (doom-themes-enable-bold t)
@@ -1614,7 +1629,6 @@ targets."
 *** catppuccin
     #+begin_src emacs-lisp
       (use-package catppuccin-theme
-        :defer t
         :init
         (setq catppuccin-flavor
               ;; 'macchiato
@@ -1624,35 +1638,31 @@ targets."
     #+end_src
 *** Ef-themes
     #+begin_src emacs-lisp
-      (use-package ef-themes
-        :defer t)
+      (use-package ef-themes)
     #+end_src
 *** Kaolin themes
     #+begin_src emacs-lisp
-      (use-package kaolin-themes
-        :defer t)
+      (use-package kaolin-themes)
     #+end_src
 *** base16
     #+begin_src emacs-lisp
-      (use-package base16-theme
-        :defer t)
+      (use-package base16-theme)
     #+end_src
 *** spacemacs themes
     #+begin_src emacs-lisp
       (use-package spacemacs-theme
-        :defer t
         :custom
         (spacemacs-theme-keyword-italic t)
         (spacemacs-theme-comment-bg nil)
         (spacemacs-theme-comment-italic t))
     #+end_src
-*** COMMENT Load theme
+*** Load theme
     #+begin_src emacs-lisp
       ;; 'kaolin-bubblegum ;; 'ef-summer ;; 'catppuccin ;; 'doom-feather-light
-      (load-theme 'kaolin-breeze ;; 'doom-feather-light ;; 'kaolin-breeze
+      (load-theme 'doom-one ;; 'doom-feather-light ;; 'kaolin-breeze
                   :no-confirm)
     #+end_src
-*** Theme rotation
+*** COMMENT Theme rotation
     #+begin_src emacs-lisp
       (use-package theme-rotation
         :straight (:host github :repo "pedroangelo/theme-rotation.el" :files ("*.el"))
@@ -1730,14 +1740,16 @@ targets."
       (use-package centaur-tabs
         :config
         (centaur-tabs-mode t)
+        (centaur-tabs-headline-match) ;; make the headline face match the tabs default face
         :custom
+        (centaur-tabs-adjust-buffer-order t)
         (centaur-tabs-group-by-projectile-project)
         (centaur-tabs-headline-match)
         (centaur-tabs-enable-key-bindings t)
         (centaur-tabs-style "bar")
         (centaur-tabs-height 24)
         (centaur-tabs-set-icons t)
-        (centaur-tabs-gray-out-icons t)
+        (centaur-tabs-gray-out-icons 'buffer) ;; gray out icons for the unselected tabs
         (centaur-tabs-set-bar 'left)
         (centaur-tabs-set-modified-marker t)
         (centaur-tabs-cycle-scope 'tabs)
@@ -1764,20 +1776,50 @@ targets."
        '(centaur-tabs-selected-modified ((t (:slant italic))))
        '(centaur-tabs-unselected-modified ((t (:slant italic)))))
     #+end_src
+** treemacs
+   #+begin_src emacs-lisp
+     (use-package treemacs
+       :config
+       (treemacs-git-commit-diff-mode t)
+       (treemacs-fringe-indicator-mode 'always)
+       (treemacs-load-theme "all-the-icons")
+       (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+       (doom-themes-treemacs-config)
+       :bind
+       (:map global-map
+             ("C-c ; ;" . treemacs)
+             ("C-c ; B" . treemacs-bookmark)
+             ("C-c ; f" . treemacs-find-file)
+             ("C-c ; g" . treemacs-find-tag)))
+   #+end_src
+*** treemacs extensions
+    #+begin_src emacs-lisp
+      (use-package treemacs-magit
+        :after (treemacs magit))
 
+      (use-package treemacs-projectile
+        :after (treemacs projectile))
+
+      (use-package treemacs-all-the-icons
+        :after (treemacs))
+
+      (use-package lsp-treemacs
+        :after (lsp treemacs)
+        :init (lsp-treemacs-sync-mode 1))
+    #+end_src
 ** Font
 *** Set font
     #+begin_src emacs-lisp
       (set-face-attribute 'default nil
                           ;; "Space Grotesk" ;; "Iosevka Curly" ;; "Monoid Nerd Font"
-                          :font" Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
-                          :height 120)
+                          :font "VictorMono Nerd Font" ;; "Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
+                          :height 130)
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
     #+begin_src emacs-lisp
       (custom-set-faces
-       '(font-lock-comment-face ((t :slant italic)))) ;; to set the font family, use the variable-pitch face-attribute
+       '(font-lock-comment-face ((t :font "VictorMono Nerd Font" :slant italic)))) ;; to set the font family, use the variable-pitch face-attribute (??)
     #+end_src
 *** Pretty symbols
     #+begin_src emacs-lisp
@@ -1792,7 +1834,6 @@ targets."
     #+begin_src emacs-lisp
       (use-package ligature
         :straight (:host github :repo "mickeynp/ligature.el")
-        :defer 1
         :config
         (ligature-set-ligatures 't '("www"))
         (ligature-set-ligatures
