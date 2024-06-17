@@ -742,16 +742,6 @@ targets."
         :config
         (editorconfig-mode 1))
     #+end_src
-*** COMMENT Code folding
-    #+begin_src emacs-lisp
-      (use-package treesit-fold
-        :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
-        :hook ((prog-mode . treesit-fold-mode)
-               (treesit-fold-mode . treesit-fold-line-comment-mode))
-        :bind ("C-(" . treesit-fold-toggle)
-        :custom
-        (treesit-fold-summary-format "   %s "))
-    #+end_src
 *** treesitter context
     #+begin_src emacs-lisp
       (use-package treesitter-context
@@ -759,14 +749,17 @@ targets."
         :hook (rust-ts-mode . treesitter-context-mode)
         :bind
         (:map treesitter-context-mode
-         ("C-(" . treesitter-context-fold-toggle))
-        :custom
-        (treesitter-context-show-context-always t) ;; only show when the outmost parent is invisible
-        (treesitter-context-frame-autohide-timeout 5)
-        (treesitter-context-frame-min-height 1)
-        (treesitter-context-fold-show-fringe-marks nil)
-        (treesitter-context-border-color (face-attribute 'default :frontend))
-        (treesitter-context-background-color (face-attribute 'default :background)))
+         ("C-(" . treesitter-context-fold-toggle)
+         ("C-)" . treesitter-context-focus-mode))
+        :config
+        (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
+              treesitter-context-frame-autohide-timeout 10
+              treesitter-context-frame-min-height 1
+              treesitter-context-border-width 5
+              treesitter-context-frame-min-width 1
+              treesitter-context-fold-show-fringe-marks nil
+              treesitter-context-border-color (face-attribute 'mode-line :background)
+              treesitter-context-background-color (face-attribute 'default :background)))
     #+end_src
 ** Languages specifics
 *** Rust
@@ -1587,7 +1580,6 @@ targets."
        (doom-modeline-support-imenu t)
        (doom-modeline-irc nil)
        (doom-modeline-gnus nil)
-       (doom-modeline-github t) ;; requires ghub package
        :hook (after-init . doom-modeline-mode))
      (custom-set-faces
       '(mode-line ((t (:family "Martian Mono" :height 120))))
@@ -1765,6 +1757,7 @@ targets."
       (add-to-list 'centaur-tabs-excluded-prefixes "*Process List")
       (add-to-list 'centaur-tabs-excluded-prefixes "*compilation")
       (add-to-list 'centaur-tabs-excluded-prefixes "*ansi-term*")
+      (add-to-list 'centaur-tabs-excluded-prefixes "*Call Hierarchy*")
       ;; dap-mode ui
       (add-to-list 'centaur-tabs-excluded-prefixes "Locals")
       (add-to-list 'centaur-tabs-excluded-prefixes "Expressions")
