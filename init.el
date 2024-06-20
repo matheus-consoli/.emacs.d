@@ -70,7 +70,8 @@
 (straight-use-package 'use-package)
 
 ;; Load the helper package for commands like `straight-x-clean-unused-repos'
-(require 'straight-x)
+;; (require 'straight-x)
+
 
 (org-babel-load-file (expand-file-name (concat user-emacs-directory "readme.org")))
 (custom-set-variables

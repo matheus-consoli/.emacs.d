@@ -121,19 +121,23 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
        :commands company-abort
        :init (global-company-mode 1)
        :config
-       (custom-set-faces
-        '(company-tooltip-common
-          ((t (:inhirit company-tooltip :weight bold :underline nil))))
-        '(company-tooltip-common-selection
-          ((t (:inhirit company-tooltip-selection :weight bold :underline nil)))))
-       :custom ((company-tooltip-align-annotations t)
-                (company-tooltip-limit 15)
-                (company-idle-delay 0)
-                (company-echo-delay 0)
-                (company-minimum-prefix-length 1)
-                (company-require-match nil)
-                (company-dabbrev-ignore-case nil)
-                (company-dabbrev-downcase nil)))
+       (progn
+         (custom-set-faces
+          '(company-tooltip-common
+            ((t (:inhirit company-tooltip :weight bold :underline nil))))
+          '(company-tooltip-common-selection
+            ((t (:inhirit company-tooltip-selection :weight bold :underline nil)))))))
+     (setq company-tooltip-align-annotations t
+           company-tooltip-limit 15
+           company-idle-delay 0.0
+           company-echo-delay 0
+           company-tooltip-limit 5
+           company-minimum-prefix-length 1
+           company-require-match nil
+           company-show-quick-access 'left
+           company-tooltip-maximum-width 60
+           company-dabbrev-ignore-case nil
+           company-dabbrev-downcase nil)
    #+end_src
 *** Company box
 #+begin_src emacs-lisp
@@ -283,19 +287,18 @@ targets."
             eldoc-echo-area-use-multiline-p nil
             lsp-eldoc-enable-hover nil
             lsp-signature-doc-lines 0
-            ;; lsp-modeline-code-actions-mode t
+            lsp-modeline-code-actions-mode t
             lsp-enable-folding t
             lsp-enable-indentation t
             lsp-enable-on-type-formatting t
             lsp-enable-snippet t
             lsp-headerline-breadcrumb-icons-enable t
-            lsp-headerline-breadcrumb-segments '(project file symbols)
+            lsp-headerline-breadcrumb-segments '(file symbols)
             lsp-idle-delay 0.2
             lsp-lens-enable t
-            lsp-inlay-hint-enable t
+            lsp-inlay-hint-enable nil
             lsp-log-io nil
-            lsp-use-plists t
-            lsp-modeline-code-actions-segments '(count icon name))
+            lsp-use-plists t)
     #+end_src
 **** hint face
      #+begin_src emacs-lisp
@@ -312,17 +315,13 @@ targets."
         (setq lsp-ui-doc-enable t
               lsp-ui-doc-position 'top
               lsp-ui-doc-header t
-              lsp-ui-doc-use-webkit nil
-              ;; lsp-ui-doc-webkit-max-width-px 300 ;; default: 600
               lsp-ui-doc-frame-mode nil
               lsp-ui-doc-delay 0.5
               lsp-ui-doc-show-with-cursor t
               lsp-ui-doc-show-with-mouse nil
 
-              ;;lsp-ui-sideline-show-diagnostics t
-              ;;lsp-ui-sideline-show-hover t
-              ;;lsp-ui-sideline-show-code-actions t
-              ;;lsp-ui-sideline-delay 2 ;; 2seconds before showing sideline
+              lsp-ui-sideline-show-code-actions nil
+              lsp-ui-sideline-delay 2
 
               lsp-ui-peek-enable t
               lsp-ui-peek-show-directory t
@@ -338,7 +337,6 @@ targets."
                     ("C-c l i" . lsp-ui-imenu)
                     ("C-c l d" . lsp-ui-doc-glance)
                     ("C-c l s" . consult-lsp-symbols)))
-      ;;(lsp-ui-doc-frame-mode 1)
     #+end_src
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
@@ -442,13 +440,10 @@ targets."
         :config
         ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
         (consult-customize consult-theme
-                           :preview-key
-                           (list (kbd "M-.")
-                                 :debounce 0.5 (kbd "<up>") (kbd "<down>")
-                                 :debounce 1 'any))
-        ;; Optionally configure the narrowing key.
-        ;; Both < and C-+ work reasonably well.
-        (setq consult-narrow-key "<") ;; (kbd "C-+")
+                         :preview-key
+                         '("M-."
+                           :debounce 0.5 "<up>" "<down>"
+                           :debounce 1 any))
 
         ;; Optionally make narrowing help available in the minibuffer.
         ;; You may want to use `embark-prefix-help-command' or which-key instead.
@@ -518,7 +513,7 @@ targets."
         #+end_src
 * Programming
 ** Utils
-*** Treesitter
+*** COMMENT Treesitter
     #+begin_src emacs-lisp
       (use-package tree-sitter
         :init (use-package tree-sitter-langs)
@@ -679,7 +674,7 @@ targets."
               ("C-c . s" . 'tsm/node-children-of-type)
               ("C-c . a" . 'tsm/node-start)
               ("C-c . e" . 'tsm/node-end)
-      	("C-c . m" . 'tsm/node-mark)
+              ("C-c . m" . 'tsm/node-mark)
               ("C-c . c" . 'tsm/mc/mark-all-overlays))
         :hook (rust-ts-mode . ts-movement-mode))
     #+end_src
@@ -1571,15 +1566,17 @@ targets."
    #+begin_src emacs-lisp
      (use-package doom-modeline
        :ensure ghub
-       :custom
-       (doom-modeline-height 40)
-       (doom-modeline-bar-width 10)
-       (doom-modeline-hud t)
-       (doom-modeline-enable-word-count t)
-       (doom-modeline-buffer-encoding nil)
-       (doom-modeline-support-imenu t)
-       (doom-modeline-irc nil)
-       (doom-modeline-gnus nil)
+       :config
+       (setq doom-modeline-height 40
+             doom-modeline-bar-width 10
+             doom-modeline-hud t
+             doom-modeline-enable-word-count t
+             doom-modeline-buffer-encoding nil
+             doom-modeline-support-imenu t
+             doom-modeline-irc nil
+             doom-modeline-modal-modern-icon t
+             doom-modeline-buffer-file-name-style 'relative-to-project
+             doom-modeline-gnus nil)
        :hook (after-init . doom-modeline-mode))
      (custom-set-faces
       '(mode-line ((t (:family "Martian Mono" :height 120))))
@@ -1608,19 +1605,25 @@ targets."
 *** Doom themes
     #+begin_src emacs-lisp
       (use-package doom-themes
-        :config (doom-themes-org-config)
-        :custom
-        (doom-themes-enable-bold t)
-        (doom-themes-enable-italic t))
+        :defer t
+        :config
+        (progn
+          (setq doom-themes-enable-bold t
+                doom-themes-treemacs-theme "doom-colors"
+                doom-themes-enable-italic t)
+          (doom-themes-treemacs-config)
+          (doom-themes-org-config)))
     #+end_src
 **** Solaire-mode
      #+begin_src emacs-lisp
-       (use-package solaire-mode)
-       ;;(add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+       (use-package solaire-mode
+         :config (solaire-global-mode +1))
+       (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
      #+end_src
 *** catppuccin
     #+begin_src emacs-lisp
       (use-package catppuccin-theme
+        :defer t
         :init
         (setq catppuccin-flavor
               ;; 'macchiato
@@ -1628,30 +1631,31 @@ targets."
               ;; 'frappe
               ))
     #+end_src
-*** Ef-themes
+*** ef-themes
     #+begin_src emacs-lisp
-      (use-package ef-themes)
+      (use-package ef-themes
+        :defer t)
     #+end_src
-*** Kaolin themes
+*** kaolin themes
     #+begin_src emacs-lisp
-      (use-package kaolin-themes)
-    #+end_src
-*** base16
-    #+begin_src emacs-lisp
-      (use-package base16-theme)
+      (use-package kaolin-themes
+        :config (kaolin-treemacs-theme)
+        :defer t)
     #+end_src
 *** spacemacs themes
     #+begin_src emacs-lisp
       (use-package spacemacs-theme
-        :custom
-        (spacemacs-theme-keyword-italic t)
-        (spacemacs-theme-comment-bg nil)
-        (spacemacs-theme-comment-italic t))
+        :defer t
+        :config
+        (setq spacemacs-theme-comment-bg nil
+              spacemacs-theme-keyword-italic t
+              spacemacs-theme-org-bold t
+              spacemacs-theme-comment-italic t))
     #+end_src
 *** Load theme
     #+begin_src emacs-lisp
       ;; 'kaolin-bubblegum ;; 'ef-summer ;; 'catppuccin ;; 'doom-feather-light
-      (load-theme 'doom-one ;; 'doom-feather-light ;; 'kaolin-breeze
+      (load-theme 'kaolin-breeze ;; 'doom-rouge ;; 'doom-feather-light ;; 'kaolin-breeze
                   :no-confirm)
     #+end_src
 *** COMMENT Theme rotation
@@ -1775,9 +1779,6 @@ targets."
        :config
        (treemacs-git-commit-diff-mode t)
        (treemacs-fringe-indicator-mode 'always)
-       (treemacs-load-theme "all-the-icons")
-       (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-       (doom-themes-treemacs-config)
        :bind
        (:map global-map
              ("C-c ; ;" . treemacs)
@@ -1793,11 +1794,13 @@ targets."
       (use-package treemacs-projectile
         :after (treemacs projectile))
 
-      (use-package treemacs-all-the-icons
+      (use-package treemacs-nerd-icons
         :after (treemacs))
 
       (use-package lsp-treemacs
         :after (lsp treemacs)
+        :bind (:map lsp-mode-map
+                    ("C-c l g s" . lsp-treemacs-symbols))
         :init (lsp-treemacs-sync-mode 1))
     #+end_src
 ** Font
@@ -1806,7 +1809,7 @@ targets."
       (set-face-attribute 'default nil
                           ;; "Space Grotesk" ;; "Iosevka Curly" ;; "Monoid Nerd Font"
                           :font "VictorMono Nerd Font" ;; "Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
-                          :height 130)
+                          :height 100)
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
