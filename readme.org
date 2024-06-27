@@ -1,3 +1,5 @@
+#+PROPERTY: header-args:emacs-lisp :lexical t
+
 * Completion system
 ** Vertico
    #+begin_src emacs-lisp
@@ -120,6 +122,18 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
      (use-package company
        :commands company-abort
        :init (global-company-mode 1)
+       :custom
+       (company-tooltip-align-annotations t)
+       (company-tooltip-limit 15)
+       (company-idle-delay 0.0)
+       (company-echo-delay 0)
+       (company-tooltip-limit 5)
+       (company-minimum-prefix-length 1)
+       (company-require-match nil)
+       (company-show-quick-access 'left)
+       (company-tooltip-maximum-width 60)
+       (company-dabbrev-ignore-case nil)
+       (company-dabbrev-downcase nil)
        :config
        (progn
          (custom-set-faces
@@ -168,7 +182,11 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
 ** Avy
    #+begin_src emacs-lisp
      (use-package avy
-       :bind ("C-:" . avy-goto-char-timer))
+       :bind
+       ("C-:" . avy-goto-char-timer)
+       ("C-c a l" . avy-goto-line)
+       ("C-c a w" . avy-goto-subword-0)
+       ("C-c a s" . avy-goto-symbol-1))
    #+end_src
 
 *** using treesit with avy
@@ -627,11 +645,12 @@ targets."
          (blamer-max-commit-message-length 30)
          (blamer-show-avatar-p t)
          :custom-face
-         (blamer-face ((t :height 100
+         ;; make the blamer font slightly smaller than the used font size
+         (blamer-face ((t :height ,(- (face-attribute 'default :height) 20)
                           :italic nil)))
          :config (global-blamer-mode 1))
      #+end_src
-*** COMMENT Region Expansion
+*** Region Expansion
     #+begin_src emacs-lisp
       (use-package expand-region
         :bind ("C-c e =" . 'er/expand-region)
@@ -647,36 +666,92 @@ targets."
     #+begin_src emacs-lisp
       (use-package multiple-cursors
         :config (define-key mc/keymap (kbd "RET") nil)
-        :bind
-        (:map multiple-cursors-mode
-              ("C-> ." . 'mc/mark-next-like-this-symbol)
-              ("C-> >" . 'mc/skip-to-next-like-this)
-              ("C-< ." . 'mc/mark-previous-like-this-symbol)
-              ("C-< <" . 'mc/skip-previous-like-this)
-              ("C-x SPC" . 'set-rectangular-region-anchor)))
+        :init
+        (defvar-keymap me/multiple-cursors-map
+               :repeat t
+               "." #'mc/mark-next-like-this-symbol
+               ">" #'mc/skip-to-next-like-this
+               "," #'mc/mark-previous-like-this-symbol
+               "<" #'mc/skip-to-previous-like-this)
+        :bind-keymap ("C->" . me/multiple-cursors-map))
     #+end_src
 *** ts-movement
     #+begin_src emacs-lisp
       (use-package ts-movement
         :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
         :ensure multiple-cursors
-        :bind
-        (:map ts-movement-map
-              ("C-c . d" . 'tsm/delete-overlay-at-point)
-              ("C-c . D" . 'tsm/clear-overlays-of-type)
-              ("C-c . b" . 'tsm/node-prev)
-              ("C-c . C-b" . 'tsm/backward-overlay)
-              ("C-c . C-f" . 'tsm/forward-overlay)
-              ("C-c . f" . 'tsm/node-next)
-              ("C-c . p" . 'tsm/node-parent)
-              ("C-c . n" . 'tsm/node-child)
-              ("C-c . N" . 'tsm/node-children)
-              ("C-c . s" . 'tsm/node-children-of-type)
-              ("C-c . a" . 'tsm/node-start)
-              ("C-c . e" . 'tsm/node-end)
-              ("C-c . m" . 'tsm/node-mark)
-              ("C-c . c" . 'tsm/mc/mark-all-overlays))
-        :hook (rust-ts-mode . ts-movement-mode))
+        :init
+        (defvar-keymap me/ts-movement-map
+                     :repeat t
+                     "d" #'tsm/delete-overlay-at-point
+                     "D" #'tsm/clear-overlays-of-type
+                     "b" #'tsm/node-prev
+                     "C-b" #'tsm/backward-overlay
+                     "C-f" #'tsm/forward-overlay
+                     "f" #'tsm/node-next
+                     "p" #'tsm/node-parent
+                     "n" #'tsm/node-child
+                     "N" #'tsm/node-children
+                     "s" #'tsm/node-children-of-type
+                     "a" #'tsm/node-start
+                     "e" #'tsm/node-end
+                     "m" #'tsm/node-mark
+                     "c" #'tsm/mc/mark-all-overlays)
+        :bind-keymap ("C-c ." . me/ts-movement-map)
+        :hook
+        (bash-ts-mode . ts-movement-mode)
+        (c++-ts-mode . ts-movement-mode)
+        (c-ts-mode . ts-movement-mode)
+        (cmake-ts-mode . ts-movement-mode)
+        (csharp-ts-mode . ts-movement-mode)
+        (css-ts-mode . ts-movement-mode)
+        (dockerfile-ts-mode . ts-movement-mode)
+        (go-mod-ts-mode . ts-movement-mode)
+        (go-ts-mode . ts-movement-mode)
+        (java-ts-mode . ts-movement-mode)
+        (js-ts-mode . ts-movement-mode)
+        (json-ts-mode . ts-movement-mode)
+        (python-ts-mode . ts-movement-mode)
+        (ruby-ts-mode . ts-movement-mode)
+        (rust-ts-mode . ts-movement-mode)
+        (toml-ts-mode . ts-movement-mode)
+        (tsx-ts-mode . ts-movement-mode)
+        (typescript-ts-mode . ts-movement-mode)
+        (yaml-ts-mode . ts-movement-mode))
+    #+end_src
+*** repeat-mode
+    #+begin_src emacs-lisp
+      (advice-add 'repeat-post-hook :after
+                  (defun my/which-key-repeat ()
+                    (when-let ((cmd (or this-command real-this-command))
+                               (keymap (repeat--command-property 'repeat-map)))
+                      (run-at-time
+                       which-key-idle-delay nil
+                       (lambda () 
+                         (which-key--create-buffer-and-show
+                          nil (symbol-value keymap)))))))
+
+      (defun my/which-key-repeat-mode-dispatch ()
+        (interactive)
+        (setq this-command last-command)
+        (when-let (keymap (repeat--command-property 'repeat-map))
+          (which-key--create-buffer-and-show
+           nil (symbol-value keymap))))
+
+      (defun my/which-key-repeat-mode-binding ()
+        (when repeat-mode
+          (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
+                      (keymap (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
+            (set-transient-map
+             (make-composed-keymap
+              (let ((map (make-sparse-keymap)))
+                (define-key map (kbd "C-h") #'my/which-key-repeat-mode-dispatch)
+                map)
+              keymap)))))
+
+      (advice-add 'repeat-post-hook :after #'my/which-key-repeat-mode-binding)
+
+      (repeat-mode t)
     #+end_src
 *** Moving lines around
     #+begin_src emacs-lisp
@@ -700,10 +775,6 @@ targets."
         (ahs-face ((t (:background "orange" :foreground "black"))))
         (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
         :hook (prog-mode . auto-highlight-symbol-mode))
-    #+end_src
-*** Continue commenting on enter
-    #+begin_src emacs-lisp
-      (global-set-key (kbd "RET") 'default-indent-new-line)
     #+end_src
 *** Get ansi-term
     #+begin_src emacs-lisp
@@ -741,7 +812,10 @@ targets."
     #+begin_src emacs-lisp
       (use-package treesitter-context
         :straight (treesitter-context-mode :type git :host github :repo "zbelial/treesitter-context.el" :files ("*.el"))
-        :hook (rust-ts-mode . treesitter-context-mode)
+        :hook
+        (rust-ts-mode . treesitter-context-mode)
+        (js-ts-mode . treesitter-context-mode)
+        (typescript-ts-mode . treesitter-context-mode)
         :bind
         (:map treesitter-context-mode
          ("C-(" . treesitter-context-fold-toggle)
@@ -776,7 +850,7 @@ targets."
      #+end_src
 **** LSP config
      #+begin_src emacs-lisp
-       (setq lsp-rust-analyzer-lru-capacity (* 10 128)
+       (setq lsp-rust-analyzer-lru-capacity (* 15 128)
              lsp-rust-analyzer-display-chaining-hints t
              lsp-rust-analyzer-display-closure-return-type-hints t
              lsp-rust-analyzer-closure-capture-hints t
@@ -868,7 +942,13 @@ targets."
      #+begin_src emacs-lisp
        (use-package dune)
      #+end_src
-*** Minors
+
+*** TypeScript
+    #+begin_src emacs-lisp
+      (add-hook 'js-ts-mode-hook #'lsp)
+      (add-hook 'typescript-ts-mode-hook #'lsp)
+    #+end_src
+*** COMMENT Minors
 **** TOML
      #+begin_src emacs-lisp
        (use-package toml-mode)
@@ -1368,7 +1448,7 @@ targets."
    #+end_src
 ** Kill current buffer
    #+begin_src emacs-lisp
-     (global-set-key (kbd "C-x k") 'kill-this-buffer)
+     (global-set-key (kbd "C-x k") (lambda () (interactive) (kill-buffer (current-buffer))))
    #+end_src
 
 ** Use y-or-n
@@ -1528,6 +1608,10 @@ targets."
          (forward-char)))
      (global-set-key (kbd "C-S-<up>") 'consoli/insert-new-line-above)
    #+end_src
+** new line follow indentation
+   #+begin_src emacs-lisp
+     (global-set-key (kbd "RET") 'indent-new-comment-line)
+   #+end_src
 ** Hide unwanted buffers when cycling
    #+begin_src emacs-lisp
      (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
@@ -1559,7 +1643,10 @@ targets."
 ** garbage collector magic hack
    #+begin_src emacs-lisp
      (use-package gcmh
-       :config (gcmh-mode t))
+       :custom (gcmh-high-cons-threshold (* 256 1024 1024))
+       :config
+       (add-hook 'after-init-hook (lambda ()
+                                    (gcmh-mode))))
    #+end_src
 * Appearance
 ** Modeline
@@ -1579,7 +1666,7 @@ targets."
              doom-modeline-gnus nil)
        :hook (after-init . doom-modeline-mode))
      (custom-set-faces
-      '(mode-line ((t (:family "Martian Mono" :height 120))))
+      '(mode-line ((t (:family "Monoid Nerd Font" :height 110))))
       '(mode-line-inactive ((t (:height 100 :underline nil :weight light)))))
    #+end_src
 *** Clock
@@ -1600,6 +1687,14 @@ targets."
    #+begin_src emacs-lisp
      (use-package all-the-icons
        :custom (setq inhibit-compacting-font-caches t))
+
+     (use-package all-the-icons-nerd-fonts
+       :straight
+       (all-the-icons-nerd-fonts :host github :repo "mohkale/all-the-icons-nerd-fonts")
+       :after all-the-icons
+       :demand t
+       :config
+       (all-the-icons-nerd-fonts-prefer))
    #+end_src
 ** Themes
 *** Doom themes
@@ -1655,7 +1750,7 @@ targets."
 *** Load theme
     #+begin_src emacs-lisp
       ;; 'kaolin-bubblegum ;; 'ef-summer ;; 'catppuccin ;; 'doom-feather-light
-      (load-theme 'kaolin-breeze ;; 'doom-rouge ;; 'doom-feather-light ;; 'kaolin-breeze
+      (load-theme 'spacemacs-dark ;; 'doom-rouge ;; 'doom-feather-light ;; 'kaolin-breeze
                   :no-confirm)
     #+end_src
 *** COMMENT Theme rotation
@@ -1808,16 +1903,17 @@ targets."
     #+begin_src emacs-lisp
       (set-face-attribute 'default nil
                           ;; "Space Grotesk" ;; "Iosevka Curly" ;; "Monoid Nerd Font"
-                          :font "VictorMono Nerd Font" ;; "Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
-                          :height 100)
+                          :font "Maple Mono" ;; "Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
+                          :height 140)
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
     #+begin_src emacs-lisp
       (custom-set-faces
-       '(font-lock-comment-face ((t :font "VictorMono Nerd Font" :slant italic)))) ;; to set the font family, use the variable-pitch face-attribute (??)
+       '(font-lock-comment-face ((t :font "Maple Mono Italic" :slant italic)))) ;; to set the font family, use the variable-pitch face-attribute (??)
     #+end_src
-*** Pretty symbols
+*** COMMENT Pretty symbols
+
     #+begin_src emacs-lisp
       (when window-system
         (add-hook 'prog-mode-hook 'prettify-symbols-mode))
