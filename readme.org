@@ -631,6 +631,12 @@ targets."
 
 **** blame
      #+begin_src emacs-lisp
+       ;; make the blamer font slightly smaller than the used font size
+       (defvar blamer-face-height
+         (if window-system
+           (- (face-attribute 'default :height) 20)
+           120))
+
        (use-package blamer
          :defer 20
          :bind (("C-c i" . blamer-show-posframe-commit-info))
@@ -645,8 +651,7 @@ targets."
          (blamer-max-commit-message-length 30)
          (blamer-show-avatar-p t)
          :custom-face
-         ;; make the blamer font slightly smaller than the used font size
-         (blamer-face ((t :height ,(- (face-attribute 'default :height) 20)
+         (blamer-face ((t :height ,blamer-face-height
                           :italic nil)))
          :config (global-blamer-mode 1))
      #+end_src
