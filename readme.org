@@ -312,7 +312,7 @@ targets."
             lsp-enable-snippet t
             lsp-headerline-breadcrumb-icons-enable t
             lsp-headerline-breadcrumb-segments '(file symbols)
-            lsp-idle-delay 0.2
+            lsp-idle-delay 0.0
             lsp-lens-enable t
             lsp-inlay-hint-enable nil
             lsp-log-io nil
@@ -634,7 +634,7 @@ targets."
        ;; make the blamer font slightly smaller than the used font size
        (defvar blamer-face-height
          (if window-system
-           (- (face-attribute 'default :height) 20)
+             (- (face-attribute 'default :height) 10)
            120))
 
        (use-package blamer
@@ -643,9 +643,10 @@ targets."
          :custom
          (blamer-datetime-formatter ", %s ")
          (blamer-author-formatter "  %s")
+         (blamer-commit-formatter "")
          (blamer-idle-time 1)
-         (blamer-smart-background-p t)
-         (blamer-min-offset 20)
+         (blamer-smart-background-p nil)
+         (blamer-min-offset 5)
          (blamer-type 'visual) ;; only about one line
          (blamer-prettify-time-p t)
          (blamer-max-commit-message-length 30)
@@ -821,6 +822,7 @@ targets."
         (rust-ts-mode . treesitter-context-mode)
         (js-ts-mode . treesitter-context-mode)
         (typescript-ts-mode . treesitter-context-mode)
+        (tsx-ts-mode . treesitter-context-mode)
         :bind
         (:map treesitter-context-mode
          ("C-(" . treesitter-context-fold-toggle)
@@ -952,6 +954,7 @@ targets."
     #+begin_src emacs-lisp
       (add-hook 'js-ts-mode-hook #'lsp)
       (add-hook 'typescript-ts-mode-hook #'lsp)
+      (add-hook 'tsx-ts-mode-hook #'lsp)
     #+end_src
 *** COMMENT Minors
 **** TOML
@@ -1909,7 +1912,7 @@ targets."
       (set-face-attribute 'default nil
                           ;; "Space Grotesk" ;; "Iosevka Curly" ;; "Monoid Nerd Font"
                           :font "Maple Mono" ;; "Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
-                          :height 140)
+                          :height 120)
       (global-auto-composition-mode t)
     #+end_src
 *** Italic comments
