@@ -133,14 +133,7 @@ https://github.com/minad/consult/wiki#minads-orderless-configuration
        (company-show-quick-access 'left)
        (company-tooltip-maximum-width 60)
        (company-dabbrev-ignore-case nil)
-       (company-dabbrev-downcase nil)
-       :config
-       (progn
-         (custom-set-faces
-          '(company-tooltip-common
-            ((t (:inhirit company-tooltip :weight bold :underline nil))))
-          '(company-tooltip-common-selection
-            ((t (:inhirit company-tooltip-selection :weight bold :underline nil)))))))
+       (company-dabbrev-downcase nil))
      (setq company-tooltip-align-annotations t
            company-tooltip-limit 15
            company-idle-delay 0.0
@@ -318,14 +311,6 @@ targets."
             lsp-log-io nil
             lsp-use-plists t)
     #+end_src
-**** hint face
-     #+begin_src emacs-lisp
-       (custom-set-faces
-        '(lsp-inlay-hint-parameter-face  ((t :inherit lsp-inlay-hint-face
-                                             :height 90)))
-        '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
-                                       :height 90))))
-     #+end_src
 *** LSP UI
     #+begin_src emacs-lisp
       (use-package lsp-ui
@@ -642,10 +627,10 @@ targets."
          :bind (("C-c i" . blamer-show-posframe-commit-info))
          :custom
          (blamer-datetime-formatter ", %s ")
-         (blamer-author-formatter "  %s")
+         (blamer-author-formatter "󰜘 %s") ;; 
          (blamer-commit-formatter "")
          (blamer-idle-time 1)
-         (blamer-smart-background-p nil)
+         (blamer-smart-background-p t)
          (blamer-min-offset 5)
          (blamer-type 'visual) ;; only about one line
          (blamer-prettify-time-p t)
@@ -997,24 +982,18 @@ targets."
       line-spacing 0.5
       ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
       org-export-with-sub-superscripts nil)
+
+     (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
    #+end_src
-** Custom faces
+** custom faces
 *** variable pitch
     #+begin_src emacs-lisp
-      (set-face-attribute 'variable-pitch nil
-                          :family "Monoid Nerd Font"
-                          :height 120)
-
       (use-package org-variable-pitch
         :hook (org-mode . variable-pitch-mode))
     #+end_src
 *** fixed pitch
     #+begin_src emacs-lisp
       (require 'org-indent)
-      (custom-theme-set-faces
-       'user
-       '(org-code ((t (:inherit (shadow fixed-pitch)))))
-       '(org-indent ((t (:inherit (org-hide fixed-pitch))))))
       (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
       (set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
       (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
@@ -1042,59 +1021,7 @@ targets."
       (set-face-background 'fringe (face-attribute 'default :background))
     #+end_src
 
-*** foo
-    #+begin_src emacs-lisp
-      (custom-theme-set-faces
-       'user
-       '(org-block ((t (:inherit fixed-pitch))))
-       '(org-code ((t (:inherit (shadow fixed-pitch)))))
-       '(org-document-info ((t (:foreground "dark orange"))))
-       '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
-       '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
-       '(org-link ((t (:foreground "royal blue" :underline t))))
-       '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-       '(org-property-value ((t (:inherit fixed-pitch))) t)
-       '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-       '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
-       '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-       '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
-    #+end_src
-** bigger font in titles
-   Use latex style headings, https://github.com/integral-dw/org-superstar-mode/blob/master/DEMO.org#latex-style-headings
-   #+begin_src emacs-lisp
-     (setq org-hidden-keywords '(title))
-     ;; set basic title font
-     (set-face-attribute 'org-level-8 nil :weight 'bold :inherit 'default)
-     ;; Low levels are unimportant => no scaling
-     (set-face-attribute 'org-level-7 nil :inherit 'org-level-8)
-     (set-face-attribute 'org-level-6 nil :inherit 'org-level-8)
-     (set-face-attribute 'org-level-5 nil :inherit 'org-level-8)
-     (set-face-attribute 'org-level-4 nil :inherit 'org-level-8)
-     ;; Top ones get scaled the same as in LaTeX (\large, \Large, \LARGE)
-     (set-face-attribute 'org-level-3 nil :inherit 'org-level-8 :height 1.2) ;\large
-     (set-face-attribute 'org-level-2 nil :inherit 'org-level-8 :height 1.44) ;\Large
-     (set-face-attribute 'org-level-1 nil :inherit 'org-level-8 :height 1.728) ;\LARGE
-     ;; Only use the first 4 styles and do not cycle.
-     (setq org-cycle-level-faces nil)
-     (setq org-n-level-faces 4)
-     ;; Document Title, (\huge)
-     (set-face-attribute 'org-document-title nil
-                         :height 2.074
-                         :foreground 'unspecified
-                         :inherit 'org-level-8)
-     ;; (set-face-attribute 'org-document-title nil :font "BlexMono Nerd Font" :weight 'bold :height 1.3)
-     ;; (dolist (face '((org-level-1 . 1.2)
-     ;;                 (org-level-2 . 1.1)
-     ;;                 (org-level-3 . 1.05)
-     ;;                 (org-level-4 . 1.0)
-     ;;                 (org-level-5 . 1.1)
-     ;;                 (org-level-6 . 1.1)
-     ;;                 (org-level-7 . 1.1)
-     ;;                 (org-level-8 . 1.1)))
-     ;;   (set-face-attribute (car face) nil :font "BlexMono Nerd Font" :weight 'medium :height (cdr face)))
-   #+end_src
-
-** Org superstar
+** org superstar
    #+begin_src emacs-lisp
      ;; org-superstar needs this way
      (setq org-hide-leading-stars nil)
@@ -1102,7 +1029,7 @@ targets."
      (use-package org-superstar
        :after org
        :init
-       (setq org-superstar-headline-bullets-list '(?● ?○ ?◉)
+       (setq org-superstar-headline-bullets-list '(?● ?○)
              ;; fancy todo headings
              org-superstar-special-todo-items t
              ;; i use my own
@@ -1121,11 +1048,11 @@ targets."
      (use-package org-appear
        :hook (org-mode . org-appear-mode))
    #+end_src
-** Org mode as the *scratch* buffer
+** org mode as the *scratch* buffer
    #+begin_src emacs-lisp
      (setq initial-major-mode 'org-mode)
    #+end_src
-** Pretty checkboxes
+** pretty checkboxes
    https://jft.home.blog/2019/07/17/use-unicode-symbol-to-display-org-mode-checkboxes/
    #+begin_src emacs-lisp
      (defface org-checkbox-done-text
@@ -1145,13 +1072,13 @@ targets."
                                 (push '("[-]" . "" ) prettify-symbols-alist)
                                 (prettify-symbols-mode)))
    #+end_src
-** Pretty bullet list
+** pretty bullet list
    #+begin_src emacs-lisp
      (font-lock-add-keywords 'org-mode
                              '(("^ *\\([-]\\) "
                                 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
    #+end_src
-** Centralized
+** centralized
    #+begin_src emacs-lisp
      (use-package olivetti
        :hook
@@ -1161,7 +1088,7 @@ targets."
 
      (setq-default default-justification 'full)
    #+end_src
-** Org-roam
+** org-roam
 *** Load org-fold
     #+begin_src emacs-lisp
       (require 'org-fold)
@@ -1332,12 +1259,10 @@ targets."
                     "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
                     "\\)"))
     #+end_src
-** Code blocks
-*** Framing
+** code blocks
+*** treesit modes and code blocks
     #+begin_src emacs-lisp
-      (use-package org-modern-indent
-        :hook (org-mode . org-modern-indent-mode)
-        :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent"))
+      (add-to-list 'org-src-lang-modes (cons "rust" 'rust-ts))
     #+end_src
 *** hide src blocks
     from https://emacs.stackexchange.com/a/31623
@@ -1398,18 +1323,18 @@ targets."
           (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
                 (cl-reduce 'append
                            (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                                   `(("#+begin_src" . ?□)
-                                     ("#+end_src"   . ?□)
+                                   `(("#+begin_src" . ?)
+                                     ("#+end_src"   . ?)
                                      ("#+header:" . ,rasmus/ob-header-symbol)
-                                     ("#+begin_quote" . ?»)
-                                     ("#+end_quote" . ?«)
-                                     ("#+begin_comment" . ?💭)
-                                     ("#+end_comment" . ?□)))))
+                                     ("#+begin_quote" . ?)
+                                     ("#+end_quote" . ?)
+                                     ("#+begin_comment" . ?)
+                                     ("#+end_comment" . ?)))))
           (turn-on-prettify-symbols-mode)
           (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
         (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
     #+end_src
-** Automatically set task to DONE when all children are complete
+** automatically set task to DONE when all children are complete
    [[https://orgmode.org/manual/Breaking-Down-Tasks.html][doc]]
    #+begin_src emacs-lisp
      (defun org-summary-todo (n-done n-not-done)
@@ -1448,6 +1373,13 @@ targets."
 
       (add-hook 'org-checkbox-statistics-hook 'my/org-checkbox-todo)
     #+end_src
+** bigger font in titles
+   #+begin_src emacs-lisp
+     (setq org-hidden-keywords '(title)
+           org-cycle-level-faces nil
+           org-n-level-faces 4)
+   #+end_src
+
 * Utils
 ** Easy increase/decrease font size
    #+begin_src emacs-lisp
@@ -1657,44 +1589,21 @@ targets."
                                     (gcmh-mode))))
    #+end_src
 * Appearance
-** Modeline
+** add frame borders and window dividers
    #+begin_src emacs-lisp
-     (use-package doom-modeline
-       :ensure ghub
-       :config
-       (setq doom-modeline-height 40
-             doom-modeline-bar-width 10
-             doom-modeline-hud t
-             doom-modeline-enable-word-count t
-             doom-modeline-buffer-encoding nil
-             doom-modeline-support-imenu t
-             doom-modeline-irc nil
-             doom-modeline-modal-modern-icon t
-             doom-modeline-buffer-file-name-style 'relative-to-project
-             doom-modeline-gnus nil)
-       :hook (after-init . doom-modeline-mode))
-     (custom-set-faces
-      '(mode-line ((t (:family "Monoid Nerd Font" :height 110))))
-      '(mode-line-inactive ((t (:height 100 :underline nil :weight light)))))
+     (modify-all-frames-parameters
+      '((right-divider-width . 15)
+        (internal-border-width . 15)))
+     (dolist (face '(window-divider
+                     window-divider-first-pixel
+                     window-divider-last-pixel))
+       (face-spec-reset-face face)
+       (set-face-foreground face (face-attribute 'default :background)))
+     (set-face-background 'fringe (face-attribute 'default :background))
    #+end_src
-*** Clock
-    #+BEGIN_SRC emacs-lisp
-      (setq-default display-time-default-load-average nil)
-      (setq display-time-format "%I:%M %p")
-      (display-time-mode 1)
-    #+END_SRC
-*** Only render the modeline in the active window
-    #+begin_src emacs-lisp
-      (set-face-attribute 'mode-line-inactive nil
-                          :height 100
-                          :underline nil
-                          :background (face-background 'default))
-    #+end_src
-
-** All the icons
+** icons
    #+begin_src emacs-lisp
-     (use-package all-the-icons
-       :custom (setq inhibit-compacting-font-caches t))
+     (use-package all-the-icons)
 
      (use-package all-the-icons-nerd-fonts
        :straight
@@ -1703,6 +1612,8 @@ targets."
        :demand t
        :config
        (all-the-icons-nerd-fonts-prefer))
+
+     (setq inhibit-compacting-font-caches t)
    #+end_src
 ** Themes
 *** Doom themes
@@ -1717,12 +1628,6 @@ targets."
           (doom-themes-treemacs-config)
           (doom-themes-org-config)))
     #+end_src
-**** Solaire-mode
-     #+begin_src emacs-lisp
-       (use-package solaire-mode
-         :config (solaire-global-mode +1))
-       (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-     #+end_src
 *** catppuccin
     #+begin_src emacs-lisp
       (use-package catppuccin-theme
@@ -1756,21 +1661,15 @@ targets."
               spacemacs-theme-comment-italic t))
     #+end_src
 *** Load theme
+    - 'kaolin-bubblegum
+    - 'kaolin-breeze
+    - 'doom-feather-light
+    - 'catppuccin
+    - 'ef-summer
+    - 'doom-rouge
     #+begin_src emacs-lisp
-      ;; 'kaolin-bubblegum ;; 'ef-summer ;; 'catppuccin ;; 'doom-feather-light
-      (load-theme 'spacemacs-dark ;; 'doom-rouge ;; 'doom-feather-light ;; 'kaolin-breeze
+      (load-theme 'kaolin-dark
                   :no-confirm)
-    #+end_src
-*** COMMENT Theme rotation
-    #+begin_src emacs-lisp
-      (use-package theme-rotation
-        :straight (:host github :repo "pedroangelo/theme-rotation.el" :files ("*.el"))
-        :custom
-        (theme-rotation-config
-         '(("08:00" . spacemacs-light)
-           ("17:00" . spacemacs-dark)))
-        :config
-        (theme-rotation-mode))
     #+end_src
 ** UI
 *** Splash screen
@@ -1870,12 +1769,6 @@ targets."
       (add-to-list 'centaur-tabs-excluded-prefixes "Expressions")
       (add-to-list 'centaur-tabs-excluded-prefixes "Debug Sessions")
     #+end_src
-*** Appearance
-    #+begin_src emacs-lisp
-      (custom-set-faces
-       '(centaur-tabs-selected-modified ((t (:slant italic))))
-       '(centaur-tabs-unselected-modified ((t (:slant italic)))))
-    #+end_src
 ** treemacs
    #+begin_src emacs-lisp
      (use-package treemacs
@@ -1915,11 +1808,6 @@ targets."
                           :height 120)
       (global-auto-composition-mode t)
     #+end_src
-*** Italic comments
-    #+begin_src emacs-lisp
-      (custom-set-faces
-       '(font-lock-comment-face ((t :font "Maple Mono Italic" :slant italic)))) ;; to set the font family, use the variable-pitch face-attribute (??)
-    #+end_src
 *** COMMENT Pretty symbols
 
     #+begin_src emacs-lisp
@@ -1954,3 +1842,78 @@ targets."
            "&="))
         (global-ligature-mode t))
     #+end_src
+** Modeline
+   #+begin_src emacs-lisp
+     (use-package doom-modeline
+       :config
+       (setq doom-modeline-height 35
+             doom-modeline-bar-width 5
+             doom-modeline-time-clock-size 0.4
+             doom-modeline-hud t
+             doom-modeline-enable-word-count t
+             doom-modeline-buffer-encoding nil
+             doom-modeline-support-imenu t
+             doom-modeline-irc nil
+             doom-modeline-modal-modern-icon t
+             doom-modeline-buffer-file-name-style 'relative-to-project
+             doom-modeline-gnus nil)
+       :hook (after-init . doom-modeline-mode))
+   #+end_src
+*** Clock
+    #+BEGIN_SRC emacs-lisp
+      (setq-default display-time-default-load-average nil)
+      (setq display-time-format "%I:%M %p")
+      (display-time-mode 1)
+    #+END_SRC
+** custom set faces
+   #+begin_src emacs-lisp
+     (custom-set-faces
+      '(mode-line ((t (:inherit 'default :family "Iosevka Consoli" :height 120 :box nil))))
+      '(mode-line-active ((t (:inherit mode-line :family "Iosevka Consoli" :height 120 :box nil))))
+      '(mode-line-inactive ((t (:inherit mode-line-active :family "Iosevka Consoli" :height 120 :box nil))))
+
+      '(company-tooltip-common
+        ((t (:inhirit company-tooltip :weight bold :underline nil))))
+      '(company-tooltip-common-selection
+        ((t (:inhirit company-tooltip-selection :weight bold :underline nil))))
+
+      '(lsp-inlay-hint-parameter-face  ((t :inherit lsp-inlay-hint-face
+                                           :height 90)))
+      '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
+                                     :height 90)))
+
+      '(centaur-tabs-selected-modified ((t (:slant italic))))
+      '(centaur-tabs-unselected-modified ((t (:slant italic))))
+
+      '(font-lock-comment-face ((t :font "Maple Mono Italic" :slant italic))))
+
+     (dolist (face '((org-level-1 . 2.0)
+                     (org-level-2 . 1.5)
+                     (org-level-3 . 1.2)
+                     (org-level-4 . 1.0)
+                     (org-level-5 . 1.0)
+                     (org-level-6 . 1.0)
+                     (org-level-7 . 1.0)
+                     (org-level-8 . 1.0)))
+       (set-face-attribute (car face) nil :font "Short Stack" :weight 'medium :height (cdr face)))
+   #+end_src
+** custom theme set faces
+   #+begin_src emacs-lisp
+     (require 'org-indent)
+     (custom-theme-set-faces
+      'user
+      '(fixed-pitch ((t (:family "Maple Mono" :height 140))))
+      '(variable-pitch ((t (:family "Short Stack" :height 150))))
+      '(org-block ((t (:inherit fixed-pitch))))
+      '(org-code ((t (:inherit (shadow fixed-pitch)))))
+      '(org-document-info ((t (:foreground "dark orange"))))
+      '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+      '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+      '(org-link ((t (:foreground "royal blue" :underline t))))
+      '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+      '(org-property-value ((t (:inherit fixed-pitch))) t)
+      '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+      '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+      '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+      '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
+   #+end_src
