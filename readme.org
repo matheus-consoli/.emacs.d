@@ -32,126 +32,79 @@
        ;; Enable recursive minibuffers
        (setq enable-recursive-minibuffers t))
    #+end_src
-*** Orderless
+** Corfu
+   #+begin_src emacs-lisp
+     (use-package corfu
+       :hook (lsp-completion-mode . kb/corfu-setup-lsp)
+       :custom
+       (lsp-completion-provider :none)
+       (corfu-auto t)
+       (corfu-cycle t)
+       (corfu-scroll-margin 5)
+       (corfu-preselect 'first)
+       (corfu-preview-current nil)
+       (corfu-quit-no-match 'separator)
+       (corfu-quit-at-boundary nil)
+       (corfu-separator ?\s)
+
+       (corfu-auto-delay 0.25) ;; TOO SMALL - NOT RECOMMENED
+       (corfu-auto-prefix 1) ;; TOO SMALL - NOT RECOMMENED
+       (corfu-popupinfo-delay '(1.30 . 1.50))
+
+       :init
+       (global-corfu-mode)
+       (corfu-history-mode 1)
+       (corfu-popupinfo-mode 1)
+
+       :config
+       (add-to-list 'savehist-additional-variables 'corfu-history)
+       (defun kb/corfu-setup-lsp ()
+         "Use orderless completion style with lsp-capf instead of the default lsp-passthrough."
+         (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+               '(orderless)))
+
+       :bind
+       (:map corfu-map
+             ("M-q" . corfu-quick-complete)
+             ("C-i" . corfu-quick-insert)))
+   #+end_src
+*** icons for corfu
+    #+begin_src emacs-lisp
+      (use-package nerd-icons-corfu
+        :config
+        (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+    #+end_src
+*** corfu in the minibuffer
+    #+begin_src emacs-lisp
+      (defun corfu-enable-in-minibuffer ()
+        "Enable Corfu in the minibuffer."
+        (when (local-variable-p 'completion-at-point-functions)
+          ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+          (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                      corfu-popupinfo-delay nil)
+          (corfu-mode 1)))
+      (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+    #+end_src
+** Orderless
 https://github.com/minad/consult/wiki#minads-orderless-configuration
 #+begin_src emacs-lisp
-(use-package orderless
-  :demand t
-  :config
-  (defvar +orderless-dispatch-alist
-    '((?% . char-fold-to-regexp)
-      (?! . orderless-without-literal)
-      (?`. orderless-initialism)
-      (?= . orderless-literal)
-      (?~ . orderless-flex)))
-
-  ;; Recognizes the following patterns:
-  ;; * ~flex flex~
-  ;; * =literal literal=
-  ;; * %char-fold char-fold%
-  ;; * `initialism initialism`
-  ;; * !without-literal without-literal!
-  ;; * .ext (file extension)
-  ;; * regexp$ (regexp matching at end)
-  (defun +orderless-dispatch (pattern index _total)
-    (cond
-     ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
-     ((string-suffix-p "$" pattern)
-      `(orderless-regexp . ,(concat (substring pattern 0 -1) "[\x100000-\x10FFFD]*$")))
-     ;; File extensions
-     ((and
-       ;; Completing filename or eshell
-       (or minibuffer-completing-file-name
-           (derived-mode-p 'eshell-mode))
-       ;; File extension
-       (string-match-p "\\`\\.." pattern))
-      `(orderless-regexp . ,(concat "\\." (substring pattern 1) "[\x100000-\x10FFFD]*$")))
-     ;; Ignore single !
-     ((string= "!" pattern) `(orderless-literal . ""))
-     ;; Prefix and suffix
-     ((if-let (x (assq (aref pattern 0) +orderless-dispatch-alist))
-          (cons (cdr x) (substring pattern 1))
-        (when-let (x (assq (aref pattern (1- (length pattern))) +orderless-dispatch-alist))
-          (cons (cdr x) (substring pattern 0 -1)))))))
-
-  ;; Define orderless style with initialism by default
-  (orderless-define-completion-style +orderless-with-initialism
-    (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
-
-  ;; You may want to combine the `orderless` style with `substring` and/or `basic`.
-  ;; There are many details to consider, but the following configurations all work well.
-  ;; Personally I (@minad) use option 3 currently. Also note that you may want to configure
-  ;; special styles for special completion categories, e.g., partial-completion for files.
-  ;;
-  ;; 1. (setq completion-styles '(orderless))
-  ;; This configuration results in a very coherent completion experience,
-  ;; since orderless is used always and exclusively. But it may not work
-  ;; in all scenarios. Prefix expansion with TAB is not possible.
-  ;;
-  ;; 2. (setq completion-styles '(substring orderless))
-  ;; By trying substring before orderless, TAB expansion is possible.
-  ;; The downside is that you can observe the switch from substring to orderless
-  ;; during completion, less coherent.
-  ;;
-  ;; 3. (setq completion-styles '(orderless basic))
-  ;; Certain dynamic completion tables (completion-table-dynamic)
-  ;; do not work properly with orderless. One can add basic as a fallback.
-  ;; Basic will only be used when orderless fails, which happens only for
-  ;; these special tables.
-  ;;
-  ;; 4. (setq completion-styles '(substring orderless basic))
-  ;; Combine substring, orderless and basic.
-  ;;
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        ;;; Enable partial-completion for files.
-        ;;; Either give orderless precedence or partial-completion.
-        ;;; Note that completion-category-overrides is not really an override,
-        ;;; but rather prepended to the default completion-styles.
-        ;; completion-category-overrides '((file (styles orderless partial-completion))) ;; orderless is tried first
-        completion-category-overrides '((file (styles partial-completion)) ;; partial-completion is tried first
-                                        ;; enable initialism by default for symbols
-                                        (command (styles +orderless-with-initialism))
-                                        (variable (styles +orderless-with-initialism))
-                                        (symbol (styles +orderless-with-initialism)))
-        orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
-        orderless-style-dispatchers '(+orderless-dispatch)))
+  (use-package orderless
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles basic partial-completion)))))
 #+end_src
-** Company
+** dabbrev
    #+begin_src emacs-lisp
-     (use-package company
-       :commands company-abort
-       :init (global-company-mode 1)
-       :custom
-       (company-tooltip-align-annotations t)
-       (company-tooltip-limit 15)
-       (company-idle-delay 0.0)
-       (company-echo-delay 0)
-       (company-tooltip-limit 5)
-       (company-minimum-prefix-length 1)
-       (company-require-match nil)
-       (company-show-quick-access 'left)
-       (company-tooltip-maximum-width 60)
-       (company-dabbrev-ignore-case nil)
-       (company-dabbrev-downcase nil))
-     (setq company-tooltip-align-annotations t
-           company-tooltip-limit 15
-           company-idle-delay 0.0
-           company-echo-delay 0
-           company-tooltip-limit 5
-           company-minimum-prefix-length 1
-           company-require-match nil
-           company-show-quick-access 'left
-           company-tooltip-maximum-width 60
-           company-dabbrev-ignore-case nil
-           company-dabbrev-downcase nil)
+     (use-package dabbrev
+       :bind (("M-/" . dabbrev-completion)
+              ("C-M-/" . dabbrev-expand))
+       :config
+       (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
+       (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+       (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
+       (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
    #+end_src
-*** Company box
-#+begin_src emacs-lisp
-(use-package company-box
-  :hook (company-mode . company-box-mode))
-#+end_src
-
 ** Marginalia
 #+begin_src emacs-lisp
 (use-package marginalia
@@ -284,7 +237,24 @@ targets."
 *** LSP mode
     #+begin_src emacs-lisp
       (use-package lsp-mode
-        :init 
+        :custom
+        (lsp-keymap-prefix "C-c l")
+        (lsp-eldoc-render-all nil)
+        (eldoc-echo-area-use-multiline-p nil)
+        (lsp-eldoc-enable-hover nil)
+        (lsp-signature-doc-lines 0)
+        (lsp-modeline-code-actions-mode t)
+        (lsp-enable-folding t)
+        (lsp-enable-indentation t)
+        (lsp-enable-on-type-formatting t)
+        (lsp-enable-snippet t)
+        (lsp-headerline-breadcrumb-icons-enable t)
+        (lsp-headerline-breadcrumb-segments '(file symbols))
+        (lsp-idle-delay 0.0)
+        (lsp-lens-enable t)
+        (lsp-inlay-hint-enable nil) ;; disable by default, F4 to enable
+        (lsp-log-io nil)
+        (lsp-use-plists t)
         :bind (:map lsp-mode-map
                     ("C-c l r" . lsp-rename)
                     ("C-c l a" . lsp-execute-code-action)
@@ -292,54 +262,37 @@ targets."
                     ("<f4>" . lsp-inlay-hints-mode))
         :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
         :commands lsp)
-
-      (setq lsp-keymap-prefix "C-c l"
-            lsp-eldoc-render-all nil
-            eldoc-echo-area-use-multiline-p nil
-            lsp-eldoc-enable-hover nil
-            lsp-signature-doc-lines 0
-            lsp-modeline-code-actions-mode t
-            lsp-enable-folding t
-            lsp-enable-indentation t
-            lsp-enable-on-type-formatting t
-            lsp-enable-snippet t
-            lsp-headerline-breadcrumb-icons-enable t
-            lsp-headerline-breadcrumb-segments '(file symbols)
-            lsp-idle-delay 0.0
-            lsp-lens-enable t
-            lsp-inlay-hint-enable nil
-            lsp-log-io nil
-            lsp-use-plists t)
     #+end_src
 *** LSP UI
     #+begin_src emacs-lisp
       (use-package lsp-ui
-        :init
-        (setq lsp-ui-doc-enable t
-              lsp-ui-doc-position 'top
-              lsp-ui-doc-header t
-              lsp-ui-doc-frame-mode nil
-              lsp-ui-doc-delay 0.5
-              lsp-ui-doc-show-with-cursor t
-              lsp-ui-doc-show-with-mouse nil
+        :bind
+        (:map lsp-ui-mode-map
+              ("C-M-q". lsp-ui-doc-unfocus-frame)
+              ("M-." . lsp-ui-peek-find-definitions)
+              ("M-?" . lsp-ui-peek-find-references)
+              ("M-<right>" . lsp-ui-peek-jump-backward)
+              ("M-<left>" . lsp-ui-peek-jump-forward)
+              ("C-c l i" . lsp-ui-imenu)
+              ("C-c l d" . lsp-ui-doc-glance)
+              ("C-c l s" . consult-lsp-symbols)))
 
-              lsp-ui-sideline-show-code-actions nil
-              lsp-ui-sideline-delay 2
+      (setq lsp-ui-doc-enable t
+            lsp-ui-doc-position 'top
+            lsp-ui-doc-header t
+            lsp-ui-doc-frame-mode nil
+            lsp-ui-doc-delay 0.5
+            lsp-ui-doc-show-with-cursor t
+            lsp-ui-doc-show-with-mouse nil
 
-              lsp-ui-peek-enable t
-              lsp-ui-peek-show-directory t
+            lsp-ui-sideline-show-code-actions nil
+            lsp-ui-sideline-delay 2
 
-              lsp-completion-show-kind t
-              lsp-completion-show-detail t)
-        :bind (:map lsp-ui-mode-map
-                    ("C-M-q". lsp-ui-doc-unfocus-frame)
-                    ("M-." . lsp-ui-peek-find-definitions)
-                    ("M-?" . lsp-ui-peek-find-references)
-                    ("M-<right>" . lsp-ui-peek-jump-backward)
-                    ("M-<left>" . lsp-ui-peek-jump-forward)
-                    ("C-c l i" . lsp-ui-imenu)
-                    ("C-c l d" . lsp-ui-doc-glance)
-                    ("C-c l s" . consult-lsp-symbols)))
+            lsp-ui-peek-enable t
+            lsp-ui-peek-show-directory t
+
+            lsp-completion-show-kind t
+            lsp-completion-show-detail t)
     #+end_src
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
@@ -516,13 +469,6 @@ targets."
         #+end_src
 * Programming
 ** Utils
-*** COMMENT Treesitter
-    #+begin_src emacs-lisp
-      (use-package tree-sitter
-        :init (use-package tree-sitter-langs)
-        (global-tree-sitter-mode)
-        :hook (tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-    #+end_src
 *** treesit-auto
     #+begin_src emacs-lisp
       (use-package treesit-auto
@@ -758,15 +704,6 @@ targets."
     #+begin_src emacs-lisp
       (save-place-mode 1)
     #+end_src
-*** COMMENT Auto highlight symbol
-    #+begin_src emacs-lisp
-      (use-package auto-highlight-symbol
-        :ensure t
-        :custom-face (ahs-definition-face ((t (:background "dark orange" :foreground "black"))))
-        (ahs-face ((t (:background "orange" :foreground "black"))))
-        (ahs-plugin-defalt-face ((t (:background "#1E2029" :foreground "dark orange"))))
-        :hook (prog-mode . auto-highlight-symbol-mode))
-    #+end_src
 *** Get ansi-term
     #+begin_src emacs-lisp
       (defvar toggle-term-state nil)
@@ -795,7 +732,6 @@ targets."
 *** editorconfig compat
     #+begin_src emacs-lisp
       (use-package editorconfig
-        :ensure t
         :config
         (editorconfig-mode 1))
     #+end_src
@@ -812,15 +748,15 @@ targets."
         (:map treesitter-context-mode
          ("C-(" . treesitter-context-fold-toggle)
          ("C-)" . treesitter-context-focus-mode))
-        :config
-        (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
-              treesitter-context-frame-autohide-timeout 10
-              treesitter-context-frame-min-height 1
-              treesitter-context-border-width 5
-              treesitter-context-frame-min-width 1
-              treesitter-context-fold-show-fringe-marks nil
-              treesitter-context-border-color (face-attribute 'mode-line :background)
-              treesitter-context-background-color (face-attribute 'default :background)))
+        :custom
+        (treesitter-context-show-context-always nil) ;; only show when the outmost parent is invisible
+        (treesitter-context-frame-autohide-timeout 5)
+        (treesitter-context-frame-min-height 1)
+        (treesitter-context-border-width 5)
+        (treesitter-context-frame-min-width 1)
+        (treesitter-context-fold-show-fringe-marks nil)
+        (treesitter-context-border-color (face-attribute 'mode-line :background))
+        (treesitter-context-background-color (face-attribute 'default :background)))
     #+end_src
 ** Languages specifics
 *** Rust
@@ -843,22 +779,24 @@ targets."
 **** LSP config
      #+begin_src emacs-lisp
        (setq lsp-rust-analyzer-lru-capacity (* 15 128)
+             lsp-rust-analyzer-binding-mode-hints t
+             lsp-rust-analyzer-check-all-targets nil ;; disable --all-targets for cargo check
+             lsp-rust-analyzer-closing-brace-hints-min-lines 25
+             lsp-rust-analyzer-closure-capture-hints t
+             lsp-rust-analyzer-closure-return-type-hints "with_block"
+             lsp-rust-analyzer-diagnostics-enable-experimental t
+             lsp-rust-analyzer-discriminants-hints "always" ;; "fieldless"
              lsp-rust-analyzer-display-chaining-hints t
              lsp-rust-analyzer-display-closure-return-type-hints t
-             lsp-rust-analyzer-closure-capture-hints t
-             lsp-rust-analyzer-discriminants-hints "always"
-             lsp-rust-analyzer-display-parameter-hints t
-             lsp-rust-analyzer-expression-adjustment-hints "always"
-             lsp-rust-analyzer-expression-adjustment-hints-mode "always"
-             lsp-rust-analyzer-implicit-drops t
              lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
              lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
              lsp-rust-analyzer-display-parameter-hints t
              lsp-rust-analyzer-display-reborrow-hints "always"
+             lsp-rust-analyzer-expression-adjustment-hints "always"
              lsp-rust-analyzer-hide-closure-initialization t
              lsp-rust-analyzer-hide-named-constructor t
-             lsp-rust-analyzer-max-inlay-hint-length 20
-             lsp-rust-analyzer-closing-brace-hints-min-lines 25
+             lsp-rust-analyzer-implicit-drops t
+             lsp-rust-analyzer-max-inlay-hint-length 25
              lsp-rust-analyzer-proc-macro-enable t
              lsp-rust-analyzer-server-display-inlay-hints t
              lsp-semantic-tokens-enable t)
@@ -1009,16 +947,6 @@ targets."
     #+begin_src emacs-lisp
       (set-face-attribute 'org-column nil :background nil)
       (set-face-attribute 'org-column-title nil :background nil)
-    #+end_src
-
-*** window dividers
-    #+begin_src emacs-lisp
-      (dolist (face '(window-divider
-                      window-divider-first-pixel
-                      window-divider-last-pixel))
-        (face-spec-reset-face face)
-        (set-face-foreground face (face-attribute 'default :background)))
-      (set-face-background 'fringe (face-attribute 'default :background))
     #+end_src
 
 ** org superstar
@@ -1580,26 +1508,23 @@ targets."
      (global-set-key (kbd "ć") (lambda () (interactive) (insert "ç")))
      (global-set-key (kbd "Ć") (lambda () (interactive) (insert "Ç")))
    #+end_src
-** garbage collector magic hack
+** hide commands in M-x which do not apply to the current mode
    #+begin_src emacs-lisp
-     (use-package gcmh
-       :custom (gcmh-high-cons-threshold (* 256 1024 1024))
-       :config
-       (add-hook 'after-init-hook (lambda ()
-                                    (gcmh-mode))))
+     (setq read-extended-command-predicate #'command-completion-default-include-p)
+   #+end_src
+** tab always complete
+   #+begin_src emacs-lisp
+     (setq tab-always-indent 'complete)
+
+     ;; for emacs 30 or newer
+     (setq text-mode-ispell-word-completion nil)
    #+end_src
 * Appearance
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
-      '((right-divider-width . 15)
-        (internal-border-width . 15)))
-     (dolist (face '(window-divider
-                     window-divider-first-pixel
-                     window-divider-last-pixel))
-       (face-spec-reset-face face)
-       (set-face-foreground face (face-attribute 'default :background)))
-     (set-face-background 'fringe (face-attribute 'default :background))
+      '((right-divider-width . 0)
+        (internal-border-width . 13)))
    #+end_src
 ** icons
    #+begin_src emacs-lisp
@@ -1845,47 +1770,56 @@ targets."
 ** Modeline
    #+begin_src emacs-lisp
      (use-package doom-modeline
-       :config
-       (setq doom-modeline-height 35
-             doom-modeline-bar-width 5
-             doom-modeline-time-clock-size 0.4
-             doom-modeline-hud t
-             doom-modeline-enable-word-count t
-             doom-modeline-buffer-encoding nil
-             doom-modeline-support-imenu t
-             doom-modeline-irc nil
-             doom-modeline-modal-modern-icon t
-             doom-modeline-buffer-file-name-style 'relative-to-project
-             doom-modeline-gnus nil)
+       :custom
+       (doom-modeline-height 30)
+       (doom-modeline-bar-width 3)
+       (doom-modeline-time-clock-size 0.4)
+       (doom-modeline-hud t)
+       (doom-modeline-enable-word-count nil)
+       (doom-modeline-buffer-encoding nil)
+       (doom-modeline-support-imenu t)
+       (doom-modeline-irc nil)
+       (doom-modeline-position-line-format '())
+       (doom-modeline-percent-position '())
+       (doom-modeline-position-column-line-format '("%l:%c"))
+       (doom-modeline-buffer-file-name-style 'relative-to-project)
+       (doom-modeline-gnus nil)
+       (doom-modeline-time-icon nil)
+       (doom-modeline-buffer-modification-icon nil)
        :hook (after-init . doom-modeline-mode))
    #+end_src
 *** Clock
     #+BEGIN_SRC emacs-lisp
       (setq-default display-time-default-load-average nil)
-      (setq display-time-format "%I:%M %p")
+      (setq display-time-format " %I:%M\t\t")
       (display-time-mode 1)
     #+END_SRC
 ** custom set faces
    #+begin_src emacs-lisp
      (custom-set-faces
-      '(mode-line ((t (:inherit 'default :family "Iosevka Consoli" :height 120 :box nil))))
-      '(mode-line-active ((t (:inherit mode-line :family "Iosevka Consoli" :height 120 :box nil))))
-      '(mode-line-inactive ((t (:inherit mode-line-active :family "Iosevka Consoli" :height 120 :box nil))))
+      '(mode-line ((t (:inherit 'default :family "Schibsted Grotesk" :height 120 :box nil))))
+      '(mode-line-active ((t (:inherit mode-line :family "Schibsted Grotesk" :height 120 :box nil))))
+      '(mode-line-inactive ((t (:inherit mode-line-active :family "Schibsted Grotesk" :height 120 :box nil))))
+      '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
 
-      '(company-tooltip-common
-        ((t (:inhirit company-tooltip :weight bold :underline nil))))
-      '(company-tooltip-common-selection
-        ((t (:inhirit company-tooltip-selection :weight bold :underline nil))))
-
-      '(lsp-inlay-hint-parameter-face  ((t :inherit lsp-inlay-hint-face
-                                           :height 90)))
+      '(lsp-inlay-hint-parameter-face ((t :inherit lsp-inlay-hint-face
+                                          :height 90)))
       '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
                                      :height 90)))
 
       '(centaur-tabs-selected-modified ((t (:slant italic))))
       '(centaur-tabs-unselected-modified ((t (:slant italic))))
 
+
       '(font-lock-comment-face ((t :font "Maple Mono Italic" :slant italic))))
+
+     (dolist (face '(window-divider
+                     window-divider-first-pixel
+                     window-divider-last-pixel))
+       (face-spec-reset-face face)
+       (set-face-foreground face (face-attribute 'default :background))
+       (set-face-background face (face-attribute 'default :background)))
+     (set-face-background 'fringe (face-attribute 'default :background))
 
      (dolist (face '((org-level-1 . 2.0)
                      (org-level-2 . 1.5)
@@ -1906,14 +1840,12 @@ targets."
       '(variable-pitch ((t (:family "Short Stack" :height 150))))
       '(org-block ((t (:inherit fixed-pitch))))
       '(org-code ((t (:inherit (shadow fixed-pitch)))))
-      '(org-document-info ((t (:foreground "dark orange"))))
       '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
       '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
-      '(org-link ((t (:foreground "royal blue" :underline t))))
       '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
       '(org-property-value ((t (:inherit fixed-pitch))) t)
       '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-      '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+      ;; '(org-table ((t (:inherit fixed-pitch :foreground "#83a598")))) ;; beatiful green... but why?
       '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
       '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
    #+end_src
