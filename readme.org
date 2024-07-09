@@ -4,7 +4,7 @@
 ** Vertico
    #+begin_src emacs-lisp
      (use-package vertico
-       :custom (vertico-cycle t)
+       :config (setq vertico-cycle t)
        :init (vertico-mode))
 
      (use-package savehist
@@ -237,30 +237,30 @@ targets."
 *** LSP mode
     #+begin_src emacs-lisp
       (use-package lsp-mode
-        :custom
-        (lsp-keymap-prefix "C-c l")
-        (lsp-eldoc-render-all nil)
-        (eldoc-echo-area-use-multiline-p nil)
-        (lsp-eldoc-enable-hover nil)
-        (lsp-signature-doc-lines 0)
-        (lsp-modeline-code-actions-mode t)
-        (lsp-enable-folding t)
-        (lsp-enable-indentation t)
-        (lsp-enable-on-type-formatting t)
-        (lsp-enable-snippet t)
-        (lsp-headerline-breadcrumb-icons-enable t)
-        (lsp-headerline-breadcrumb-segments '(file symbols))
-        (lsp-idle-delay 0.0)
-        (lsp-lens-enable t)
-        (lsp-inlay-hint-enable nil) ;; disable by default, F4 to enable
-        (lsp-log-io nil)
-        (lsp-use-plists t)
+        :config
+        (setq lsp-keymap-prefix "C-c l"
+              lsp-eldoc-render-all nil
+              eldoc-echo-area-use-multiline-p nil
+              lsp-eldoc-enable-hover nil
+              lsp-signature-doc-lines 0
+              lsp-modeline-code-actions-mode t
+              lsp-enable-folding t
+              lsp-enable-indentation t
+              lsp-enable-on-type-formatting t
+              lsp-enable-snippet t
+              lsp-headerline-breadcrumb-icons-enable t
+              lsp-headerline-breadcrumb-segments '(file symbols)
+              lsp-idle-delay 0.0
+              lsp-lens-enable t
+              lsp-inlay-hint-enable nil ;; disable by default, F4 to enable
+              lsp-log-io nil
+              lsp-use-plists t)
+        (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
         :bind (:map lsp-mode-map
                     ("C-c l r" . lsp-rename)
                     ("C-c l a" . lsp-execute-code-action)
                     ("C-c l t" . lsp-find-type-definition)
                     ("<f4>" . lsp-inlay-hints-mode))
-        :config (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
         :commands lsp)
     #+end_src
 *** LSP UI
@@ -587,6 +587,15 @@ targets."
                           :italic nil)))
          :config (global-blamer-mode 1))
      #+end_src
+**** forge
+     #+begin_src emacs-lisp
+       (use-package forge
+         :after magit)
+     #+end_src
+**** github notifications
+     #+begin_src emacs-lisp
+       (use-package gh-notify)
+     #+end_src
 *** Region Expansion
     #+begin_src emacs-lisp
       (use-package expand-region
@@ -690,6 +699,13 @@ targets."
 
       (repeat-mode t)
     #+end_src
+*** symbol overlay
+    #+begin_src emacs-lisp
+      (use-package symbol-overlay
+        :config
+        (setq symbol-overlay-toggle-in-scope t)
+        :bind ("M-i" . symbol-overlay-put))
+    #+end_src
 *** Moving lines around
     #+begin_src emacs-lisp
       (use-package drag-stuff
@@ -746,17 +762,17 @@ targets."
         (tsx-ts-mode . treesitter-context-mode)
         :bind
         (:map treesitter-context-mode
-         ("C-(" . treesitter-context-fold-toggle)
-         ("C-)" . treesitter-context-focus-mode))
-        :custom
-        (treesitter-context-show-context-always nil) ;; only show when the outmost parent is invisible
-        (treesitter-context-frame-autohide-timeout 5)
-        (treesitter-context-frame-min-height 1)
-        (treesitter-context-border-width 5)
-        (treesitter-context-frame-min-width 1)
-        (treesitter-context-fold-show-fringe-marks nil)
-        (treesitter-context-border-color (face-attribute 'mode-line :background))
-        (treesitter-context-background-color (face-attribute 'default :background)))
+              ("C-(" . treesitter-context-fold-toggle)
+              ("C-)" . treesitter-context-focus-mode))
+        :config
+        (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
+              treesitter-context-frame-autohide-timeout 5
+              treesitter-context-frame-min-height 1
+              treesitter-context-border-width 5
+              treesitter-context-frame-min-width 1
+              treesitter-context-fold-show-fringe-marks nil
+              treesitter-context-border-color (face-attribute 'mode-line :background)
+              treesitter-context-background-color (face-attribute 'default :background)))
     #+end_src
 ** Languages specifics
 *** Rust
@@ -1162,11 +1178,11 @@ targets."
         :after org
         :bind
         ("<f8>" . deft)
-        :custom
-        (deft-recursive t)
-        (deft-use-filter-string-for-filename t)
-        (deft-default-extension "org")
-        (deft-directory (file-truename "~/projects/brainiac")))
+        :config
+        (setq deft-recursive t
+              deft-use-filter-string-for-filename t
+              deft-default-extension "org"
+              deft-directory (file-truename "~/projects/brainiac")))
 
       (defun cm/deft-parse-title (file contents)
         "Parse the given FILE and CONTENTS and determine the title.
@@ -1355,12 +1371,13 @@ targets."
 ** Smooth scrolling
    #+begin_src emacs-lisp
      (use-package good-scroll
-       :custom (redisplay-dont-pause 1)
-       :config (good-scroll-mode 1))
+       :config
+       (good-scroll-mode 1))
 
      ;; always redraw immediately when scrolling
      ;; more responsive and doesn't hang
      (setq fast-but-imprecise-scrolling t
+           redisplay-dont-pause 1
            jit-lock-defer-time 0)
    #+end_src
 *** Preserve screen position
@@ -1500,7 +1517,7 @@ targets."
       (use-package jinx
         :hook (emacs-startup . global-jinx-mode)
         ;; `M-$` correct the word at point
-        :custom (jinx-languages "en_UK en_US pt_BR")
+        :config (setq jinx-languages "en_UK en_US pt_BR")
         :bind ([remap ispell-word] . jinx-correct))
     #+end_src
 ** Ccedilla in emacs
@@ -1664,20 +1681,18 @@ targets."
         :config
         (centaur-tabs-mode t)
         (centaur-tabs-headline-match) ;; make the headline face match the tabs default face
-        :custom
-        (centaur-tabs-adjust-buffer-order t)
+        (centaur-tabs-change-fonts "Maple Mono" 110)
         (centaur-tabs-group-by-projectile-project)
-        (centaur-tabs-headline-match)
-        (centaur-tabs-enable-key-bindings t)
-        (centaur-tabs-style "bar")
-        (centaur-tabs-height 24)
-        (centaur-tabs-set-icons t)
-        (centaur-tabs-gray-out-icons 'buffer) ;; gray out icons for the unselected tabs
-        (centaur-tabs-set-bar 'left)
-        (centaur-tabs-set-modified-marker t)
-        (centaur-tabs-cycle-scope 'tabs)
-        (centaur-tabs-change-fonts "VictorMono Nerd Font Propo" 120)
-        (centaur-tabs-label-fixed-length 15))
+        (setq centaur-tabs-adjust-buffer-order t
+              centaur-tabs-enable-key-bindings t
+              centaur-tabs-style "bar"
+              centaur-tabs-height 24
+              centaur-tabs-set-icons t
+              centaur-tabs-gray-out-icons 'buffer ;; gray out icons for the unselected tabs
+              centaur-tabs-set-bar 'left
+              centaur-tabs-set-modified-marker t
+              centaur-tabs-cycle-scope 'tabs
+              centaur-tabs-label-fixed-length 15))
     #+end_src
 *** Disabled modes
     #+begin_src emacs-lisp
@@ -1770,22 +1785,28 @@ targets."
 ** Modeline
    #+begin_src emacs-lisp
      (use-package doom-modeline
-       :custom
-       (doom-modeline-height 30)
-       (doom-modeline-bar-width 3)
-       (doom-modeline-time-clock-size 0.4)
-       (doom-modeline-hud t)
-       (doom-modeline-enable-word-count nil)
-       (doom-modeline-buffer-encoding nil)
-       (doom-modeline-support-imenu t)
-       (doom-modeline-irc nil)
-       (doom-modeline-position-line-format '())
-       (doom-modeline-percent-position '())
-       (doom-modeline-position-column-line-format '("%l:%c"))
-       (doom-modeline-buffer-file-name-style 'relative-to-project)
-       (doom-modeline-gnus nil)
-       (doom-modeline-time-icon nil)
-       (doom-modeline-buffer-modification-icon nil)
+       :config
+       (use-package async)
+       (use-package ghub)
+       (setq
+        auth-sources '("~/.authinfo.gpg")
+        doom-modeline-height 30
+        doom-modeline-bar-width 3
+        doom-modeline-time-clock-size 0.4
+        doom-modeline-hud t
+        doom-modeline-github t
+        doom-modeline-github-interval (* 5 60)
+        doom-modeline-enable-word-count nil
+        doom-modeline-buffer-encoding nil
+        doom-modeline-support-imenu t
+        doom-modeline-irc nil
+        doom-modeline-position-line-format '()
+        doom-modeline-percent-position '()
+        doom-modeline-position-column-line-format '("%l:%c")
+        doom-modeline-buffer-file-name-style 'relative-to-project
+        doom-modeline-gnus nil
+        doom-modeline-time-icon nil
+        doom-modeline-buffer-modification-icon nil)
        :hook (after-init . doom-modeline-mode))
    #+end_src
 *** Clock
