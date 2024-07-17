@@ -8,7 +8,9 @@
 (setq read-process-output-max (* 3 1024 1024 )) ;; 3mb
 
 ;; keep the eln cache clean
-(setq native-compile-prune-cache t)
 (setq load-prefer-newer noninteractive)
+
+(setq comp-deferred-compilation t)
+(setq native-comp-jit-compilation t)
 
 (provide 'early-init)

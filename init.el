@@ -20,9 +20,6 @@
 ;; Silence compiler warnings as they can be pretty disruptive
 (setq comp-async-report-warnings-errors nil)
 
-(setq comp-deferred-compilation t)
-(setq native-compile-prune-cache t)
-
 ;; Initialize package sources
 (require 'package)
 
