@@ -9,17 +9,6 @@
 
 (setq garbage-collection-messages t)
 
-;;
-;; Improve IO
-;;
-;; Optimizations for improving IO performance. Increase max bytes read from a sub-process in a single op
-;; default value: 3145728 (3M)
-(when (boundp 'read-process-output-max)
-  (setq read-process-output-max (* 5 1024 1024)))
-
-;; Silence compiler warnings as they can be pretty disruptive
-(setq comp-async-report-warnings-errors nil)
-
 ;; Initialize package sources
 (require 'package)
 
@@ -36,32 +25,32 @@
 ;; Bootstrap straight.el
 (defvar bootstrap-version)
 (let ((bootstrap-file
-      (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
         (url-retrieve-synchronously
-        "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-        'silent 'inhibit-cookies)
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
 ;; Always use straight to install on systems other than Linux
-(setq straight-use-package-by-default t
-      use-package-always-defer nil
-      straight-cache-autoloads t
-      straight-vc-git-default-clone-depth 1
-      package-enable-at-startup t)
+(setq straight-use-package-by-default t)
+      ;; use-package-always-defer nil
+      ;; straight-cache-autoloads t
+      ;; straight-vc-git-default-clone-depth 1
+      ;; package-enable-at-startup t)
+
 
 (straight-use-package 'org)
 
 ;; Use straight.el for use-package expressions
 (straight-use-package 'use-package)
-
-;; Load the helper package for commands like `straight-x-clean-unused-repos'
-;; (require 'straight-x)
-
 
 (org-babel-load-file (expand-file-name (concat user-emacs-directory "readme.org")))
 (custom-set-variables

@@ -75,10 +75,10 @@
 ** Orderless
    #+begin_src emacs-lisp
      (use-package orderless
-       :config
+       :init
        (setq completion-styles '(orderless partial-completion basic)
              completion-category-defaults nil
-             completion-category-overrides '((file (styles basic partial-completion)))))
+             completion-category-overrides nil)) ;; '((file (styles basic partial-completion)))))
    #+end_src
 ** dabbrev
    #+begin_src emacs-lisp
@@ -90,6 +90,15 @@
        (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
        (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
        (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
+   #+end_src
+** cape
+   #+begin_src emacs-lisp
+     (use-package cape
+       :bind ("M-p" . cape-prefix-map)
+       :init
+       (add-hook 'completion-at-point-functions #'cape-dabbrev)
+       (add-hook 'completion-at-point-functions #'cape-file)
+       (add-hook 'completion-at-point-functions #'cape-elisp-block))
    #+end_src
 ** Marginalia
    #+begin_src emacs-lisp
@@ -166,45 +175,45 @@
 #+end_src
 
 *** Embark use whick-key like a key menu prompt
-#+begin_src emacs-lisp
-(defun embark-which-key-indicator ()
-  "An embark indicator that displays keymaps using which-key.
-The which-key help message will show the type and value of the
-current target followed by an ellipsis if there are further
-targets."
-  (lambda (&optional keymap targets prefix)
-    (if (null keymap)
+    #+begin_src emacs-lisp
+      (defun embark-which-key-indicator ()
+        "An embark indicator that displays keymaps using which-key.
+      The which-key help message will show the type and value of the
+      current target followed by an ellipsis if there are further
+      targets."
+        (lambda (&optional keymap targets prefix)
+          (if (null keymap)
+              (which-key--hide-popup-ignore-command)
+            (which-key--show-keymap
+             (if (eq (plist-get (car targets) :type) 'embark-become)
+                 "Become"
+               (format "Act on %s '%s'%s"
+                       (plist-get (car targets) :type)
+                       (embark--truncate-target (plist-get (car targets) :target))
+                       (if (cdr targets) "…" "")))
+             (if prefix
+                 (pcase (lookup-key keymap prefix 'accept-default)
+                   ((and (pred keymapp) km) km)
+                   (_ (key-binding prefix 'accept-default)))
+               keymap)
+             nil nil t (lambda (binding)
+                         (not (string-suffix-p "-argument" (cdr binding))))))))
+
+      (setq embark-indicators
+            '(embark-which-key-indicator
+              embark-highlight-indicator
+              embark-isearch-highlight-indicator))
+
+      (defun embark-hide-which-key-indicator (fn &rest args)
+        "Hide the which-key indicator immediately when using the completing-read prompter."
         (which-key--hide-popup-ignore-command)
-      (which-key--show-keymap
-       (if (eq (plist-get (car targets) :type) 'embark-become)
-           "Become"
-         (format "Act on %s '%s'%s"
-                 (plist-get (car targets) :type)
-                 (embark--truncate-target (plist-get (car targets) :target))
-                 (if (cdr targets) "…" "")))
-       (if prefix
-           (pcase (lookup-key keymap prefix 'accept-default)
-             ((and (pred keymapp) km) km)
-             (_ (key-binding prefix 'accept-default)))
-         keymap)
-       nil nil t (lambda (binding)
-                   (not (string-suffix-p "-argument" (cdr binding))))))))
+        (let ((embark-indicators
+               (remq #'embark-which-key-indicator embark-indicators)))
+          (apply fn args)))
 
-(setq embark-indicators
-      '(embark-which-key-indicator
-        embark-highlight-indicator
-        embark-isearch-highlight-indicator))
-
-(defun embark-hide-which-key-indicator (fn &rest args)
-  "Hide the which-key indicator immediately when using the completing-read prompter."
-  (which-key--hide-popup-ignore-command)
-  (let ((embark-indicators
-         (remq #'embark-which-key-indicator embark-indicators)))
-    (apply fn args)))
-
-(advice-add #'embark-completing-read-prompter
-            :around #'embark-hide-which-key-indicator)
-#+end_src
+      (advice-add #'embark-completing-read-prompter
+                  :around #'embark-hide-which-key-indicator)
+    #+end_src
 ** Projectile
    #+begin_src emacs-lisp
      (use-package projectile
@@ -251,9 +260,17 @@ targets."
                     ("C-c l t" . lsp-find-type-definition)
                     ("<f4>" . lsp-inlay-hints-mode))
         :init
+        (defun my/orderless-dispatch-flex-first (_pattern index _total)
+          (and (eq index 0) 'orderless-flex))
+
         (defun my/lsp-mode-setup-completion ()
           (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-                '(orderless)))
+                '(orderless))
+          ;; Optionally configure the first word as flex filtered.
+          (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+          ;; Optionally configure the cape-capf-buster.
+          (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point))))
+
         :hook (lsp-completion-mode . my/lsp-mode-setup-completion)
         :commands lsp)
     #+end_src
@@ -291,6 +308,24 @@ targets."
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
      (use-package dap-mode
+       :config
+       (require 'dap-lldb)
+       (require 'dap-gdb-lldb)
+       (dap-register-debug-template "Rust::GDB Run Configuration"
+                                    (list :type "gdb"
+                                          :request "launch"
+                                          :name "GDB::Run"
+                                          :gdbpath "rust-gdb"
+                                          :target nil
+                                          :cwd nil))
+
+       (dap-register-debug-template "Rust::LLDB Run Configuration"
+                                    (list :type "lldb"
+                                          :request "launch"
+                                          :name "LLDB::Run"
+                                          :gdbpath "rust-lldb"
+                                          :target nil
+                                          :cwd nil))
        :bind ("<f5>" . dap-breakpoint-toggle))
    #+end_src
 ** Linter
@@ -478,29 +513,24 @@ targets."
        (use-package smartparens
          :bind ("C-M-f" . 'sp-forward-sexp)
          ("C-M-b" . 'sp-backward-sexp)
-         :config (smartparens-global-mode)
+         :config
+         (require 'smartparens-config)
+         (smartparens-global-mode)
+         ;; easy <'lifetime>
+         (sp-with-modes 'rust-ts-mode
+           (sp-local-pair "<" ">")
+           (sp-local-pair "'" nil :actions nil))
+         ;; easy ~code~
+         (sp-with-modes 'org-mode
+           (sp-local-pair "~" "~")
+           (sp-local-pair "=" "="))
          :init (smartparens-strict-mode t))
-       ;; easy <'lifetime>
-       (sp-with-modes 'rust-ts-mode
-         (sp-local-pair "<" ">")
-         (sp-local-pair "'" nil :actions nil))
-       ;; easy ~code~
-       (sp-with-modes 'org-mode
-         (sp-local-pair "~" "~")
-         (sp-local-pair "=" "="))
      #+end_src
-***** easy generics
-      #+begin_src emacs-lisp
-        (sp-with-modes 'rust-ts-mode
-          (sp-local-pair "<" ">")
-          ;; easy lifetimes
-          (sp-local-pair "'" nil :actions nil))
-      #+end_src
 ***** close parens in new line
       #+begin_src emacs-lisp
-        (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
-        (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
-        (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
+        ;; (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
+        ;; (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
+        ;; (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
       #+end_src
 
 **** Show matches
@@ -542,7 +572,7 @@ targets."
 **** git gutter
      #+begin_src emacs-lisp
        (use-package git-gutter
-         :hook (prog-mode . git-gutter-mode)
+         :config (global-git-gutter-mode t)
          :custom
          (git-gutter:update-interval 0.02))
 
@@ -661,16 +691,6 @@ targets."
     #+end_src
 *** repeat-mode
     #+begin_src emacs-lisp
-      (advice-add 'repeat-post-hook :after
-                  (defun my/which-key-repeat ()
-                    (when-let ((cmd (or this-command real-this-command))
-                               (keymap (repeat--command-property 'repeat-map)))
-                      (run-at-time
-                       which-key-idle-delay nil
-                       (lambda () 
-                         (which-key--create-buffer-and-show
-                          nil (symbol-value keymap)))))))
-
       (defun my/which-key-repeat-mode-dispatch ()
         (interactive)
         (setq this-command last-command)
@@ -689,7 +709,18 @@ targets."
                 map)
               keymap)))))
 
+      (advice-add 'repeat-post-hook :after
+                  (defun my/which-key-repeat ()
+                    (when-let ((cmd (or this-command real-this-command))
+                               (keymap (repeat--command-property 'repeat-map)))
+                      (run-at-time
+                       which-key-idle-delay nil
+                       (lambda () 
+                         (which-key--create-buffer-and-show
+                          nil (symbol-value keymap)))))))
+
       (advice-add 'repeat-post-hook :after #'my/which-key-repeat-mode-binding)
+
 
       (repeat-mode t)
     #+end_src
@@ -815,28 +846,12 @@ targets."
              lsp-rust-analyzer-implicit-drops t
              lsp-rust-analyzer-max-inlay-hint-length 25
              lsp-rust-analyzer-proc-macro-enable t
+             lsp-rust-analyzer-lens-references-adt-enable t
+             lsp-rust-analyzer-lens-references-method-enable t
+             lsp-rust-analyzer-lens-references-trait-enable t
+             lsp-rust-analyzer-lens-references-enum-variant-enable t
              lsp-rust-analyzer-server-display-inlay-hints t
              lsp-semantic-tokens-enable nil)
-     #+end_src
-**** DAP config
-     #+begin_src emacs-lisp
-       (require 'dap-lldb)
-       (require 'dap-gdb-lldb)
-       (dap-register-debug-template "Rust::GDB Run Configuration"
-                                    (list :type "gdb"
-                                          :request "launch"
-                                          :name "GDB::Run"
-                                          :gdbpath "rust-gdb"
-                                          :target nil
-                                          :cwd nil))
-
-       (dap-register-debug-template "Rust::LLDB Run Configuration"
-                                    (list :type "lldb"
-                                          :request "launch"
-                                          :name "LLDB::Run"
-                                          :gdbpath "rust-lldb"
-                                          :target nil
-                                          :cwd nil))
      #+end_src
 **** When creating news language bugs
      [[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
@@ -896,21 +911,6 @@ targets."
       (add-hook 'typescript-ts-mode-hook #'lsp)
       (add-hook 'tsx-ts-mode-hook #'lsp)
     #+end_src
-*** COMMENT Minors
-**** TOML
-     #+begin_src emacs-lisp
-       (use-package toml-mode)
-     #+end_src
-
-**** YAML
-     #+begin_src emacs-lisp
-       (use-package yaml-mode)
-     #+end_src
-**** Dockerfile
-     #+begin_src emacs-lisp
-       (use-package dockerfile-mode)
-     #+end_src
-
 * Org
 ** install
    #+begin_src emacs-lisp
@@ -1099,14 +1099,6 @@ targets."
                                           ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :book:\n#+TITLE: ${title}\n#+DATE: %U\n")
                        :unnarrowed t))
       #+end_src
-****** COMMENT Chapter
-       TODO: i don't know how to capture inside the current buffer
-       #+begin_src emacs-lisp
-         (add-to-list 'org-roam-capture-templates
-                      '("c" "Book chapter" entry
-                        "** %?"))
-       #+end_src
-
 ***** Paper
       #+begin_src emacs-lisp
         (add-to-list 'org-roam-capture-templates
@@ -1147,15 +1139,6 @@ targets."
                        ))
       #+end_src
 
-***** COMMENT Project
-      #+begin_src emacs-lisp
-        (add-to-list 'org-roam-capture-templates
-                     '(("" "paper" plain
-                        "..."
-                        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                                           "#+TITLE: ${title}\n#+DATE: %U\n#+FILETAGS: :paper")
-                        :unnarrowed t)))
-      #+end_src
 *** Org-roam-ui
     #+begin_src emacs-lisp
       (use-package org-roam-ui
@@ -1553,8 +1536,8 @@ targets."
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
-      '((right-divider-width . 0)
-        (internal-border-width . 1)))
+      '((right-divider-width . 10)
+        (internal-border-width . 10)))
    #+end_src
 ** icons
    #+begin_src emacs-lisp
@@ -1571,52 +1554,53 @@ targets."
      (setq inhibit-compacting-font-caches t)
    #+end_src
 ** Themes
-*** Doom themes
+*** downloading themes
+**** Doom themes
+     #+begin_src emacs-lisp
+       (use-package doom-themes
+         :defer t
+         :config
+         (progn
+           (setq doom-themes-enable-bold t
+                 doom-themes-treemacs-theme "doom-colors"
+                 doom-themes-enable-italic t)
+           (doom-themes-treemacs-config)
+           (doom-themes-org-config)))
+     #+end_src
+**** catppuccin
+     #+begin_src emacs-lisp
+       (use-package catppuccin-theme
+         :defer t
+         :init
+         (setq catppuccin-flavor 'macchiato
+               catppuccin-italic-comments t
+               catppuccin-italic-variables t
+               catppuccin-italic-blockquotes t))
+     #+end_src
+**** ef-themes
+     #+begin_src emacs-lisp
+       (use-package ef-themes
+         :defer t)
+     #+end_src
+**** kaolin themes
+     #+begin_src emacs-lisp
+       (use-package kaolin-themes
+         :config (kaolin-treemacs-theme)
+         :defer t)
+     #+end_src
+**** spacemacs themes
+     #+begin_src emacs-lisp
+       (use-package spacemacs-theme
+         :defer t
+         :config
+         (setq spacemacs-theme-comment-bg nil
+               spacemacs-theme-keyword-italic t
+               spacemacs-theme-org-bold t
+               spacemacs-theme-comment-italic t))
+     #+end_src
+*** loading theme
     #+begin_src emacs-lisp
-      (use-package doom-themes
-        :defer t
-        :config
-        (progn
-          (setq doom-themes-enable-bold t
-                doom-themes-treemacs-theme "doom-colors"
-                doom-themes-enable-italic t)
-          (doom-themes-treemacs-config)
-          (doom-themes-org-config)))
-    #+end_src
-*** catppuccin
-    #+begin_src emacs-lisp
-      (use-package catppuccin-theme
-        :defer t
-        :init
-        (setq catppuccin-flavor 'macchiato
-              catppuccin-italic-comments t
-              catppuccin-italic-variables t
-              catppuccin-italic-blockquotes t))
-    #+end_src
-*** ef-themes
-    #+begin_src emacs-lisp
-      (use-package ef-themes
-        :defer t)
-    #+end_src
-*** kaolin themes
-    #+begin_src emacs-lisp
-      (use-package kaolin-themes
-        :config (kaolin-treemacs-theme)
-        :defer t)
-    #+end_src
-*** spacemacs themes
-    #+begin_src emacs-lisp
-      (use-package spacemacs-theme
-        :defer t
-        :config
-        (setq spacemacs-theme-comment-bg nil
-              spacemacs-theme-keyword-italic t
-              spacemacs-theme-org-bold t
-              spacemacs-theme-comment-italic t))
-    #+end_src
-*** Load theme
-    #+begin_src emacs-lisp
-      (load-theme 'doom-snazzy
+      (load-theme 'doom-one
                   :no-confirm)
     #+end_src
 ** UI
@@ -1651,7 +1635,10 @@ targets."
     #+end_src
 *** highlight todo
     #+begin_src emacs-lisp
-      (global-hl-todo-mode t)
+      (use-package hl-todo
+        :config
+        (global-hl-todo-mode t))
+
       (define-key prog-mode-map (kbd "C-|") (lambda ()
                                               (interactive)
                                               (hl-todo-insert "TODO(matheus-consoli): ")))
@@ -1680,41 +1667,48 @@ targets."
         (if (string-suffix-p "256color" (getenv "TERM"))
           (enable-256color-term)))
     #+end_src
-** COMMENT Tabs
+** Tabs
 *** Install
     #+begin_src emacs-lisp
       (use-package centaur-tabs
         :config
+        ;; disable in modes
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Org")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*MULTI")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Backtrace")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*scratch*")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Process List")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*compilation")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*ansi-term*")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Call Hierarchy*")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*github-notifications*")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Warnings*")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Help*")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*straight-")
+        (add-to-list 'centaur-tabs-excluded-prefixes "*Messages*")
+        ;; dap-mode ui
+        (add-to-list 'centaur-tabs-excluded-prefixes "Locals")
+        (add-to-list 'centaur-tabs-excluded-prefixes "Expressions")
+        (add-to-list 'centaur-tabs-excluded-prefixes "Debug Sessions")
+
+        (centaur-tabs-mode t)
         (centaur-tabs-enable-buffer-reordering)
         (centaur-tabs-group-by-projectile-project)
-        (centaur-tabs-mode t)
-        (centaur-tabs-change-fonts "Maple Mono" 110)
+        (centaur-tabs-change-fonts (face-attribute 'default :font) 110)
+        (centaur-tabs-headline-match)
         (setq centaur-tabs-adjust-buffer-order t
               centaur-tabs-enable-key-bindings t
               centaur-tabs-style "bar"
-              centaur-tabs-height 32
+              centaur-tabs-height 27
               centaur-tabs-set-icons t
+              centaur-tabs-plain-icons t
               centaur-tabs-gray-out-icons 'buffer
+              centaur-tabs-icon-type "nerd-icons"
               centaur-tabs-set-bar 'over
               centaur-tabs-set-modified-marker t
               centaur-tabs-cycle-scope 'tabs
+              centaur-tabs-left-edge-margin nil
               centaur-tabs-label-fixed-length 15))
-    #+end_src
-*** Disabled modes
-    #+begin_src emacs-lisp
-      (add-to-list 'centaur-tabs-excluded-prefixes "*Org")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*MULTI")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*Backtrace")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*scratch*")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*Process List")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*compilation")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*ansi-term*")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*Call Hierarchy*")
-      (add-to-list 'centaur-tabs-excluded-prefixes "*github-notifications*")
-      ;; dap-mode ui
-      (add-to-list 'centaur-tabs-excluded-prefixes "Locals")
-      (add-to-list 'centaur-tabs-excluded-prefixes "Expressions")
-      (add-to-list 'centaur-tabs-excluded-prefixes "Debug Sessions")
     #+end_src
 ** treemacs
    #+begin_src emacs-lisp
