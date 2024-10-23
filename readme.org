@@ -27,7 +27,7 @@
        ;; Enable recursive minibuffers
        (setq enable-recursive-minibuffers t))
    #+end_src
-** Corfu
+** COMMENT Corfu
    #+begin_src emacs-lisp
      (use-package corfu
        :init
@@ -41,14 +41,14 @@
         corfu-cycle t
         corfu-scroll-margin 2
         corfu-preselect 'first
-        corfu-preview-current t
+        corfu-preview-current nil
         corfu-quit-no-match 'separator
-        corfu-quit-at-boundary nil
+        corfu-quit-at-boundary t
         corfu-separator ?\s
 
         corfu-auto t
-        corfu-auto-delay 0.4
-        corfu-auto-prefix 0
+        corfu-auto-delay 0.25
+        corfu-auto-prefix 1
         corfu-popupinfo-delay '(1.30 . 1.50))
        :bind
        (:map corfu-map
@@ -72,6 +72,41 @@
           (corfu-mode 1)))
       (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
     #+end_src
+** Company
+#+begin_src emacs-lisp
+  (use-package company
+    :commands company-abort
+    :init (global-company-mode 1)
+    :custom
+    (company-tooltip-align-annotations t)
+    (company-tooltip-limit 15)
+    (company-idle-delay 0.0)
+    (company-echo-delay 0)
+    (company-tooltip-limit 5)
+    (company-minimum-prefix-length 1)
+    (company-require-match nil)
+    (company-show-quick-access 'left)
+    (company-tooltip-maximum-width 60)
+    (company-dabbrev-ignore-case nil)
+    (company-dabbrev-downcase nil)
+    :config
+    (setq company-tooltip-align-annotations t
+          company-tooltip-limit 15
+          company-idle-delay 0.0
+          company-echo-delay 0
+          company-tooltip-limit 5
+          company-minimum-prefix-length 1
+          company-require-match nil
+          company-show-quick-access 'left
+          company-tooltip-maximum-width 60
+          company-dabbrev-ignore-case nil
+          company-dabbrev-downcase nil))
+#+end_src
+*** company box
+#+begin_src emacs-lisp
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+#+end_src
 ** Orderless
    #+begin_src emacs-lisp
      (use-package orderless
@@ -96,9 +131,8 @@
      (use-package cape
        :bind ("M-p" . cape-prefix-map)
        :init
-       (add-hook 'completion-at-point-functions #'cape-dabbrev)
-       (add-hook 'completion-at-point-functions #'cape-file)
-       (add-hook 'completion-at-point-functions #'cape-elisp-block))
+       (setq-local completion-at-point-functions
+                   (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-file))))
    #+end_src
 ** Marginalia
    #+begin_src emacs-lisp
@@ -235,7 +269,7 @@
       (use-package lsp-mode
         :config
         (setq
-         lsp-completion-provider :none ;; using Corfu!
+         ;; lsp-completion-provider :none ;; using Corfu!
          lsp-keymap-prefix "C-c l"
          lsp-eldoc-render-all nil
          eldoc-echo-area-use-multiline-p nil
@@ -250,7 +284,9 @@
          lsp-headerline-breadcrumb-segments '(file symbols)
          lsp-idle-delay 0.0
          lsp-lens-enable t
-         lsp-inlay-hint-enable nil ;; disable by default, F4 to enable
+         lsp-inlay-hint-enable t
+         lsp-symbol-highlighting-skip-current t
+         ;; lsp-inlay-hint-enable nil ;; disabled by default, F4 to enable
          lsp-log-io nil
          lsp-use-plists t)
         (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
@@ -279,7 +315,8 @@
       (use-package lsp-ui
         :bind
         (:map lsp-ui-mode-map
-              ("C-M-q". lsp-ui-doc-unfocus-frame)
+              ("C-c C-M-d". lsp-ui-doc-focus-frame)
+              ("C-c C-M-q". lsp-ui-doc-unfocus-frame)
               ("M-." . lsp-ui-peek-find-definitions)
               ("M-?" . lsp-ui-peek-find-references)
               ("M-<right>" . lsp-ui-peek-jump-backward)
@@ -289,12 +326,14 @@
               ("C-c l s" . consult-lsp-symbols)))
 
       (setq lsp-ui-doc-enable t
-            lsp-ui-doc-position 'top
-            lsp-ui-doc-header t
-            lsp-ui-doc-frame-mode nil
+            lsp-ui-doc-position 'bottom
+            lsp-ui-doc-header nil
             lsp-ui-doc-delay 0.5
             lsp-ui-doc-show-with-cursor t
             lsp-ui-doc-show-with-mouse nil
+
+            lsp-ui-doc-use-childframe t
+            lsp-ui-doc-use-webkit nil
 
             lsp-ui-sideline-show-code-actions nil
             lsp-ui-sideline-delay 2
@@ -330,19 +369,23 @@
    #+end_src
 ** Linter
 *** Flycheck
-#+begin_src emacs-lisp
-(use-package flycheck
-  :config
-  (add-to-list 'display-buffer-alist
-               `(,(rx bos "*Flycheck errors*" eos)
-                 (display-buffer-reuse-window
-                  display-buffer-in-side-window)
-                 (side            . bottom)
-                 (reusable-frames . visible)
-                 (window-height   . 0.33)))
-  :init (global-flycheck-mode))
-#+end_src
-
+    #+begin_src emacs-lisp
+      (use-package flycheck
+        :config
+        (add-to-list 'display-buffer-alist
+                     `(,(rx bos "*Flycheck errors*" eos)
+                       (display-buffer-reuse-window
+                        display-buffer-in-side-window)
+                       (side            . bottom)
+                       (reusable-frames . visible)
+                       (window-height   . 0.33)))
+        :init (global-flycheck-mode))
+    #+end_src
+**** flycheck inline
+     #+begin_src emacs-lisp
+       (use-package flycheck-inline
+         :after flycheck-mode)
+     #+end_src
 ** Consult and integrations
 *** Consult
     #+begin_src emacs-lisp
@@ -524,13 +567,13 @@
          (sp-with-modes 'org-mode
            (sp-local-pair "~" "~")
            (sp-local-pair "=" "="))
-         :init (smartparens-strict-mode t))
+         (smartparens-strict-mode t))
      #+end_src
 ***** close parens in new line
       #+begin_src emacs-lisp
-        ;; (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
-        ;; (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
-        ;; (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
       #+end_src
 
 **** Show matches
@@ -586,12 +629,6 @@
 
 **** blame
      #+begin_src emacs-lisp
-       ;; make the blamer font slightly smaller than the used font size
-       (defvar blamer-face-height
-         (if window-system
-             (- (face-attribute 'default :height) 10)
-           120))
-
        (use-package blamer
          :defer 20
          :bind (("C-c i" . blamer-show-posframe-commit-info))
@@ -606,9 +643,7 @@
          (blamer-prettify-time-p t)
          (blamer-max-commit-message-length 30)
          (blamer-show-avatar-p t)
-         :custom-face
-         (blamer-face ((t :height ,blamer-face-height
-                          :italic nil)))
+         (blamer-symbol-count-before-new-line 1)
          :config (global-blamer-mode 1))
      #+end_src
 **** forge
@@ -620,6 +655,28 @@
      #+begin_src emacs-lisp
        (use-package gh-notify)
      #+end_src
+**** review
+#+begin_src emacs-lisp
+  (use-package github-review
+    :straight
+    (github-review :type git :host github :repo "charignon/github-review" :files ("*.el"))
+    :after forge
+    :bind (("C-x r" . github-review-forge-pr-at-point)
+           :map diff-mode-map ("C-c s" . my/github-review-kill-suggestion))
+    :config
+    ;; from github.com/anticomputer/gh-notify
+    (defun my/github-review-kill-suggestion ()
+      ;; kill a region of diff+ as a review suggestion template
+      (interactive)
+      (setq deactivate-mark t)
+      (let ((s-region
+             (buffer-substring-no-properties
+              (region-beginning)
+              (region-end))))
+        (kill-new
+         (format "# ```suggestion\n%s\n# ```\n"
+                 (replace-regexp-in-string "^\\+" "# " s-region))))))
+#+end_src
 *** Region Expansion
     #+begin_src emacs-lisp
       (use-package expand-region
@@ -792,7 +849,7 @@
         (tsx-ts-mode . treesitter-context-mode)
         :bind
         (:map treesitter-context-mode
-              ("C-(" . treesitter-context-fold-toggle)
+              ("<f6>" . treesitter-context-mode)
               ("C-)" . treesitter-context-focus-mode))
         :config
         (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
@@ -806,12 +863,24 @@
               treesitter-context-border-color (face-attribute 'mode-line :background)
               treesitter-context-background-color (face-attribute 'default :background)))
     #+end_src
+*** yafolding
+#+begin_src emacs-lisp
+  (use-package treesit-fold
+    :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
+    :config (global-treesit-fold-mode)
+    (setq treesit-fold-summary-show nil)
+    :bind (:map treesit-fold-mode-map
+                ("C-{" . treesit-fold-toggle)
+                ("C-*" . treesit-fold-open-all)
+                ("C-}" . treesit-fold-close-all)))
+#+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
      #+begin_src emacs-lisp
        (use-package rust-ts-mode
-            :hook (rust-ts-mode . lsp))
+            :hook (rust-ts-mode . lsp)
+            (rust-ts-mode . lsp-inlay-hints-mode))
      #+end_src
 **** Better cargo integration
      #+begin_src emacs-lisp
@@ -828,8 +897,8 @@
      #+begin_src emacs-lisp
        (setq lsp-rust-analyzer-lru-capacity (* 15 128)
              lsp-rust-analyzer-binding-mode-hints t
-             lsp-rust-analyzer-check-all-targets nil ;; disable --all-targets for cargo check
-             lsp-rust-analyzer-closing-brace-hints-min-lines 25
+             lsp-rust-analyzer-check-all-targets t
+             lsp-rust-analyzer-closing-brace-hints-min-lines nil
              lsp-rust-analyzer-closure-capture-hints t
              lsp-rust-analyzer-closure-return-type-hints "with_block"
              lsp-rust-analyzer-diagnostics-enable-experimental t
@@ -838,19 +907,23 @@
              lsp-rust-analyzer-display-closure-return-type-hints t
              lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
              lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
+
              lsp-rust-analyzer-display-parameter-hints t
              lsp-rust-analyzer-display-reborrow-hints "always"
              lsp-rust-analyzer-expression-adjustment-hints "always"
              lsp-rust-analyzer-hide-closure-initialization t
-             lsp-rust-analyzer-hide-named-constructor t
+             lsp-rust-analyzer-hide-named-constructor nil
              lsp-rust-analyzer-implicit-drops t
              lsp-rust-analyzer-max-inlay-hint-length 25
+
              lsp-rust-analyzer-proc-macro-enable t
              lsp-rust-analyzer-lens-references-adt-enable t
              lsp-rust-analyzer-lens-references-method-enable t
+
              lsp-rust-analyzer-lens-references-trait-enable t
              lsp-rust-analyzer-lens-references-enum-variant-enable t
              lsp-rust-analyzer-server-display-inlay-hints t
+
              lsp-semantic-tokens-enable nil)
      #+end_src
 **** When creating news language bugs
@@ -865,9 +938,14 @@
 *** Unison
 **** Unison mode
      #+begin_src emacs-lisp
-       (use-package unisonlang-mode)
+       (use-package unison-ts-mode
+        :straight (unison-ts-mode :type git :host github :repo "fmguerreiro/unison-ts-mode" :files ("*.el")))
      #+end_src
-
+***** COMMENT grammar
+      #+begin_src emacs-lisp
+        (push '((unison "https://github.com/fmguerreiro/tree-sitter-unison-kylegoetz" "build/include-parser-in-src-control"))
+              treesit-language-source-alist)
+      #+end_src
 *** Elixir
 **** Elixir mode
      #+begin_src emacs-lisp
@@ -889,8 +967,8 @@
      #+begin_src emacs-lisp
        (use-package lsp-haskell
          :config
-         (setq lsp-haskell-server-path "haskell-language-server-wrapper")
-         (setq lsp-haskell-server-args ())
+         (setq lsp-haskell-server-path "haskell-language-server-wrapper"
+               lsp-haskell-plugin-semantic-tokens-global-on nil)
          :hook (haskell-mode . lsp))
      #+end_src
 
@@ -921,8 +999,8 @@
    #+begin_src emacs-lisp
      (setq
       ;; adapt indentation of content to match its heading
-      org-adapt-indentation t
-      org-ellipsis "  "
+      org-adapt-indentation nil
+      org-ellipsis " ⌄ "
       org-hide-emphasis-markers t
       ;; non-nil = utf-8
       org-pretty-entities t
@@ -988,6 +1066,34 @@
      (setq org-indent-mode-turns-on-hiding-stars nil)
    #+end_src
 
+** COMMENT hide all stars
+   from [[https://www.reddit.com/r/emacs/comments/9wukv8/comment/e9pkggv][this]] reddit comment
+   #+begin_src emacs-lisp
+     ;; remove everything
+     (defun chunyang-org-mode-remove-stars ()
+       (font-lock-add-keywords
+        nil
+        '(("^\\*+ "
+           (0
+            (prog1 nil
+              (put-text-property (match-beginning 0) (match-end 0)
+                                 'invisible t)))))))
+
+     ;; with whitespace
+     (defun chunyang-org-mode-hide-stars ()
+       (font-lock-add-keywords
+        nil
+        '(("^\\*+ "
+           (0
+            (prog1 nil
+              (put-text-property (match-beginning 0) (match-end 0)
+                                 'face (list :foreground
+                                             (face-attribute
+                                              'default :background)))))))))
+
+     (add-hook 'org-mode-hook #'chunyang-org-mode-remove-stars)
+   #+end_src
+
 ** make invisible parts visible
    #+begin_src emacs-lisp
      (use-package org-appear
@@ -1029,6 +1135,7 @@
        :hook
        (org-mode . olivetti-mode)
        (markdown-mode . olivetti-mode)
+       ;; (prog-mode . olivetti-mode)
        :config (setq-default olivetti-body-width 140))
 
      (setq-default default-justification 'full)
@@ -1302,13 +1409,6 @@
 
       (add-hook 'org-checkbox-statistics-hook 'my/org-checkbox-todo)
     #+end_src
-** bigger font in titles
-   #+begin_src emacs-lisp
-     (setq org-hidden-keywords '(title)
-           org-cycle-level-faces nil
-           org-n-level-faces 4)
-   #+end_src
-
 * Utils
 ** Easy increase/decrease font size
    #+begin_src emacs-lisp
@@ -1374,15 +1474,15 @@
 *** Change backup directory
     By default, emacs saves the ~backup~~ files in the same directory the file is.
     #+begin_src emacs-lisp
-      (setq backup-directory-alist '(("." . "~/.emacs.d/backup/per-save")))
+      (setq backup-directory-alist '(("~/.emacs.d/backup/per-save")))
     #+end_src
 *** More backup files
     #+begin_src emacs-lisp
       (setq delete-old-versions t
             ;; number of new versions of a file to kept
-            kept-new-versions 4
+            kept-new-versions 1
             ;; number of old version to kept
-            kept-old-versions 3
+            kept-old-versions 2
             ;; numeric version control
             version-control t
             ;; copy files, dont rename them
@@ -1392,27 +1492,8 @@
     Auto-save files are temporary files that Emacs creates until a file is saved.
     Emacs auto-saves whenever it crashes, after ~N~ keystrokes and after a timeout.
     #+begin_src emacs-lisp
-      (setq auto-save-timeout 30 ;; seconds
-            ;; keystrokes
+      (setq auto-save-timeout 15 ;; seconds
             auto-save-interval 200)
-    #+end_src
-*** force backup of buffer
-    https://stackoverflow.com/a/20824625
-    #+begin_src emacs-lisp
-      (defun force-backup-of-buffer ()
-        ;; Make a special "per session" backup at the first save of each
-        ;; emacs session.
-        (when (not buffer-backed-up)
-          ;; Override the default parameters for per-session backups.
-          (let ((backup-directory-alist '(("" . "~/.emacs.d/backup/per-session")))
-                (kept-new-versions 3))
-            (backup-buffer)))
-        ;; Make a "per save" backup on each save.  The first save results in
-        ;; both a per-session and a per-save backup, to keep the numbering
-        ;; of per-save backups consistent.
-        (let ((buffer-backed-up nil))
-          (backup-buffer)))
-      (add-hook 'before-save-hook  'force-backup-of-buffer)
     #+end_src
 ** lockfiles
    #+begin_src emacs-lisp
@@ -1429,6 +1510,7 @@
      (use-package crux
        :bind ([remap kill-line] . crux-smart-kill-line)
        ([remap kill-whole-line] . crux-kill-whole-line)
+       ("C-a" . crux-move-beginning-of-line)
        ("C-c d" . crux-duplicate-current-line-or-region)
        ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
        #+end_src
@@ -1436,27 +1518,6 @@
    #+begin_src emacs-lisp
      (use-package exec-path-from-shell
        :init (exec-path-from-shell-initialize))
-   #+end_src
-** Smart go to beginning of line
-   #+begin_src emacs-lisp
-     (defun smarter-beginning-of-line (arg)
-       "Move point back to indentation of beginning of line.
-     Move point to the first non-whitespace character on this line.
-     If point is already there, move to the beginning of the line.
-     Effectively toggle between the first non-whitespace character and the beginning of the line.
-     If ARG is not nil or 1, move forward ARG - 1 lines first. If point reaches the beginning or end of the buffer, stop there."
-
-       (interactive "^p")
-       (setq arg (or arg 1))
-       (when (/= arg 1)
-         (let ((line-move-visual nil))
-           (forward-line (1- arg))))
-       (let ((orig-point (point)))
-         (back-to-indentation)
-         (when (= orig-point (point))
-           (move-beginning-of-line 1))))
-
-     (global-set-key [remap move-beginning-of-line] 'smarter-beginning-of-line)
    #+end_src
 ** Open lines around
    #+begin_src emacs-lisp
@@ -1487,11 +1548,6 @@
      (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
    #+end_src
 
-** Hide native compile logs
-   #+begin_src emacs-lisp
-     (setq native-comp-async-report-warnings-errors nil)
-   #+end_src
-
 ** no bell
    #+begin_src emacs-lisp
      (setq ring-bell-function 'ignore)
@@ -1520,6 +1576,9 @@
 
      ;; for emacs 30 or newer
      (setq text-mode-ispell-word-completion nil)
+
+     ;; prefer cape-dict
+     ;; (text-mode-ispell-word-completion nil)
    #+end_src
 ** dim marked region when using kill ring
    Taken from: https://www.youtube.com/watch?v=oQ9JE9kRwG8
@@ -1532,6 +1591,41 @@
 
      (advice-add #'kill-ring-save :before #'my/pulse-current-region)
    #+end_src
+** undo tree
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :config
+    (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))
+          undo-tree-visualizer-lazy-drawing 10)
+    (global-undo-tree-mode))
+#+end_src
+** rainbow mode
+#+begin_src emacs-lisp
+  (use-package colorful-mode
+    :hook (prog-mode text-mode))
+#+end_src
+** annotate
+#+begin_src  emacs-lisp
+  (use-package annotate
+     :config
+     (setq annotate-annotation-column 25
+           annotate-use-messages nil
+           annotate-use-echo-area nil
+           annotate-highlight-faces '((:underline "#c4addd")
+                                      (:underline "#d1c0ec")
+                                      (:underline "#8d77a8"))
+           annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
+                                                      :slant italic
+                                                      :family "VictorMono Nerd Font")
+                                            (:inherit 'font-lock-comment-face
+                                                      :slant italic
+                                                      :family "VictorMono Nerd Font")
+                                            (:inherit 'font-lock-comment-face
+                                                      :slant italic
+                                                      :family "VictorMono Nerd Font")))
+     :hook (prog-mode . annotate-mode)
+     :bind ("C-c C-n" . annotate-toggle-annotation-text))
+#+end_src
 * Appearance
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
@@ -1553,26 +1647,25 @@
 
      (setq inhibit-compacting-font-caches t)
    #+end_src
-** Themes
+** themes
 *** downloading themes
 **** Doom themes
      #+begin_src emacs-lisp
        (use-package doom-themes
          :defer t
-         :config
-         (progn
-           (setq doom-themes-enable-bold t
-                 doom-themes-treemacs-theme "doom-colors"
-                 doom-themes-enable-italic t)
-           (doom-themes-treemacs-config)
-           (doom-themes-org-config)))
+         :config  
+         (setq doom-themes-enable-bold t
+               doom-themes-treemacs-theme "doom-colors"
+               doom-themes-enable-italic t)
+         (doom-themes-treemacs-config)
+         (doom-themes-org-config))
      #+end_src
 **** catppuccin
      #+begin_src emacs-lisp
        (use-package catppuccin-theme
          :defer t
          :init
-         (setq catppuccin-flavor 'macchiato
+         (setq catppuccin-flavor 'mocha
                catppuccin-italic-comments t
                catppuccin-italic-variables t
                catppuccin-italic-blockquotes t))
@@ -1585,7 +1678,16 @@
 **** kaolin themes
      #+begin_src emacs-lisp
        (use-package kaolin-themes
-         :config (kaolin-treemacs-theme)
+         :config
+         (kaolin-treemacs-theme)
+         (setq kaolin-themes-bold t
+               kaolin-themes-italic t
+               kaolin-themes-italic-comments t
+               kaolin-themes-distinct-parentheses t
+               kaolin-themes-distinct-fringe nil
+               kaolin-themes-comments-style 'alt
+               kaolin-themes-hl-line-colored t
+               kaolin-themes-underline t)
          :defer t)
      #+end_src
 **** spacemacs themes
@@ -1598,9 +1700,15 @@
                spacemacs-theme-org-bold t
                spacemacs-theme-comment-italic t))
      #+end_src
+**** timu
+#+begin_src emacs-lisp
+  (use-package timu-macos-theme
+    :defer t
+    :init (customize-set-variable 'timu-macos-flavour "light"))
+#+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load-theme 'doom-one
+      (load-theme 'spacemacs-dark
                   :no-confirm)
     #+end_src
 ** UI
@@ -1667,49 +1775,19 @@
         (if (string-suffix-p "256color" (getenv "TERM"))
           (enable-256color-term)))
     #+end_src
-** Tabs
-*** Install
-    #+begin_src emacs-lisp
-      (use-package centaur-tabs
-        :config
-        ;; disable in modes
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Org")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*MULTI")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Backtrace")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*scratch*")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Process List")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*compilation")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*ansi-term*")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Call Hierarchy*")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*github-notifications*")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Warnings*")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Help*")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*straight-")
-        (add-to-list 'centaur-tabs-excluded-prefixes "*Messages*")
-        ;; dap-mode ui
-        (add-to-list 'centaur-tabs-excluded-prefixes "Locals")
-        (add-to-list 'centaur-tabs-excluded-prefixes "Expressions")
-        (add-to-list 'centaur-tabs-excluded-prefixes "Debug Sessions")
-
-        (centaur-tabs-mode t)
-        (centaur-tabs-enable-buffer-reordering)
-        (centaur-tabs-group-by-projectile-project)
-        (centaur-tabs-change-fonts (face-attribute 'default :font) 110)
-        (centaur-tabs-headline-match)
-        (setq centaur-tabs-adjust-buffer-order t
-              centaur-tabs-enable-key-bindings t
-              centaur-tabs-style "bar"
-              centaur-tabs-height 27
-              centaur-tabs-set-icons t
-              centaur-tabs-plain-icons t
-              centaur-tabs-gray-out-icons 'buffer
-              centaur-tabs-icon-type "nerd-icons"
-              centaur-tabs-set-bar 'over
-              centaur-tabs-set-modified-marker t
-              centaur-tabs-cycle-scope 'tabs
-              centaur-tabs-left-edge-margin nil
-              centaur-tabs-label-fixed-length 15))
-    #+end_src
+** tabs
+*** tab bar mode
+#+begin_src emacs-lisp
+  (setq tab-bar-new-tab-choice "*scratch*"
+        tab-bar-new-tab-to 'rightmost
+        tab-bar-close-button-show nil
+        tab-bar-show 1
+        tab-bar-new-button-show nil
+        tab-bar-tab-hints t
+        tab-bar-auto-width t
+        tab-bar-auto-width-max '((130) 10))
+  (tab-bar-mode 1)
+#+end_src
 ** treemacs
    #+begin_src emacs-lisp
      (use-package treemacs
@@ -1740,13 +1818,12 @@
                     ("C-c l g s" . lsp-treemacs-symbols))
         :init (lsp-treemacs-sync-mode 1))
     #+end_src
-** Font
+** font
 *** Set font
     #+begin_src emacs-lisp
       (set-face-attribute 'default nil
-                          ;; "Space Grotesk" ;; "Iosevka Curly" ;; "Monoid Nerd Font"
-                          :font "Maple Mono" ;; "Martian Mono Std Lt" ;; "Monoid Nerd Font" ;; "Iosevka SS14" ;; "Iosevka Comfy Motion Duo" ;; "Baumans" ;; "CaskaydiaCove Nerd Font Propo"
-                          :height 110)
+                          :font "Maple Mono"
+                          :height 160)
       (global-auto-composition-mode t)
     #+end_src
 *** COMMENT Pretty symbols
@@ -1783,7 +1860,7 @@
            "&="))
         (global-ligature-mode t))
     #+end_src
-** Modeline
+** modeline
    #+begin_src emacs-lisp
      (use-package doom-modeline
        :config
@@ -1791,11 +1868,11 @@
        (use-package ghub)
        (setq
         auth-sources '("~/.authinfo.gpg")
-        doom-modeline-height 30
+        doom-modeline-height 28
         doom-modeline-bar-width 8
         doom-modeline-time-clock-size 0.4
         doom-modeline-hud t
-        doom-modeline-github t
+        doom-modeline-github nil
         doom-modeline-github-interval (* 30 60)
         doom-modeline-enable-word-count nil
         doom-modeline-buffer-encoding nil
@@ -1806,6 +1883,7 @@
         doom-modeline-position-column-line-format '("%l:%c")
         doom-modeline-buffer-file-name-style 'relative-to-project
         doom-modeline-gnus nil
+        doom-modeline-icon nil ;; remove icons
         doom-modeline-time-icon nil
         doom-modeline-buffer-modification-icon nil)
        :hook (after-init . doom-modeline-mode))
@@ -1813,27 +1891,28 @@
 *** Clock
     #+BEGIN_SRC emacs-lisp
       (setq-default display-time-default-load-average nil)
-      (setq display-time-format " %I:%M\t\t")
+      (setq display-time-format " %I:%M\t")
       (display-time-mode 1)
     #+END_SRC
 ** custom set faces
    #+begin_src emacs-lisp
      (custom-set-faces
-      '(mode-line ((t (:inherit 'default :family "Schibsted Grotesk" :height 120 :box nil))))
-      '(mode-line-active ((t (:inherit mode-line :family "Schibsted Grotesk" :height 120 :box nil))))
-      '(mode-line-inactive ((t (:inherit mode-line-active :family "Schibsted Grotesk" :height 120 :box nil))))
+      '(mode-line ((t (:inherit 'default :family "Mononoki Nerd Font" :height 130 :box nil))))
+      '(mode-line-active ((t (:inherit mode-line :box nil))))
+      '(mode-line-inactive ((t (:inherit mode-line-active :box nil))))
       '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
 
+      '(blamer-face ((t :family "VictorMono Nerd Font" :height 120 :italic t)))
+
       '(lsp-inlay-hint-parameter-face ((t :inherit lsp-inlay-hint-face
-                                          :height 90)))
+                                          :height 130)))
       '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
-                                     :height 90)))
+                                     :height 130)))
 
       '(centaur-tabs-selected-modified ((t (:slant italic))))
       '(centaur-tabs-unselected-modified ((t (:slant italic))))
 
-
-      '(font-lock-comment-face ((t :font "Maple Mono Italic" :slant italic))))
+      '(font-lock-comment-face ((t :font "Maple Mono" :slant italic :height 130))))
 
      (dolist (face '(window-divider
                      window-divider-first-pixel
@@ -1843,28 +1922,30 @@
        (set-face-background face (face-attribute 'default :background)))
      (set-face-background 'fringe (face-attribute 'default :background))
 
-     (dolist (face '((org-level-1 . 2.0)
-                     (org-level-2 . 1.5)
-                     (org-level-3 . 1.2)
+     (dolist (face '((org-level-1 . 1.4)
+                     (org-level-2 . 1.2)
+                     (org-level-3 . 1.1)
                      (org-level-4 . 1.0)
                      (org-level-5 . 1.0)
                      (org-level-6 . 1.0)
                      (org-level-7 . 1.0)
                      (org-level-8 . 1.0)))
-       (set-face-attribute (car face) nil :font "Short Stack" :weight 'medium :height (cdr face)))
+       (set-face-attribute (car face) nil :font "Margem Condensed Test" :weight 'medium :height (cdr face)))
+
    #+end_src
 ** custom theme set faces
    #+begin_src emacs-lisp
      (require 'org-indent)
      (custom-theme-set-faces
       'user
-      '(fixed-pitch ((t (:family "Maple Mono" :height 140))))
-      '(variable-pitch ((t (:family "Short Stack" :height 150))))
+      '(fixed-pitch ((t (:family "VictorMono Nerd Font" :height 140))))
+      '(variable-pitch ((t (:family "Margem Test" :height 160)))) ;; short stack
       '(org-block ((t (:inherit fixed-pitch))))
       '(org-code ((t (:inherit (shadow fixed-pitch)))))
       '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
       '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
       '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+      '(font-lock-doc-face ((t (:inherit font-lock-string-face :height 140))))
       '(org-property-value ((t (:inherit fixed-pitch))) t)
       '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
       ;; '(org-table ((t (:inherit fixed-pitch :foreground "#83a598")))) ;; beatiful green... but why?

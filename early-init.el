@@ -15,5 +15,6 @@
 
 (setq native-comp-deferred-compilation t)
 (setq native-comp-jit-compilation t)
+(setq native-comp-prune-cache t)
 
 (provide 'early-init)
