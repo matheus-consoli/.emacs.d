@@ -27,7 +27,7 @@
        ;; Enable recursive minibuffers
        (setq enable-recursive-minibuffers t))
    #+end_src
-** COMMENT Corfu
+** Corfu
    #+begin_src emacs-lisp
      (use-package corfu
        :init
@@ -72,7 +72,7 @@
           (corfu-mode 1)))
       (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
     #+end_src
-** Company
+** COMMENT Company
 #+begin_src emacs-lisp
   (use-package company
     :commands company-abort
@@ -248,14 +248,6 @@
       (advice-add #'embark-completing-read-prompter
                   :around #'embark-hide-which-key-indicator)
     #+end_src
-** Projectile
-   #+begin_src emacs-lisp
-     (use-package projectile
-       :ensure t
-       :init (projectile-mode +1)
-       :config (push "~/.cargo/registry/src" projectile-globally-ignored-directories)
-       :bind ("C-c p" . projectile-command-map))
-   #+end_src
 ** Yasnippet
    #+begin_src emacs-lisp
      (use-package yasnippet
@@ -269,7 +261,7 @@
       (use-package lsp-mode
         :config
         (setq
-         ;; lsp-completion-provider :none ;; using Corfu!
+         lsp-completion-provider :none ;; using Corfu!
          lsp-keymap-prefix "C-c l"
          lsp-eldoc-render-all nil
          eldoc-echo-area-use-multiline-p nil
@@ -323,26 +315,26 @@
               ("M-<left>" . lsp-ui-peek-jump-forward)
               ("C-c l i" . lsp-ui-imenu)
               ("C-c l d" . lsp-ui-doc-glance)
-              ("C-c l s" . consult-lsp-symbols)))
+              ("C-c l s" . consult-lsp-symbols))
+        :config
+        (setq lsp-ui-doc-enable t
+              lsp-ui-doc-position 'bottom
+              lsp-ui-doc-header nil
+              lsp-ui-doc-delay 0.5
+              lsp-ui-doc-show-with-cursor t
+              lsp-ui-doc-show-with-mouse nil
 
-      (setq lsp-ui-doc-enable t
-            lsp-ui-doc-position 'bottom
-            lsp-ui-doc-header nil
-            lsp-ui-doc-delay 0.5
-            lsp-ui-doc-show-with-cursor t
-            lsp-ui-doc-show-with-mouse nil
+              lsp-ui-doc-use-childframe t
+              lsp-ui-doc-use-webkit nil
 
-            lsp-ui-doc-use-childframe t
-            lsp-ui-doc-use-webkit nil
+              lsp-ui-sideline-show-code-actions nil
+              lsp-ui-sideline-delay 2
 
-            lsp-ui-sideline-show-code-actions nil
-            lsp-ui-sideline-delay 2
+              lsp-ui-peek-enable t
+              lsp-ui-peek-show-directory t
 
-            lsp-ui-peek-enable t
-            lsp-ui-peek-show-directory t
-
-            lsp-completion-show-kind t
-            lsp-completion-show-detail t)
+              lsp-completion-show-kind t
+              lsp-completion-show-detail t))
     #+end_src
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
@@ -879,13 +871,16 @@
 **** Rust mode
      #+begin_src emacs-lisp
        (use-package rust-ts-mode
-            :hook (rust-ts-mode . lsp)
-            (rust-ts-mode . lsp-inlay-hints-mode))
+         :hook (rust-ts-mode . lsp)
+         (rust-ts-mode . lsp-inlay-hints-mode)
+         :config
+         (add-hook 'before-save-hook (lambda () (when (eq 'rust-ts-mode major-mode)
+                                                  (lsp-format-buffer)))))
      #+end_src
 **** Better cargo integration
      #+begin_src emacs-lisp
        (use-package cargo-transient
-         :bind (:map rust-ts-mode
+         :bind (:map rust-ts-mode-map
                      ("C-c C-c t" . cargo-transient)
                      ("C-c C-c c" . cargo-transient-check)
                      ("C-c C-c l" . cargo-transient-clippy)
@@ -923,6 +918,7 @@
              lsp-rust-analyzer-lens-references-trait-enable t
              lsp-rust-analyzer-lens-references-enum-variant-enable t
              lsp-rust-analyzer-server-display-inlay-hints t
+             lsp-rust-analyzer-completion-auto-import-enable t
 
              lsp-semantic-tokens-enable nil)
      #+end_src
@@ -1136,7 +1132,7 @@
        (org-mode . olivetti-mode)
        (markdown-mode . olivetti-mode)
        (prog-mode . olivetti-mode)
-       :config (setq-default olivetti-body-width 140))
+       :config (setq-default olivetti-body-width 170))
 
      (setq-default default-justification 'full)
    #+end_src
@@ -1636,6 +1632,11 @@
 ** icons
    #+begin_src emacs-lisp
      (use-package all-the-icons)
+     (use-package nerd-icons-completion
+       :after marginalia
+       :config
+       (nerd-icons-completion-mode)
+       (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
      (use-package all-the-icons-nerd-fonts
        :straight
@@ -1678,7 +1679,7 @@
 **** kaolin themes
      #+begin_src emacs-lisp
        (use-package kaolin-themes
-         :config
+         :init
          (kaolin-treemacs-theme)
          (setq kaolin-themes-bold t
                kaolin-themes-italic t
@@ -1708,7 +1709,7 @@
 #+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load-theme 'spacemacs-dark
+      (load-theme 'kaolin-bubblegum
                   :no-confirm)
     #+end_src
 ** UI
@@ -1737,9 +1738,40 @@
     #+begin_src emacs-lisp
       (setq-default cursor-type 'bar)
     #+end_src
-*** Highlight line
+*** auto show and hide current line
     #+begin_src emacs-lisp
-      (global-hl-line-mode t)
+      (use-package hl-line
+        :ensure nil
+        :config
+        (defvar my-hide-hl-line-timer nil
+          "Timer to show the hl-line after a certain idle time.")
+
+        (defun my-show-hl-line ()
+          "Show the hl-line by disabling `hide-mode-line-mode`."
+          (unless hl-line-mode
+            (hl-line-mode 1)))
+
+        (defun my-hide-hl-line ()
+          "Hide the hl-line by enabling `hide-mode-line-mode`."
+          (when hl-line-mode
+            (hl-line-mode -1)))
+
+        (defun my-start-idle-timer ()
+          "Start the idle timer to show the hl-line after a certain time."
+          (when my-hide-hl-line-timer
+            (cancel-timer my-hide-hl-line-timer))  ;; Cancel any existing timer
+          (setq my-hide-hl-line-timer (run-with-idle-timer 5 nil #'my-show-hl-line)))
+
+        (defun my-hl-line-reset-on-command ()
+          "Hide the hl-line and reset the idle timer when a command is executed."
+          (my-hide-hl-line)
+          (my-start-idle-timer))
+
+        (defun my-toggle-hl-line ()
+          "Set up hooks to hide/show the hl-line based on idle time and input."
+          (add-hook 'post-command-hook #'my-hl-line-reset-on-command)
+          (my-start-idle-timer))
+        (my-toggle-hl-line))
     #+end_src
 *** highlight todo
     #+begin_src emacs-lisp
@@ -1778,15 +1810,118 @@
 ** tabs
 *** tab bar mode
 #+begin_src emacs-lisp
-  (setq tab-bar-new-tab-choice "*scratch*"
-        tab-bar-new-tab-to 'rightmost
-        tab-bar-close-button-show nil
-        tab-bar-show 1
-        tab-bar-new-button-show nil
-        tab-bar-tab-hints t
-        tab-bar-auto-width t
-        tab-bar-auto-width-max '((130) 10))
-  (tab-bar-mode 1)
+  (use-package tab-bar
+    :ensure nil
+    :bind
+    (:map tab-bar-mode-map
+          ("<next>" . tab-bar-switch-to-next-tab)
+          ("<prior>" . tab-bar-switch-to-prev-tab))
+    :config
+    (setq tab-bar-new-tab-choice "*scratch*"
+          tab-bar-new-tab-to 'rightmost
+          tab-bar-close-button-show nil
+          tab-bar-show 1
+          tab-bar-new-button-show nil
+          tab-bar-tab-hints t
+          tab-bar-auto-width t
+          tab-bar-auto-width-max '((130) 10))
+    (tab-bar-mode 1))
+#+end_src
+*** project tab groups
+#+begin_src emacs-lisp
+  (use-package project-tab-groups
+    :config
+    (project-tab-groups-mode 1))
+#+end_src
+*** tab spaces
+#+begin_src emacs-lisp
+  (use-package tabspaces
+    :straight (:type git :host github :repo "mclear-tools/tabspaces")
+    :hook (after-init . tabspaces-mode)
+    :commands (tabspaces-switch-or-create-workspace
+               tabspaces-open-or-create-project-and-workspace)
+    :custom
+    (tabspaces-use-filtered-buffers-as-default t)
+    (tabspaces-default-tab "Default")
+    (tabspaces-remove-to-default t)
+    (tabspaces-initialize-project-with-todo t)
+    (tabspaces-todo-file-name "project-todo.org")
+    ;; sessions
+    (tabspaces-session t)
+    (tabspaces-session-auto-restore nil)
+    :config
+    ;; Filter Buffers for Consult-Buffer
+    (with-eval-after-load 'consult
+      ;; hide full buffer list (still available with "b" prefix)
+      (consult-customize consult--source-buffer :hidden t :default nil)
+      ;; set consult-workspace buffer list
+      (defvar consult--source-workspace
+        (list :name     "Workspace Buffers"
+              :narrow   ?w
+              :history  'buffer-name-history
+              :category 'buffer
+              :state    #'consult--buffer-state
+              :default  t
+              :items    (lambda () (consult--buffer-query
+                                    :predicate #'tabspaces--local-buffer-p
+                                    :sort 'visibility
+                                    :as #'buffer-name)))
+
+        "Set workspace buffer list for consult-buffer.")
+      (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+#+end_src
+*** tabs
+**** hide special tabs
+#+begin_src emacs-lisp
+  (defun my-centaur-tabs-hide-tab (x)
+    "Do no to show buffer X in tabs."
+    (let ((name (format "%s" x)))
+      (message "NAME: %s" name)
+      (or
+       ;; Current window is not dedicated window.
+       (window-dedicated-p (selected-window))
+
+       ;; Buffer name not match below blocklist.
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Helm" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*company" name)
+       (string-prefix-p "*Flycheck" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p " *Mini" name)
+       (string-prefix-p "*help" name)
+       (string-prefix-p "*straight" name)
+       (string-prefix-p " *temp" name)
+       (string-prefix-p "*Help" name)
+       (string-prefix-p "*mybuf" name)
+
+       ;; Is not magit buffer.
+       (and (string-prefix-p "magit" name)
+            (not (file-name-extension name))))))
+#+end_src
+**** centaur tabs
+#+begin_src emacs-lisp
+  (use-package centaur-tabs
+    :demand
+    :config
+    (centaur-tabs-change-fonts "Margem Rounded Test" 120)
+    (centaur-tabs-mode t)
+    :bind
+    (:map centaur-tabs-mode-map
+          (("C-c t j" . centaur-tabs-ace-jump)
+           ("C-c t RET" . centaur-tabs-local-mode)
+           ("C-<prior>" . centaur-tabs-backward)
+           ("C-<next>" . centaur-tabs-forward)))
+    :custom
+    (centaur-tabs-height 16)
+    (centaur-tabs-style "bar")
+    (centaur-tabs-hide-tab-function my-centaur-tabs-hide-tab)
+    (centaur-tabs-set-bar 'over)
+    (centaur-tabs-gray-out-icons 'buffer)
+    (centaur-tabs-modified-marker t)
+    (centaur-tabs-enable-key-bindings t))
 #+end_src
 ** treemacs
    #+begin_src emacs-lisp
@@ -1806,16 +1941,38 @@
       (use-package treemacs-magit
         :after (treemacs magit))
 
-      (use-package treemacs-projectile
-        :after (treemacs projectile))
-
       (use-package treemacs-nerd-icons
-        :after (treemacs))
+        :after  (treemacs))
 
       (use-package lsp-treemacs
         :after (lsp treemacs)
-        :bind (:map lsp-mode-map
-                    ("C-c l g s" . lsp-treemacs-symbols))
+        :custom
+        (lsp-treemacs-error-list-expand-depth 2)
+        (lsp-treemacs-call-hierarchy-expand-depth 2)
+        (lsp-treemacs-error-list-current-project-only t)
+        (lsp-treemacs-symbols-position-params '((side . right)
+                                                (slot . 1)
+                                                (window-width . 40)))
+        (lsp-treemacs-errors-position-params '((side . right)
+                                               (slot . 2)
+                                               (window-width . 40)))
+        :config
+        (defun toggle-lsp-treemacs-modes ()
+          "Toggle both `lsp-treemacs-symbols` and `lsp-treemacs-error-list` modes."
+          (interactive)
+          ;; Toggle lsp-treemacs-symbols
+          (if (get-buffer lsp-treemacs-symbols-buffer-name)
+              (kill-buffer lsp-treemacs-symbols-buffer-name) ; this closes it if open
+            (lsp-treemacs-symbols)) ; this opens it if closed
+          ;; Toggle lsp-treemacs-error-list
+          (if (get-buffer lsp-treemacs-errors-buffer-name)
+              (kill-buffer lsp-treemacs-errors-buffer-name) ; this closes it if open
+            (lsp-treemacs-errors-list))) ; this opens it if closed
+
+        (define-key lsp-mode-map (kbd "C-c l g s") 'toggle-lsp-treemacs-modes)
+        
+        ;; :bind (:map lsp-mode-map
+        ;;             ("C-c l g s" . toggle-lsp-treemacs-modes))
         :init (lsp-treemacs-sync-mode 1))
     #+end_src
 ** font
@@ -1868,7 +2025,7 @@
        (use-package ghub)
        (setq
         auth-sources '("~/.authinfo.gpg")
-        doom-modeline-height 28
+        doom-modeline-height 8
         doom-modeline-bar-width 8
         doom-modeline-time-clock-size 0.4
         doom-modeline-hud t
@@ -1896,52 +2053,61 @@
     #+END_SRC
 *** toggle modeline when idle for some time
 #+begin_src emacs-lisp
-  (use-package hide-mode-line
-    :config
-    (defvar my-hide-modeline-timer nil
-      "Timer to show the modeline after a certain idle time.")
+  ;; (use-package hide-mode-line
+  ;;   :config
+  ;;   (defvar my-hide-modeline-timer nil
+  ;;     "Timer to show the modeline after a certain idle time.")
 
-    (defun my-show-modeline ()
-      "Show the modeline by disabling `hide-mode-line-mode`."
-      (when hide-mode-line-mode
-        (hide-mode-line-mode -1))
-      (force-mode-line-update t))
+  ;;   (defun my-show-modeline ()
+  ;;     "Show the modeline by disabling `hide-mode-line-mode`."
+  ;;     (when hide-mode-line-mode
+  ;;       (hide-mode-line-mode -1))
+  ;;     (force-mode-line-update t))
 
-    (defun my-hide-modeline ()
-      "Hide the modeline by enabling `hide-mode-line-mode`."
-      (unless hide-mode-line-mode
-        (hide-mode-line-mode 1))
-      (force-mode-line-update t))
+  ;;   (defun my-hide-modeline ()
+  ;;     "Hide the modeline by enabling `hide-mode-line-mode`."
+  ;;     (unless hide-mode-line-mode
+  ;;       (hide-mode-line-mode 1))
+  ;;     (force-mode-line-update t))
 
-    (defun my-start-idle-timer ()
-      "Start the idle timer to show the modeline after a certain time."
-      (when my-hide-modeline-timer
-        (cancel-timer my-hide-modeline-timer))  ;; Cancel any existing timer
-      (setq my-hide-modeline-timer (run-with-idle-timer 5 nil #'my-show-modeline)))
+  ;;   (defun my-start-idle-timer ()
+  ;;     "Start the idle timer to show the modeline after a certain time."
+  ;;     (when my-hide-modeline-timer
+  ;;       (cancel-timer my-hide-modeline-timer))  ;; Cancel any existing timer
+  ;;     (setq my-hide-modeline-timer (run-with-idle-timer 3 nil #'my-show-modeline)))
 
-    (defun my-reset-on-command ()
-      "Hide the modeline and reset the idle timer when a command is executed."
-      (my-hide-modeline)
-      (my-start-idle-timer))
+  ;;   (defun my-reset-on-command ()
+  ;;     "Hide the modeline and reset the idle timer when a command is executed."
+  ;;     (my-hide-modeline)
+  ;;     (my-start-idle-timer))
 
-    (defun my-toggle-modeline ()
-      "Set up hooks to hide/show the modeline based on idle time and input."
-      (add-hook 'post-command-hook #'my-reset-on-command)
-      (my-start-idle-timer))
+  ;;   (defun my-toggle-modeline ()
+  ;;     "Set up hooks to hide/show the modeline based on idle time and input."
+  ;;     (add-hook 'post-command-hook #'my-reset-on-command)
+  ;;     (my-start-idle-timer))
 
-    (my-toggle-modeline))
+  ;;   (my-toggle-modeline))
 #+end_src
-** mini frame
+** vertico posframe
 #+begin_src emacs-lisp
-  (use-package mini-frame
+  (use-package vertico-posframe
     :config
-    (custom-set-variables
-     '(mini-frame-show-parameters
-       '((top . 0.5)
-         (width . 0.7)
-         (left . 0.5)
-         (height . 15))))
-    (mini-frame-mode t))
+    ;; https://github.com/tumashu/vertico-posframe/issues/27#issuecomment-1423156044
+    (defun vertico-posframe-hide-minibuffer (BUFFER WINDOW-POINT)
+      (remove-overlays (point-min) (point-min))
+      (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
+        (overlay-put ov 'window (selected-window))
+        (overlay-put ov 'face
+                     (let ((bg-color (face-background 'default nil)))
+                       `( :background ,bg-color :foreground ,bg-color
+                          :box nil :underline nil
+                          :overline nil :strike-through nil)))
+        (setq-local cursor-type nil)))
+
+    (advice-add 'vertico-posframe--show :after 'vertico-posframe-hide-minibuffer)
+
+    (setq vertico-posframe-width 114)
+    (vertico-posframe-mode))
 #+end_src
 ** custom set faces
    #+begin_src emacs-lisp
