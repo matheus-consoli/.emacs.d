@@ -17,4 +17,8 @@
 (setq native-comp-jit-compilation t)
 (setq native-comp-prune-cache t)
 
+(when 'native-comp-compiler-options
+  (setq native-comp-speed 2
+        native-comp-compiler-options '("-O3" "-mtune=native")))
+
 (provide 'early-init)
