@@ -138,8 +138,8 @@
    #+begin_src emacs-lisp
      (use-package marginalia
        :after vertico
-       :config
-       (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+       ;; :config
+       ;;(setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
        :init (marginalia-mode))
    #+end_src
 
@@ -919,6 +919,7 @@
              lsp-rust-analyzer-lens-references-enum-variant-enable t
              lsp-rust-analyzer-server-display-inlay-hints t
              lsp-rust-analyzer-completion-auto-import-enable t
+             lsp-rust-analyzer-expression-adjustment-hints-mode "prefer_postfix"
 
              lsp-semantic-tokens-enable nil)
      #+end_src
@@ -1626,8 +1627,8 @@
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
-      '((right-divider-width . 10)
-        (internal-border-width . 10)))
+      '((right-divider-width . 0)
+        (internal-border-width . 15)))
    #+end_src
 ** icons
    #+begin_src emacs-lisp
@@ -1702,14 +1703,28 @@
                spacemacs-theme-comment-italic t))
      #+end_src
 **** timu
+***** timu macos
 #+begin_src emacs-lisp
   (use-package timu-macos-theme
     :defer t
-    :init (customize-set-variable 'timu-macos-flavour "light"))
+    :init (customize-set-variable 'timu-macos-flavour "dark"))
+#+end_src
+**** flexoki
+#+begin_src emacs-lisp
+  (use-package flexoki-themes)
+#+end_src
+*** COMMENT auto dark
+#+begin_src emacs-lisp
+  (use-package auto-dark
+    :custom
+    (custom-safe-themes t)
+    (auto-dark-themes '((kaolin-dark) (kaolin-light)))
+    (auto-dark-polling-interval-seconds 60)
+    :init (auto-dark-mode))
 #+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load-theme 'kaolin-bubblegum
+      (load-theme 'kaolin-dark
                   :no-confirm)
     #+end_src
 ** UI
@@ -1813,7 +1828,7 @@
   (use-package tab-bar
     :ensure nil
     :bind
-    (:map tab-bar-mode-map
+    (:map tab-bar-map
           ("<next>" . tab-bar-switch-to-next-tab)
           ("<prior>" . tab-bar-switch-to-prev-tab))
     :config
@@ -1882,20 +1897,20 @@
        (window-dedicated-p (selected-window))
 
        ;; Buffer name not match below blocklist.
-       (string-prefix-p "*epc" name)
-       (string-prefix-p "*helm" name)
-       (string-prefix-p "*Helm" name)
-       (string-prefix-p "*Compile-Log*" name)
-       (string-prefix-p "*lsp" name)
-       (string-prefix-p "*company" name)
-       (string-prefix-p "*Flycheck" name)
-       (string-prefix-p "*tramp" name)
-       (string-prefix-p " *Mini" name)
-       (string-prefix-p "*help" name)
-       (string-prefix-p "*straight" name)
-       (string-prefix-p " *temp" name)
-       (string-prefix-p "*Help" name)
-       (string-prefix-p "*mybuf" name)
+       (string-suffix-p "*epc" name)
+       (string-suffix-p "*helm" name)
+       (string-suffix-p "*Helm" name)
+       (string-suffix-p "*Compile-Log*" name)
+       (string-suffix-p "*lsp" name)
+       (string-suffix-p "*company" name)
+       (string-suffix-p "*Flycheck" name)
+       (string-suffix-p "*tramp" name)
+       (string-suffix-p " *Mini" name)
+       (string-suffix-p "*help" name)
+       (string-suffix-p "*straight" name)
+       (string-suffix-p " *temp" name)
+       (string-suffix-p "*Help" name)
+       (string-suffix-p "*mybuf" name)
 
        ;; Is not magit buffer.
        (and (string-prefix-p "magit" name)
@@ -1979,8 +1994,8 @@
 *** Set font
     #+begin_src emacs-lisp
       (set-face-attribute 'default nil
-                          :font "Maple Mono"
-                          :height 160)
+                          :font "Dank Mono"
+                          :height 120)
       (global-auto-composition-mode t)
     #+end_src
 *** COMMENT Pretty symbols
@@ -2025,7 +2040,7 @@
        (use-package ghub)
        (setq
         auth-sources '("~/.authinfo.gpg")
-        doom-modeline-height 8
+        doom-modeline-height 30
         doom-modeline-bar-width 8
         doom-modeline-time-clock-size 0.4
         doom-modeline-hud t
@@ -2112,22 +2127,22 @@
 ** custom set faces
    #+begin_src emacs-lisp
      (custom-set-faces
-      '(mode-line ((t (:inherit 'default :family "Mononoki Nerd Font" :height 130 :box nil))))
+      '(mode-line ((t (:inherit 'default :family "Conta" :height 120 :box nil))))
       '(mode-line-active ((t (:inherit mode-line :box nil))))
       '(mode-line-inactive ((t (:inherit mode-line-active :box nil))))
       '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
 
-      '(blamer-face ((t :family "VictorMono Nerd Font" :height 120 :italic t)))
+      '(blamer-face ((t :family "Dank Mono" :height 100 :italic t)))
 
       '(lsp-inlay-hint-parameter-face ((t :inherit lsp-inlay-hint-face
-                                          :height 130)))
+                                          :height 110)))
       '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
-                                     :height 130)))
+                                     :height 110)))
 
       '(centaur-tabs-selected-modified ((t (:slant italic))))
       '(centaur-tabs-unselected-modified ((t (:slant italic))))
 
-      '(font-lock-comment-face ((t :font "Maple Mono" :slant italic :height 130))))
+      '(font-lock-comment-face ((t :font "Dank Mono" :slant italic :height 110))))
 
      (dolist (face '(window-divider
                      window-divider-first-pixel
@@ -2153,14 +2168,14 @@
      (require 'org-indent)
      (custom-theme-set-faces
       'user
-      '(fixed-pitch ((t (:family "VictorMono Nerd Font" :height 140))))
-      '(variable-pitch ((t (:family "Margem Test" :height 160)))) ;; short stack
+      '(fixed-pitch ((t (:family "VictorMono Nerd Font" :height 120))))
+      '(variable-pitch ((t (:family "Margem Test" :height 130)))) ;; short stack
       '(org-block ((t (:inherit fixed-pitch))))
       '(org-code ((t (:inherit (shadow fixed-pitch)))))
       '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
       '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
       '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-      '(font-lock-doc-face ((t (:inherit font-lock-string-face :height 140))))
+      '(font-lock-doc-face ((t (:inherit font-lock-string-face :height 120))))
       '(org-property-value ((t (:inherit fixed-pitch))) t)
       '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
       ;; '(org-table ((t (:inherit fixed-pitch :foreground "#83a598")))) ;; beatiful green... but why?
