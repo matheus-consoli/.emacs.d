@@ -72,41 +72,6 @@
           (corfu-mode 1)))
       (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
     #+end_src
-** COMMENT Company
-#+begin_src emacs-lisp
-  (use-package company
-    :commands company-abort
-    :init (global-company-mode 1)
-    :custom
-    (company-tooltip-align-annotations t)
-    (company-tooltip-limit 15)
-    (company-idle-delay 0.0)
-    (company-echo-delay 0)
-    (company-tooltip-limit 5)
-    (company-minimum-prefix-length 1)
-    (company-require-match nil)
-    (company-show-quick-access 'left)
-    (company-tooltip-maximum-width 60)
-    (company-dabbrev-ignore-case nil)
-    (company-dabbrev-downcase nil)
-    :config
-    (setq company-tooltip-align-annotations t
-          company-tooltip-limit 15
-          company-idle-delay 0.0
-          company-echo-delay 0
-          company-tooltip-limit 5
-          company-minimum-prefix-length 1
-          company-require-match nil
-          company-show-quick-access 'left
-          company-tooltip-maximum-width 60
-          company-dabbrev-ignore-case nil
-          company-dabbrev-downcase nil))
-#+end_src
-*** company box
-#+begin_src emacs-lisp
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
-#+end_src
 ** Orderless
    #+begin_src emacs-lisp
      (use-package orderless
@@ -152,7 +117,54 @@
              which-key-idle-secondary-delay 0.05
              which-key-show-remaining-keys t)
        :init (which-key-mode)
+       ;; config for which-key output for repeat-mode maps
+       ;; taken from https://gist.github.com/karthink/9f054dc8fba07fd117738bec31652a90
+       ;; (slightly modified)
+       :preface
+       (setq --my-which-key-last-timer nil)
+       (defun --my-which-key-reset-last-timer ()
+         ;; `--my-which-key-last-timer' holds the timer returned by `run-with-idle-timer'
+         ;; it is set on every key pressed while on repeat-mode, and reset to nil on both entry and exit
+         ;; of repeat-mode through `repeat-mode-hook'
+         (setq --my-which-key-last-timer nil))
+
+       :hook ((repeat-mode . --my-which-key-reset-last-timer))
+       :config
+       (defun --my-which-key-repeat ()
+         (unless (null --my-which-key-last-timer)
+           (cancel-timer --my-which-key-last-timer))
+         (when-let* ((cmd (or this-command real-this-command))
+                     (keymap1 (repeat--command-property 'repeat-mode-map)))
+           (run-with-idle-timer
+            which-key-idle-delay nil
+            (lambda ()
+              (which-key--create-buffer-and-show
+               nil (symbol-value keymap1))))))
+
+       (defun --my-which-key-repeat-mode-dispatch ()
+         (interactive)
+         (setq this-command last-command)
+         (when-let (keymap2 (repeat--command-property 'repeat-map))
+           (which-key--create-buffer-and-show
+            nil (symbol-value keymap2))))
+
+       (defun --my-which-key-repeat-mode-binding ()
+         (when repeat-mode
+           (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
+                       (keymap3 (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
+             (set-transient-map
+              (make-composed-keymap
+               (let ((map (make-sparse-keymap)))
+                 (define-key map (kbd "C-h") #'--my-which-key-repeat-mode-dispatch)
+                 map)
+               keymap3)))))
+
+       ;; for some odd reason `repeat-post-hook' and `repeat-pre-hook' are functions instead
+       ;; of variables so functions on hook must be added through `advice-add'
+       (advice-add 'repeat-post-hook :after #'--my-which-key-repeat)
+       (advice-add 'repeat-post-hook :after #'--my-which-key-repeat-mode-binding)
        :bind ("C-c c w" . which-key-show-major-mode))
+     (repeat-mode t)
    #+end_src
 
 ** Avy
@@ -531,461 +543,7 @@
         ("C-c n l" . consult-org-roam-forward-links)
         ("C-c n r" . consult-org-roam-search))
         #+end_src
-* Programming
-** Utils
-*** treesit-auto
-    #+begin_src emacs-lisp
-      (use-package treesit-auto
-        :custom
-        (treesit-auto-install 'prompt)
-        :config
-        (treesit-auto-add-to-auto-mode-alist 'all)
-        (global-treesit-auto-mode))
-    #+end_src
-*** Parens
-**** Smartparens
-     #+begin_src emacs-lisp
-       (use-package smartparens
-         :bind ("C-M-f" . 'sp-forward-sexp)
-         ("C-M-b" . 'sp-backward-sexp)
-         :config
-         (require 'smartparens-config)
-         (smartparens-global-mode)
-         ;; easy <'lifetime>
-         (sp-with-modes 'rust-ts-mode
-           (sp-local-pair "<" ">")
-           (sp-local-pair "'" nil :actions nil))
-         ;; easy ~code~
-         (sp-with-modes 'org-mode
-           (sp-local-pair "~" "~")
-           (sp-local-pair "=" "="))
-         (smartparens-strict-mode t))
-     #+end_src
-***** close parens in new line
-      #+begin_src emacs-lisp
-        (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
-        (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
-        (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
-      #+end_src
-
-**** Show matches
-     #+begin_src emacs-lisp
-       (show-paren-mode 1)
-       (setq show-paren-style 'parenthesis)
-       (set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
-     #+end_src
-**** Rainbow delimiters
-     #+begin_src emacs-lisp
-       (use-package rainbow-delimiters
-         :hook (prog-mode . rainbow-delimiters-mode))
-     #+end_src
-*** Git
-**** Magit
-     #+begin_src emacs-lisp
-       (use-package magit
-         :config (setq magit-ediff-dwim-show-on-hunks t))
-     #+end_src
-
-***** Magit TODOs
-      #+begin_src emacs-lisp
-        (use-package magit-todos
-          :config (magit-todos-mode t))
-      #+end_src
-***** magit delta
-      #+begin_src emacs-lisp
-        (use-package magit-delta
-          :after magit
-          :commands magit-delta-mode
-          :hook (magit-mode . magit-delta-mode))
-      #+end_src
-**** Fringe Helper
-     #+BEGIN_SRC emacs-lisp
-       (use-package fringe-helper
-         :ensure t)
-     #+END_SRC
-
-**** git gutter
-     #+begin_src emacs-lisp
-       (use-package git-gutter
-         :config (global-git-gutter-mode t)
-         :custom
-         (git-gutter:update-interval 0.02))
-
-       (use-package git-gutter-fringe
-         :custom
-         (git-gutter-fr:side 'right-fringe))
-       (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
-       (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
-       (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom)
-     #+end_src
-
-**** blame
-     #+begin_src emacs-lisp
-       (use-package blamer
-         :defer 20
-         :bind (("C-c i" . blamer-show-posframe-commit-info))
-         :custom
-         (blamer-datetime-formatter ", %s ")
-         (blamer-author-formatter " %s") ;; 
-         (blamer-commit-formatter "")
-         (blamer-idle-time 1)
-         (blamer-smart-background-p t)
-         (blamer-min-offset 5)
-         (blamer-type 'visual) ;; only about one line
-         (blamer-prettify-time-p t)
-         (blamer-max-commit-message-length 30)
-         (blamer-show-avatar-p t)
-         (blamer-symbol-count-before-new-line 1)
-         :config (global-blamer-mode 1))
-     #+end_src
-**** forge
-     #+begin_src emacs-lisp
-       (use-package forge
-         :after magit)
-     #+end_src
-**** github notifications
-     #+begin_src emacs-lisp
-       (use-package gh-notify)
-     #+end_src
-**** review
-#+begin_src emacs-lisp
-  (use-package github-review
-    :straight
-    (github-review :type git :host github :repo "charignon/github-review" :files ("*.el"))
-    :after forge
-    :bind (("C-x r" . github-review-forge-pr-at-point)
-           :map diff-mode-map ("C-c s" . my/github-review-kill-suggestion))
-    :config
-    ;; from github.com/anticomputer/gh-notify
-    (defun my/github-review-kill-suggestion ()
-      ;; kill a region of diff+ as a review suggestion template
-      (interactive)
-      (setq deactivate-mark t)
-      (let ((s-region
-             (buffer-substring-no-properties
-              (region-beginning)
-              (region-end))))
-        (kill-new
-         (format "# ```suggestion\n%s\n# ```\n"
-                 (replace-regexp-in-string "^\\+" "# " s-region))))))
-#+end_src
-*** Region Expansion
-    #+begin_src emacs-lisp
-      (use-package expand-region
-        :bind ("C-c e =" . 'er/expand-region)
-        ("C-c e p" . 'er/mark-inside-pairs)
-        ("C-c e P" . 'er/mark-outside-pairs)
-        ("C-c e q" . 'er/mark-inside-quotes)
-        ("C-c e Q" . 'er/mark-outside-quotes)
-        ("C-c e m" . 'er/mark-method-call)
-        ("C-c e c" . 'er/mark-comment)
-        ("C-c e -" . 'er/contract-region))
-    #+end_src
-*** multiple-cursors
-    #+begin_src emacs-lisp
-      (use-package multiple-cursors
-        :config (define-key mc/keymap (kbd "RET") nil)
-        :init
-        (defvar-keymap me/multiple-cursors-map
-               :repeat t
-               "." #'mc/mark-next-like-this-symbol
-               ">" #'mc/skip-to-next-like-this
-               "," #'mc/mark-previous-like-this-symbol
-               "<" #'mc/skip-to-previous-like-this)
-        :bind-keymap ("C->" . me/multiple-cursors-map))
-    #+end_src
-*** ts-movement
-    #+begin_src emacs-lisp
-      (use-package ts-movement
-        :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
-        :ensure multiple-cursors
-        :init
-        (defvar-keymap me/ts-movement-map
-                     :repeat t
-                     "d" #'tsm/delete-overlay-at-point
-                     "D" #'tsm/clear-overlays-of-type
-                     "b" #'tsm/node-prev
-                     "C-b" #'tsm/backward-overlay
-                     "C-f" #'tsm/forward-overlay
-                     "f" #'tsm/node-next
-                     "p" #'tsm/node-parent
-                     "n" #'tsm/node-child
-                     "N" #'tsm/node-children
-                     "s" #'tsm/node-children-of-type
-                     "a" #'tsm/node-start
-                     "e" #'tsm/node-end
-                     "m" #'tsm/node-mark
-                     "c" #'tsm/mc/mark-all-overlays)
-        :bind-keymap ("C-c ." . me/ts-movement-map)
-        :hook
-        (bash-ts-mode . ts-movement-mode)
-        (c++-ts-mode . ts-movement-mode)
-        (c-ts-mode . ts-movement-mode)
-        (cmake-ts-mode . ts-movement-mode)
-        (csharp-ts-mode . ts-movement-mode)
-        (css-ts-mode . ts-movement-mode)
-        (dockerfile-ts-mode . ts-movement-mode)
-        (go-mod-ts-mode . ts-movement-mode)
-        (go-ts-mode . ts-movement-mode)
-        (java-ts-mode . ts-movement-mode)
-        (js-ts-mode . ts-movement-mode)
-        (json-ts-mode . ts-movement-mode)
-        (python-ts-mode . ts-movement-mode)
-        (ruby-ts-mode . ts-movement-mode)
-        (rust-ts-mode . ts-movement-mode)
-        (toml-ts-mode . ts-movement-mode)
-        (tsx-ts-mode . ts-movement-mode)
-        (typescript-ts-mode . ts-movement-mode)
-        (yaml-ts-mode . ts-movement-mode))
-    #+end_src
-*** repeat-mode
-    #+begin_src emacs-lisp
-      (defun my/which-key-repeat-mode-dispatch ()
-        (interactive)
-        (setq this-command last-command)
-        (when-let (keymap (repeat--command-property 'repeat-map))
-          (which-key--create-buffer-and-show
-           nil (symbol-value keymap))))
-
-      (defun my/which-key-repeat-mode-binding ()
-        (when repeat-mode
-          (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
-                      (keymap (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
-            (set-transient-map
-             (make-composed-keymap
-              (let ((map (make-sparse-keymap)))
-                (define-key map (kbd "C-h") #'my/which-key-repeat-mode-dispatch)
-                map)
-              keymap)))))
-
-      (advice-add 'repeat-post-hook :after
-                  (defun my/which-key-repeat ()
-                    (when-let ((cmd (or this-command real-this-command))
-                               (keymap (repeat--command-property 'repeat-map)))
-                      (run-at-time
-                       which-key-idle-delay nil
-                       (lambda () 
-                         (which-key--create-buffer-and-show
-                          nil (symbol-value keymap)))))))
-
-      (advice-add 'repeat-post-hook :after #'my/which-key-repeat-mode-binding)
-
-
-      (repeat-mode t)
-    #+end_src
-*** symbol overlay
-    #+begin_src emacs-lisp
-      (use-package symbol-overlay
-        :config
-        (setq symbol-overlay-toggle-in-scope t)
-        :bind ("M-i" . symbol-overlay-put))
-    #+end_src
-*** Moving lines around
-    #+begin_src emacs-lisp
-      (use-package drag-stuff
-        :hook (prog-mode . drag-stuff-mode)
-        :config (drag-stuff-define-keys))
-    #+end_src
-*** Auto reload files
-    #+begin_src emacs-lisp
-      (global-auto-revert-mode t)
-    #+end_src
-*** Save last cursor position
-    #+begin_src emacs-lisp
-      (save-place-mode 1)
-    #+end_src
-*** Get ansi-term
-    #+begin_src emacs-lisp
-      (defvar toggle-term-state nil)
-      (defun toggle-term ()
-        (interactive)
-        (progn
-          (if toggle-term-state
-              (term-line-mode)
-            (term-char-mode))
-          (setq toggle-term-state (not toggle-term-state))))
-
-      (use-package multi-term
-        :custom (multi-term-program "/bin/zsh")
-        :bind (("<f11>" . multi-term-dedicated-toggle)
-               ("<f10>" . multi-term-dedicated-select)
-               (:map term-mode-map
-                     ("C-," . toggle-term))
-               (:map term-raw-map
-                     ("C-," . toggle-term))))
-    #+end_src
-*** subword mode
-    #+begin_src emacs-lisp
-      ;; CamelCase words as individual words
-      (add-hook 'prog-mode-hook 'subword-mode)
-    #+end_src
-*** editorconfig compat
-    #+begin_src emacs-lisp
-      (use-package editorconfig
-        :config
-        (editorconfig-mode 1))
-    #+end_src
-*** treesitter context
-    #+begin_src emacs-lisp
-      (use-package treesitter-context
-        :straight
-        (treesitter-context-mode
-         :type git
-         :host github
-         :repo "zbelial/treesitter-context.el"
-         :files ("*.el"))
-        :hook
-        (rust-ts-mode . treesitter-context-mode)
-        (js-ts-mode . treesitter-context-mode)
-        (typescript-ts-mode . treesitter-context-mode)
-        (tsx-ts-mode . treesitter-context-mode)
-        :bind
-        (:map treesitter-context-mode
-              ("<f6>" . treesitter-context-mode)
-              ("C-)" . treesitter-context-focus-mode))
-        :config
-        (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
-              treesitter-context-frame-autohide-timeout 5
-              treesitter-context-show-line-number nil
-              treesitter-context-frame-min-height 1
-              treesitter-context-border-width 5
-              treesitter-context-frame-min-width 1
-              treesitter-context-fold-show-fringe-marks nil
-              treesitter-context-frame-font-fraction 0.85
-              treesitter-context-border-color (face-attribute 'mode-line :background)
-              treesitter-context-background-color (face-attribute 'default :background)))
-    #+end_src
-*** yafolding
-#+begin_src emacs-lisp
-  (use-package treesit-fold
-    :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
-    :config (global-treesit-fold-mode)
-    (setq treesit-fold-summary-show nil)
-    :bind (:map treesit-fold-mode-map
-                ("C-{" . treesit-fold-toggle)
-                ("C-*" . treesit-fold-open-all)
-                ("C-}" . treesit-fold-close-all)))
-#+end_src
-** Languages specifics
-*** Rust
-**** Rust mode
-     #+begin_src emacs-lisp
-       (use-package rust-ts-mode
-         :hook (rust-ts-mode . lsp)
-         (rust-ts-mode . lsp-inlay-hints-mode)
-         :config
-         (add-hook 'before-save-hook (lambda () (when (eq 'rust-ts-mode major-mode)
-                                                  (lsp-format-buffer)))))
-     #+end_src
-**** Better cargo integration
-     #+begin_src emacs-lisp
-       (use-package cargo-transient
-         :bind (:map rust-ts-mode-map
-                     ("C-c C-c t" . cargo-transient)
-                     ("C-c C-c c" . cargo-transient-check)
-                     ("C-c C-c l" . cargo-transient-clippy)
-                     ("C-c C-c f" . cargo-transient-clippy-fix)
-                     ("C-c C-c t" . cargo-transient-clippy-test)
-                     ("C-c C-c r" . cargo-transient-run)))
-     #+end_src
-**** LSP config
-     #+begin_src emacs-lisp
-       (setq lsp-rust-analyzer-lru-capacity (* 15 128)
-             lsp-rust-analyzer-binding-mode-hints t
-             lsp-rust-analyzer-check-all-targets t
-             lsp-rust-analyzer-closing-brace-hints-min-lines nil
-             lsp-rust-analyzer-closure-capture-hints t
-             lsp-rust-analyzer-closure-return-type-hints "with_block"
-             lsp-rust-analyzer-diagnostics-enable-experimental t
-             lsp-rust-analyzer-discriminants-hints "always" ;; "fieldless"
-             lsp-rust-analyzer-display-chaining-hints t
-             lsp-rust-analyzer-display-closure-return-type-hints t
-             lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
-             lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
-
-             lsp-rust-analyzer-display-parameter-hints t
-             lsp-rust-analyzer-display-reborrow-hints "always"
-             lsp-rust-analyzer-expression-adjustment-hints "always"
-             lsp-rust-analyzer-hide-closure-initialization t
-             lsp-rust-analyzer-hide-named-constructor nil
-             lsp-rust-analyzer-implicit-drops t
-             lsp-rust-analyzer-max-inlay-hint-length 25
-
-             lsp-rust-analyzer-proc-macro-enable t
-             lsp-rust-analyzer-lens-references-adt-enable t
-             lsp-rust-analyzer-lens-references-method-enable t
-
-             lsp-rust-analyzer-lens-references-trait-enable t
-             lsp-rust-analyzer-lens-references-enum-variant-enable t
-             lsp-rust-analyzer-server-display-inlay-hints t
-             lsp-rust-analyzer-completion-auto-import-enable t
-             lsp-rust-analyzer-expression-adjustment-hints-mode "prefer_postfix"
-
-             lsp-semantic-tokens-enable nil)
-     #+end_src
-**** When creating news language bugs
-     [[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
-     #+begin_src emacs-lisp
-       ;; (setq
-       ;;  lsp-rust-analyzer-rustfmt-override-command ["./build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021"]
-       ;;  lsp-rust-analyzer-cargo-run-build-scripts t
-       ;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
-       ;;  lsp-rust-analyzer-proc-macro-enable t)
-     #+end_src
-*** Unison
-**** Unison mode
-     #+begin_src emacs-lisp
-       (use-package unison-ts-mode
-        :straight (unison-ts-mode :type git :host github :repo "fmguerreiro/unison-ts-mode" :files ("*.el")))
-     #+end_src
-***** COMMENT grammar
-      #+begin_src emacs-lisp
-        (push '((unison "https://github.com/fmguerreiro/tree-sitter-unison-kylegoetz" "build/include-parser-in-src-control"))
-              treesit-language-source-alist)
-      #+end_src
-*** Elixir
-**** Elixir mode
-     #+begin_src emacs-lisp
-       (use-package elixir-mode
-         :hook (elixir-mode . lsp)
-         :init (add-to-list 'exec-path "~/.elixir_ls/"))
-     #+end_src
-**** Elixir snippets
-     #+begin_src emacs-lisp
-       (use-package elixir-yasnippets)
-     #+end_src
-**** Elixir flycheck
-     #+begin_src emacs-lisp
-       (use-package flycheck-elixir)
-     #+end_src
-
-*** Haskell
-**** LSP
-     #+begin_src emacs-lisp
-       (use-package lsp-haskell
-         :config
-         (setq lsp-haskell-server-path "haskell-language-server-wrapper"
-               lsp-haskell-plugin-semantic-tokens-global-on nil)
-         :hook (haskell-mode . lsp))
-     #+end_src
-
-*** OCaml
-**** ocaml mode
-     #+begin_src emacs-lisp
-       (use-package tuareg-mode
-         :hook (tuareg-mode . lsp))
-     #+end_src
-**** dune mode
-     #+begin_src emacs-lisp
-       (use-package dune)
-     #+end_src
-
-*** TypeScript
-    #+begin_src emacs-lisp
-      (add-hook 'js-ts-mode-hook #'lsp)
-      (add-hook 'typescript-ts-mode-hook #'lsp)
-      (add-hook 'tsx-ts-mode-hook #'lsp)
-    #+end_src
+   
 * Org
 ** install
    #+begin_src emacs-lisp
@@ -1406,6 +964,459 @@
 
       (add-hook 'org-checkbox-statistics-hook 'my/org-checkbox-todo)
     #+end_src
+* Programming
+** Utils
+*** treesit-auto
+    #+begin_src emacs-lisp
+      (use-package treesit-auto
+        :custom
+        (treesit-auto-install 'prompt)
+        :config
+        (treesit-auto-add-to-auto-mode-alist 'all)
+        (global-treesit-auto-mode))
+    #+end_src
+*** Parens
+**** Smartparens
+     #+begin_src emacs-lisp
+       (use-package smartparens
+         :bind ("C-M-f" . 'sp-forward-sexp)
+         ("C-M-b" . 'sp-backward-sexp)
+         :config
+         (require 'smartparens-config)
+         (smartparens-global-mode)
+         ;; easy <'lifetime>
+         (sp-with-modes 'rust-ts-mode
+           (sp-local-pair "<" ">")
+           (sp-local-pair "'" nil :actions nil))
+         ;; easy ~code~
+         (sp-with-modes 'org-mode
+           (sp-local-pair "~" "~")
+           (sp-local-pair "=" "="))
+         (smartparens-strict-mode t))
+     #+end_src
+***** close parens in new line
+      #+begin_src emacs-lisp
+        (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
+        (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
+      #+end_src
+
+**** Show matches
+     #+begin_src emacs-lisp
+       (show-paren-mode 1)
+       (setq show-paren-style 'parenthesis)
+       (set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
+     #+end_src
+**** Rainbow delimiters
+     #+begin_src emacs-lisp
+       (use-package rainbow-delimiters
+         :hook (prog-mode . rainbow-delimiters-mode))
+     #+end_src
+*** Git
+**** Magit
+     #+begin_src emacs-lisp
+       (use-package magit
+         :config (setq magit-ediff-dwim-show-on-hunks t))
+     #+end_src
+
+***** Magit TODOs
+      #+begin_src emacs-lisp
+        (use-package magit-todos
+          :config (magit-todos-mode t))
+      #+end_src
+***** magit delta
+      #+begin_src emacs-lisp
+        (use-package magit-delta
+          :after magit
+          :commands magit-delta-mode
+          :hook (magit-mode . magit-delta-mode))
+      #+end_src
+**** Fringe Helper
+     #+BEGIN_SRC emacs-lisp
+       (use-package fringe-helper
+         :ensure t)
+     #+END_SRC
+
+**** git gutter
+     #+begin_src emacs-lisp
+       (use-package git-gutter
+         :config (global-git-gutter-mode t)
+         :custom
+         (git-gutter:update-interval 0.02))
+
+       (use-package git-gutter-fringe
+         :custom
+         (git-gutter-fr:side 'right-fringe))
+       (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
+       (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
+       (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom)
+     #+end_src
+
+**** blame
+     #+begin_src emacs-lisp
+       (use-package blamer
+         :defer 20
+         :bind (("C-c i" . blamer-show-posframe-commit-info))
+         :custom
+         (blamer-datetime-formatter ", %s ")
+         (blamer-author-formatter " %s") ;; 
+         (blamer-commit-formatter "")
+         (blamer-idle-time 1)
+         (blamer-smart-background-p t)
+         (blamer-min-offset 5)
+         (blamer-type 'visual) ;; only about one line
+         (blamer-prettify-time-p t)
+         (blamer-max-commit-message-length 30)
+         (blamer-show-avatar-p t)
+         (blamer-symbol-count-before-new-line 1)
+         :config (global-blamer-mode 1))
+     #+end_src
+**** forge
+     #+begin_src emacs-lisp
+       (use-package forge
+         :after magit)
+     #+end_src
+**** github notifications
+     #+begin_src emacs-lisp
+       (use-package gh-notify)
+     #+end_src
+**** review
+#+begin_src emacs-lisp
+  (use-package github-review
+    :straight
+    (github-review :type git :host github :repo "charignon/github-review" :files ("*.el"))
+    :after forge
+    :bind (("C-x r" . github-review-forge-pr-at-point)
+           :map diff-mode-map ("C-c s" . my/github-review-kill-suggestion))
+    :config
+    ;; from github.com/anticomputer/gh-notify
+    (defun my/github-review-kill-suggestion ()
+      ;; kill a region of diff+ as a review suggestion template
+      (interactive)
+      (setq deactivate-mark t)
+      (let ((s-region
+             (buffer-substring-no-properties
+              (region-beginning)
+              (region-end))))
+        (kill-new
+         (format "# ```suggestion\n%s\n# ```\n"
+                 (replace-regexp-in-string "^\\+" "# " s-region))))))
+#+end_src
+*** Region Expansion
+    #+begin_src emacs-lisp
+      (use-package expand-region
+        :bind ("C-c e =" . 'er/expand-region)
+        ("C-c e p" . 'er/mark-inside-pairs)
+        ("C-c e P" . 'er/mark-outside-pairs)
+        ("C-c e q" . 'er/mark-inside-quotes)
+        ("C-c e Q" . 'er/mark-outside-quotes)
+        ("C-c e m" . 'er/mark-method-call)
+        ("C-c e c" . 'er/mark-comment)
+        ("C-c e -" . 'er/contract-region))
+    #+end_src
+*** multiple-cursors
+    #+begin_src emacs-lisp
+      (use-package multiple-cursors
+        :config (define-key mc/keymap (kbd "RET") nil)
+        :init
+        (defvar-keymap me/multiple-cursors-map
+               :repeat t
+               "." #'mc/mark-next-like-this-symbol
+               ">" #'mc/skip-to-next-like-this
+               "," #'mc/mark-previous-like-this-symbol
+               "<" #'mc/skip-to-previous-like-this)
+        :bind-keymap ("C->" . me/multiple-cursors-map))
+    #+end_src
+*** ts-movement
+    #+begin_src emacs-lisp
+      (use-package ts-movement
+        :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
+        :ensure multiple-cursors
+        :init
+        (defvar-keymap me/ts-movement-map
+                     :repeat t
+                     "d" #'tsm/delete-overlay-at-point
+                     "D" #'tsm/clear-overlays-of-type
+                     "b" #'tsm/node-prev
+                     "C-b" #'tsm/backward-overlay
+                     "C-f" #'tsm/forward-overlay
+                     "f" #'tsm/node-next
+                     "p" #'tsm/node-parent
+                     "n" #'tsm/node-child
+                     "N" #'tsm/node-children
+                     "s" #'tsm/node-children-of-type
+                     "a" #'tsm/node-start
+                     "e" #'tsm/node-end
+                     "m" #'tsm/node-mark
+                     "c" #'tsm/mc/mark-all-overlays)
+        :bind-keymap ("C-c ." . me/ts-movement-map)
+        :hook
+        (bash-ts-mode . ts-movement-mode)
+        (c++-ts-mode . ts-movement-mode)
+        (c-ts-mode . ts-movement-mode)
+        (cmake-ts-mode . ts-movement-mode)
+        (csharp-ts-mode . ts-movement-mode)
+        (css-ts-mode . ts-movement-mode)
+        (dockerfile-ts-mode . ts-movement-mode)
+        (go-mod-ts-mode . ts-movement-mode)
+        (go-ts-mode . ts-movement-mode)
+        (java-ts-mode . ts-movement-mode)
+        (js-ts-mode . ts-movement-mode)
+        (json-ts-mode . ts-movement-mode)
+        (python-ts-mode . ts-movement-mode)
+        (ruby-ts-mode . ts-movement-mode)
+        (rust-ts-mode . ts-movement-mode)
+        (toml-ts-mode . ts-movement-mode)
+        (tsx-ts-mode . ts-movement-mode)
+        (typescript-ts-mode . ts-movement-mode)
+        (yaml-ts-mode . ts-movement-mode))
+    #+end_src
+*** symbol overlay
+    #+begin_src emacs-lisp
+      (use-package symbol-overlay
+        :config
+        (setq symbol-overlay-toggle-in-scope t)
+        :bind ("M-i" . symbol-overlay-put))
+    #+end_src
+*** Moving lines around
+    #+begin_src emacs-lisp
+      (use-package drag-stuff
+        :hook (prog-mode . drag-stuff-mode)
+        :config (drag-stuff-define-keys))
+    #+end_src
+*** Auto reload files
+    #+begin_src emacs-lisp
+      (global-auto-revert-mode t)
+    #+end_src
+*** Save last cursor position
+    #+begin_src emacs-lisp
+      (save-place-mode 1)
+    #+end_src
+*** Get ansi-term
+    #+begin_src emacs-lisp
+      (defvar toggle-term-state nil)
+      (defun toggle-term ()
+        (interactive)
+        (progn
+          (if toggle-term-state
+              (term-line-mode)
+            (term-char-mode))
+          (setq toggle-term-state (not toggle-term-state))))
+
+      (use-package multi-term
+        :custom (multi-term-program "/bin/fish")
+        :bind (("<f11>" . multi-term-dedicated-toggle)
+               ("<f10>" . multi-term-dedicated-select)
+               (:map term-mode-map
+                     ("C-," . toggle-term))
+               (:map term-raw-map
+                     ("C-," . toggle-term))))
+    #+end_src
+*** subword mode
+    #+begin_src emacs-lisp
+      ;; CamelCase words as individual words
+      (add-hook 'prog-mode-hook 'subword-mode)
+    #+end_src
+*** editorconfig compat
+    #+begin_src emacs-lisp
+      (use-package editorconfig
+        :config
+        (editorconfig-mode 1))
+    #+end_src
+*** treesitter context
+    #+begin_src emacs-lisp
+      (use-package treesitter-context
+        :straight
+        (treesitter-context-mode
+         :type git
+         :host github
+         :repo "zbelial/treesitter-context.el"
+         :files ("*.el"))
+        :hook
+        (rust-ts-mode . treesitter-context-mode)
+        (js-ts-mode . treesitter-context-mode)
+        (typescript-ts-mode . treesitter-context-mode)
+        (tsx-ts-mode . treesitter-context-mode)
+        :bind
+        (:map treesitter-context-mode
+              ("<f6>" . treesitter-context-mode)
+              ("C-)" . treesitter-context-focus-mode))
+        :config
+        (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
+              treesitter-context-frame-autohide-timeout 5
+              treesitter-context-show-line-number nil
+              treesitter-context-frame-min-height 1
+              treesitter-context-border-width 5
+              treesitter-context-frame-min-width 1
+              treesitter-context-fold-show-fringe-marks nil
+              treesitter-context-frame-font-fraction 0.85
+              treesitter-context-border-color (face-attribute 'mode-line :background)
+              treesitter-context-background-color (face-attribute 'default :background)))
+    #+end_src
+*** treesit-fold
+#+begin_src emacs-lisp
+  (use-package treesit-fold
+    :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
+    :hook (treesit-mode . treesit-fold-mode)
+    :config
+    (setq treesit-fold-summary-show nil)
+    :bind (:map treesit-fold-mode-map
+                (("C-{" . treesit-fold-toggle)
+                 ("C-*" . treesit-fold-open-all)
+                 ("C-}" . treesit-fold-close-all))))
+#+end_src
+** Languages specifics
+*** Rust
+**** Rust mode
+     #+begin_src emacs-lisp
+       (use-package rust-ts-mode
+         :hook (rust-ts-mode . lsp)
+         (rust-ts-mode . lsp-inlay-hints-mode)
+         :config
+         (add-hook 'before-save-hook (lambda () (when (eq 'rust-ts-mode major-mode)
+                                                  (lsp-format-buffer)))))
+     #+end_src
+**** Better cargo integration
+     #+begin_src emacs-lisp
+       (use-package cargo-transient
+         :bind (:map rust-ts-mode-map
+                     ("C-c C-c t" . cargo-transient)
+                     ("C-c C-c c" . cargo-transient-check)
+                     ("C-c C-c l" . cargo-transient-clippy)
+                     ("C-c C-c f" . cargo-transient-clippy-fix)
+                     ("C-c C-c t" . cargo-transient-clippy-test)
+                     ("C-c C-c r" . cargo-transient-run)))
+     #+end_src
+**** LSP config
+     #+begin_src emacs-lisp
+       (setq lsp-rust-analyzer-lru-capacity (* 15 128)
+             lsp-rust-analyzer-binding-mode-hints t
+             lsp-rust-analyzer-check-all-targets t
+             lsp-rust-analyzer-closing-brace-hints-min-lines nil
+             lsp-rust-analyzer-closure-capture-hints t
+             lsp-rust-analyzer-closure-return-type-hints "with_block"
+             lsp-rust-analyzer-diagnostics-enable-experimental t
+             lsp-rust-analyzer-discriminants-hints "always" ;; "fieldless"
+             lsp-rust-analyzer-display-chaining-hints t
+             lsp-rust-analyzer-display-closure-return-type-hints t
+             lsp-rust-analyzer-display-lifetime-elision-hints-enable "always"
+             lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t
+
+             lsp-rust-analyzer-display-parameter-hints t
+             lsp-rust-analyzer-display-reborrow-hints "always"
+             lsp-rust-analyzer-expression-adjustment-hints "always"
+             lsp-rust-analyzer-hide-closure-initialization t
+             lsp-rust-analyzer-hide-named-constructor nil
+             lsp-rust-analyzer-implicit-drops t
+             lsp-rust-analyzer-max-inlay-hint-length 25
+
+             lsp-rust-analyzer-proc-macro-enable t
+             lsp-rust-analyzer-lens-references-adt-enable t
+             lsp-rust-analyzer-lens-references-method-enable t
+
+             lsp-rust-analyzer-lens-references-trait-enable t
+             lsp-rust-analyzer-lens-references-enum-variant-enable t
+             lsp-rust-analyzer-server-display-inlay-hints t
+             lsp-rust-analyzer-completion-auto-import-enable t
+             lsp-rust-analyzer-expression-adjustment-hints-mode "prefer_postfix"
+
+             lsp-semantic-tokens-enable nil)
+     #+end_src
+**** When creating news language bugs
+     [[https://rustc-dev-guide.rust-lang.org/building/suggested.html#configuring-rust-analyzer-for-rustc][Configuring rust-analyzer for rustc]]
+     #+begin_src emacs-lisp
+       ;; (setq
+       ;;  lsp-rust-analyzer-rustfmt-override-command ["./build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021"]
+       ;;  lsp-rust-analyzer-cargo-run-build-scripts t
+       ;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
+       ;;  lsp-rust-analyzer-proc-macro-enable t)
+     #+end_src
+*** Unison
+**** Unison mode
+     #+begin_src emacs-lisp
+       (use-package unison-ts-mode
+        :straight (unison-ts-mode :type git :host github :repo "fmguerreiro/unison-ts-mode" :files ("*.el")))
+     #+end_src
+***** COMMENT grammar
+      #+begin_src emacs-lisp
+        (push '((unison "https://github.com/fmguerreiro/tree-sitter-unison-kylegoetz" "build/include-parser-in-src-control"))
+              treesit-language-source-alist)
+      #+end_src
+*** Elixir
+**** Elixir mode
+     #+begin_src emacs-lisp
+       (use-package elixir-mode
+         :hook (elixir-mode . lsp)
+         :init (add-to-list 'exec-path "~/.elixir_ls/"))
+     #+end_src
+**** Elixir snippets
+     #+begin_src emacs-lisp
+       (use-package elixir-yasnippets)
+     #+end_src
+**** Elixir flycheck
+     #+begin_src emacs-lisp
+       (use-package flycheck-elixir)
+     #+end_src
+
+*** Haskell
+**** LSP
+     #+begin_src emacs-lisp
+       (use-package lsp-haskell
+         :config
+         (setq lsp-haskell-server-path "haskell-language-server-wrapper"
+               lsp-haskell-plugin-semantic-tokens-global-on nil)
+         :hook (haskell-mode . lsp))
+     #+end_src
+
+*** OCaml
+**** ocaml mode
+     #+begin_src emacs-lisp
+       (use-package tuareg-mode
+         :hook (tuareg-mode . lsp))
+     #+end_src
+**** dune mode
+     #+begin_src emacs-lisp
+       (use-package dune)
+     #+end_src
+
+*** TypeScript
+    #+begin_src emacs-lisp
+      (add-hook 'js-ts-mode-hook #'lsp)
+      (add-hook 'typescript-ts-mode-hook #'lsp)
+      (add-hook 'tsx-ts-mode-hook #'lsp)
+    #+end_src
+
+*** Scala3
+
+**** lsp
+#+begin_src emacs-lisp
+  (use-package lsp-metals
+    :hook (scala-mode . lsp)
+    :custom
+    (lsp-metals-enable-semantic-highlighting t))
+#+end_src
+
+**** sbt-mode
+#+begin_src emacs-lisp
+  (use-package sbt-mode
+    :commands sbt-start sbt-command
+    :config
+    ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+    ;; allows using SPACE when in the minibuffer
+    (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
+    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+    (setq sbt:program-options '("-Dsbt.supershell=false")))
+#+end_src
+
+**** COMMENT treesitter
+#+begin_src emacs-lisp
+  (use-package scala-ts-mode
+    :hook (scala-ts-mode . lsp))
+#+end_src
+
 * Utils
 ** Easy increase/decrease font size
    #+begin_src emacs-lisp
@@ -1471,7 +1482,8 @@
 *** Change backup directory
     By default, emacs saves the ~backup~~ files in the same directory the file is.
     #+begin_src emacs-lisp
-      (setq backup-directory-alist '(("~/.emacs.d/backup/per-save")))
+      (setq backup-directory-alist '(("." . "~/.emacs.d/backup/per-save"))
+            auto-save-file-name-transforms '((".*" "~/.emacs.d/backup/auto-saves/")))
     #+end_src
 *** More backup files
     #+begin_src emacs-lisp
@@ -1623,6 +1635,10 @@
      :hook (prog-mode . annotate-mode)
      :bind ("C-c C-n" . annotate-toggle-annotation-text))
 #+end_src
+** mouse
+#+begin_src emacs-lisp
+  (xterm-mouse-mode t)
+#+end_src
 * Appearance
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
@@ -1724,7 +1740,7 @@
 #+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load-theme 'kaolin-dark
+      (load-theme 'doom-one
                   :no-confirm)
     #+end_src
 ** UI
@@ -2103,7 +2119,7 @@
 
   ;;   (my-toggle-modeline))
 #+end_src
-** vertico posframe
+** COMMENT vertico posframe
 #+begin_src emacs-lisp
   (use-package vertico-posframe
     :config
