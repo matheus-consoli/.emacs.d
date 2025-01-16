@@ -596,7 +596,6 @@
       (set-face-attribute 'org-column nil :background nil)
       (set-face-attribute 'org-column-title nil :background nil)
     #+end_src
-
 ** org superstar
    #+begin_src emacs-lisp
      ;; org-superstar needs this way
