@@ -64,6 +64,7 @@ transient/
 *.el
 !init.el
 !early-init.el
+!my-themes/*
 
 .lsp-session-v1
 elpy
@@ -83,3 +84,9 @@ backup/
 org-roam.db
 roam-backup
 tree-sitter
+annotations
+elisa/
+ellama-sessions/
+forge-database*
+multisession/
+url/

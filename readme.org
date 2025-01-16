@@ -4,28 +4,38 @@
 ** Vertico
    #+begin_src emacs-lisp
      (use-package vertico
-       :config (setq vertico-cycle t)
-       :init (vertico-mode))
+       :config
+       (setq vertico-cycle t)
+       :init
+       (vertico-mode))
 
      (use-package savehist
        :init (savehist-mode))
 
-     ;; A few more useful configurations...
      (use-package emacs
+       :custom
+       ;; Support opening new minibuffers from inside existing minibuffers.
+       (enable-recursive-minibuffers t)
+       ;; Hide commands in M-x which do not work in the current mode.  Vertico
+       ;; commands are hidden in normal buffers. This setting is useful beyond
+       ;; Vertico.
+       (read-extended-command-predicate #'command-completion-default-include-p)
        :init
        ;; Add prompt indicator to `completing-read-multiple'.
-       ;; Alternatively try `consult-completing-read-multiple'.
+       ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
        (defun crm-indicator (args)
-         (cons (concat "[CRM] " (car args)) (cdr args)))
+         (cons (format "[CRM%s] %s"
+                       (replace-regexp-in-string
+                        "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                        crm-separator)
+                       (car args))
+               (cdr args)))
        (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
        ;; Do not allow the cursor in the minibuffer prompt
        (setq minibuffer-prompt-properties
              '(read-only t cursor-intangible t face minibuffer-prompt))
-       (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-
-       ;; Enable recursive minibuffers
-       (setq enable-recursive-minibuffers t))
+       (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
    #+end_src
 ** Corfu
    #+begin_src emacs-lisp
@@ -48,7 +58,7 @@
 
         corfu-auto t
         corfu-auto-delay 0.25
-        corfu-auto-prefix 1
+        corfu-auto-prefix 0.2
         corfu-popupinfo-delay '(1.30 . 1.50))
        :bind
        (:map corfu-map
@@ -76,9 +86,9 @@
    #+begin_src emacs-lisp
      (use-package orderless
        :init
-       (setq completion-styles '(orderless partial-completion basic)
+       (setq completion-styles '(orderless substring partial-completion basic)
              completion-category-defaults nil
-             completion-category-overrides nil)) ;; '((file (styles basic partial-completion)))))
+             completion-category-overrides '((file (styles basic partial-completion)))))
    #+end_src
 ** dabbrev
    #+begin_src emacs-lisp
@@ -227,23 +237,25 @@
       The which-key help message will show the type and value of the
       current target followed by an ellipsis if there are further
       targets."
-        (lambda (&optional keymap targets prefix)
-          (if (null keymap)
-              (which-key--hide-popup-ignore-command)
-            (which-key--show-keymap
-             (if (eq (plist-get (car targets) :type) 'embark-become)
-                 "Become"
-               (format "Act on %s '%s'%s"
-                       (plist-get (car targets) :type)
-                       (embark--truncate-target (plist-get (car targets) :target))
-                       (if (cdr targets) "…" "")))
-             (if prefix
-                 (pcase (lookup-key keymap prefix 'accept-default)
-                   ((and (pred keymapp) km) km)
-                   (_ (key-binding prefix 'accept-default)))
-               keymap)
-             nil nil t (lambda (binding)
-                         (not (string-suffix-p "-argument" (cdr binding))))))))
+        
+        (when (bound-and-true-p which-key-mode)
+          (lambda (&optional keymap targets prefix)
+            (if (null keymap)
+                (which-key--hide-popup-ignore-command)
+              (which-key--show-keymap
+               (if (eq (plist-get (car targets) :type) 'embark-become)
+                   "Become"
+                 (format "Act on %s '%s'%s"
+                         (plist-get (car targets) :type)
+                         (embark--truncate-target (plist-get (car targets) :target))
+                         (if (cdr targets) "…" "")))
+               (if prefix
+                   (pcase (lookup-key keymap prefix 'accept-default)
+                     ((and (pred keymapp) km) km)
+                     (_ (key-binding prefix 'accept-default)))
+                 keymap)
+               nil nil t (lambda (binding)
+                           (not (string-suffix-p "-argument" (cdr binding)))))))))
 
       (setq embark-indicators
             '(embark-which-key-indicator
@@ -267,7 +279,7 @@
        (use-package yasnippet-snippets)
        :hook (prog-mode . yas-minor-mode))
    #+end_src
-** Language Server Protocol
+** LSP - Language Server Protocol
 *** LSP mode
     #+begin_src emacs-lisp
       (use-package lsp-mode
@@ -285,14 +297,15 @@
          lsp-enable-on-type-formatting t
          lsp-enable-snippet t
          lsp-headerline-breadcrumb-icons-enable t
-         lsp-headerline-breadcrumb-segments '(file symbols)
-         lsp-idle-delay 0.0
+         lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)
+         lsp-idle-delay 0.1
          lsp-lens-enable t
          lsp-inlay-hint-enable t
          lsp-symbol-highlighting-skip-current t
          ;; lsp-inlay-hint-enable nil ;; disabled by default, F4 to enable
          lsp-log-io nil
          lsp-use-plists t)
+        (lsp-diagnostics-mode t)
         (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
         :bind (:map lsp-mode-map
                     ("C-c l r" . lsp-rename)
@@ -339,7 +352,7 @@
               lsp-ui-doc-use-childframe t
               lsp-ui-doc-use-webkit nil
 
-              lsp-ui-sideline-show-code-actions nil
+              lsp-ui-sideline-show-code-actions t
               lsp-ui-sideline-delay 2
 
               lsp-ui-peek-enable t
@@ -393,22 +406,33 @@
 ** Consult and integrations
 *** Consult
     #+begin_src emacs-lisp
+      ;; Example configuration for Consult
       (use-package consult
-        ;; Replace bindings. Lazily loaded due by `use-package'.
-        :bind (;; C-c bindings (mode-specific-map)
+        ;; Replace bindings. Lazily loaded by `use-package'.
+        :bind (;; C-c bindings in `mode-specific-map'
+               ("C-c M-x" . consult-mode-command)
                ("C-c h" . consult-history)
-               ("C-c m" . consult-mode-command)
-               ;; C-x bindings (ctl-x-map)
+               ("C-c k" . consult-kmacro)
+               ("C-c m" . consult-man)
+               ("C-c i" . consult-info)
+               ([remap Info-search] . consult-info)
+               ;; C-x bindings in `ctl-x-map'
                ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
                ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+               ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+               ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+               ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
+               ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+               ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
                ;; Custom M-# bindings for fast register access
                ("M-#" . consult-register-load)
                ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
                ("C-M-#" . consult-register)
                ;; Other custom bindings
                ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-               ;; M-g bindings (goto-map)
-               ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
+               ;; M-g bindings in `goto-map'
+               ("M-g e" . consult-compile-error)
+               ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
                ("M-g g" . consult-goto-line)             ;; orig. goto-line
                ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
                ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
@@ -416,13 +440,14 @@
                ("M-g k" . consult-global-mark)
                ("M-g i" . consult-imenu)
                ("M-g I" . consult-imenu-multi)
-               ;; M-s bindings (search-map)
-               ("M-s f" . consult-find)
-               ("M-s F" . consult-locate)
+               ;; M-s bindings in `search-map'
+               ("M-s d" . consult-find)                  ;; Alternative: consult-fd
+               ("M-s c" . consult-locate)
+               ("M-s g" . consult-grep)
+               ("M-s G" . consult-git-grep)
                ("M-s r" . consult-ripgrep)
                ("M-s l" . consult-line)
                ("M-s L" . consult-line-multi)
-               ("M-s m" . consult-multi-occur)
                ("M-s k" . consult-keep-lines)
                ("M-s u" . consult-focus-lines)
                ;; Isearch integration
@@ -431,67 +456,58 @@
                ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
                ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
                ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-               ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+               ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+               ;; Minibuffer history
+               :map minibuffer-local-map
+               ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+               ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
         ;; Enable automatic preview at point in the *Completions* buffer. This is
-        ;; relevant when you use the default completion UI. You may want to also
-        ;; enable `consult-preview-at-point-mode` in Embark Collect buffers.
+        ;; relevant when you use the default completion UI.
         :hook (completion-list-mode . consult-preview-at-point-mode)
 
         ;; The :init configuration is always executed (Not lazy)
         :init
 
-        ;; Optionally configure the register formatting. This improves the register
-        ;; preview for `consult-register', `consult-register-load',
-        ;; `consult-register-store' and the Emacs built-ins.
-        (setq register-preview-delay 0
-              register-preview-function #'consult-register-format)
-
-        ;; Optionally tweak the register preview window.
-        ;; This adds thin lines, sorting and hides the mode line of the window.
+        ;; Tweak the register preview for `consult-register-load',
+        ;; `consult-register-store' and the built-in commands.  This improves the
+        ;; register formatting, adds thin separator lines, register sorting and hides
+        ;; the window mode line.
         (advice-add #'register-preview :override #'consult-register-window)
-
-        ;; Optionally replace `completing-read-multiple' with an enhanced version.
-        (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+        (setq register-preview-delay 0.5)
 
         ;; Use Consult to select xref locations with preview
         (setq xref-show-xrefs-function #'consult-xref
               xref-show-definitions-function #'consult-xref)
 
-        ;; Use `consult-completion-in-region' if Vertico is enabled.
-        ;; Otherwise use the default `completion--in-region' function.
-        (setq completion-in-region-function
-              (lambda (&rest args)
-                (apply (if vertico-mode
-                           #'consult-completion-in-region
-                         #'completion--in-region)
-                       args)))
-
         ;; Configure other variables and modes in the :config section,
         ;; after lazily loading the package.
         :config
-        ;; Preview immediately theme on M-., on up/down after 0.5s, on any other key after 1s
-        (consult-customize consult-theme
-                         :preview-key
-                         '("M-."
-                           :debounce 0.5 "<up>" "<down>"
-                           :debounce 1 any))
+
+        ;; Optionally configure preview. The default value
+        ;; is 'any, such that any key triggers the preview.
+        ;; (setq consult-preview-key 'any)
+        ;; (setq consult-preview-key "M-.")
+        ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+        ;; For some commands and buffer sources it is useful to configure the
+        ;; :preview-key on a per-command basis using the `consult-customize' macro.
+        (consult-customize
+         consult-theme :preview-key '(:debounce 0.2 any)
+         consult-ripgrep consult-git-grep consult-grep consult-man
+         consult-bookmark consult-recent-file consult-xref
+         consult--source-bookmark consult--source-file-register
+         consult--source-recent-file consult--source-project-recent-file
+         ;; :preview-key "M-."
+         :preview-key '(:debounce 0.4 any))
+
+        ;; Optionally configure the narrowing key.
+        ;; Both < and C-+ work reasonably well.
+        (setq consult-narrow-key "<") ;; "C-+"
 
         ;; Optionally make narrowing help available in the minibuffer.
         ;; You may want to use `embark-prefix-help-command' or which-key instead.
-        ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-
-        ;; Configure S-up/S-down preview keys
-        (define-key vertico-map [S-up] #'vertico-previous)
-        (define-key vertico-map [S-down] #'vertico-next)
-        (consult-customize consult-recent-file :preview-key '([S-up] [S-down]))
-        ;; Optionally configure a function which returns the project root directory.
-        ;; There are multiple reasonable alternatives to chose from.
-          ;;;; 1. project.el (project-roots)
-        (setq consult-project-root-function
-              (lambda ()
-                (when-let (project (project-current))
-                  (car (project-roots project))))))
+        ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
+      )
     #+end_src
 
 *** Consult flycheck
@@ -550,29 +566,11 @@
      (use-package org
        :ensure org-contrib)
    #+end_src
-** basic settings
-   #+begin_src emacs-lisp
-     (setq
-      ;; adapt indentation of content to match its heading
-      org-adapt-indentation nil
-      org-ellipsis " ⌄ "
-      org-hide-emphasis-markers t
-      ;; non-nil = utf-8
-      org-pretty-entities t
-      org-startup-folded 'fold
-      org-return-follows-link t
-      ;; only needs one empty line to show an empty line when collapsed
-      org-cycle-separator-lines 2
-      ;; shift-select with mouse
-      org-support-shift-select 'always
-      ;; no help message when editing code
-      org-edit-src-persistent-message nil
-      line-spacing 0.5
-      ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
-      org-export-with-sub-superscripts nil)
-
-     (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
-   #+end_src
+** org modern
+#+begin_src emacs-lisp
+  (use-package org-modern
+    :hook (org-mode . org-modern-mode))
+#+end_src
 ** custom faces
 *** variable pitch
     #+begin_src emacs-lisp
@@ -619,34 +617,6 @@
      ;; If you use Org Indent you also need to add this, otherwise the
      ;; above has no effect while Indent is enabled.
      (setq org-indent-mode-turns-on-hiding-stars nil)
-   #+end_src
-
-** COMMENT hide all stars
-   from [[https://www.reddit.com/r/emacs/comments/9wukv8/comment/e9pkggv][this]] reddit comment
-   #+begin_src emacs-lisp
-     ;; remove everything
-     (defun chunyang-org-mode-remove-stars ()
-       (font-lock-add-keywords
-        nil
-        '(("^\\*+ "
-           (0
-            (prog1 nil
-              (put-text-property (match-beginning 0) (match-end 0)
-                                 'invisible t)))))))
-
-     ;; with whitespace
-     (defun chunyang-org-mode-hide-stars ()
-       (font-lock-add-keywords
-        nil
-        '(("^\\*+ "
-           (0
-            (prog1 nil
-              (put-text-property (match-beginning 0) (match-end 0)
-                                 'face (list :foreground
-                                             (face-attribute
-                                              'default :background)))))))))
-
-     (add-hook 'org-mode-hook #'chunyang-org-mode-remove-stars)
    #+end_src
 
 ** make invisible parts visible
@@ -729,8 +699,7 @@
       (setq
        org-roam-directory (file-truename "~/projects/brainiac/")
        org-roam-db-location (file-truename "~/projects/brainiac/org-roam.db")
-       org-roam-dailies-directory "dailies/"
-       org-roam-completion-everywhere t)
+       org-roam-dailies-directory "dailies/")
     #+end_src
 *** Templates
 **** Dailies
@@ -964,6 +933,29 @@
 
       (add-hook 'org-checkbox-statistics-hook 'my/org-checkbox-todo)
     #+end_src
+** basic settings
+   #+begin_src emacs-lisp
+     (setq
+      ;; adapt indentation of content to match its heading
+      org-adapt-indentation nil
+      org-ellipsis " ⌄ "
+      org-hide-emphasis-markers t
+      ;; non-nil = utf-8
+      org-pretty-entities t
+      org-startup-folded 'fold
+      org-return-follows-link t
+      ;; only needs one empty line to show an empty line when collapsed
+      org-cycle-separator-lines 2
+      ;; shift-select with mouse
+      org-support-shift-select 'always
+      ;; no help message when editing code
+      org-edit-src-persistent-message nil
+      line-spacing 0.5
+      ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
+      org-export-with-sub-superscripts nil)
+
+     (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
+   #+end_src
 * Programming
 ** Utils
 *** treesit-auto
@@ -1181,8 +1173,9 @@
 *** Moving lines around
     #+begin_src emacs-lisp
       (use-package drag-stuff
-        :hook (prog-mode . drag-stuff-mode)
-        :config (drag-stuff-define-keys))
+        :config
+        (drag-stuff-define-keys)
+        (drag-stuff-global-mode))
     #+end_src
 *** Auto reload files
     #+begin_src emacs-lisp
@@ -1265,12 +1258,19 @@
                  ("C-*" . treesit-fold-open-all)
                  ("C-}" . treesit-fold-close-all))))
 #+end_src
+*** cognitive complexity
+#+begin_src emacs-lisp
+  (use-package cognitive-complexity
+    :straight (:host github :repo "emacs-vs/cognitive-complexity")
+    :config (cognitive-complexity-mode 1))
+#+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
      #+begin_src emacs-lisp
        (use-package rust-ts-mode
-         :hook (rust-ts-mode . lsp)
+         :hook
+         (rust-ts-mode . lsp)
          (rust-ts-mode . lsp-inlay-hints-mode)
          :config
          (add-hook 'before-save-hook (lambda () (when (eq 'rust-ts-mode major-mode)
@@ -1598,6 +1598,9 @@
            (pulse-momentary-highlight-region (region-beginning) (region-end))
          (pulse-momentary-highlight-region (mark) (point))))
 
+     (setq pulse-delay 0.03
+           pulse-iterations 13)
+
      (advice-add #'kill-ring-save :before #'my/pulse-current-region)
    #+end_src
 ** undo tree
@@ -1644,11 +1647,12 @@
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
       '((right-divider-width . 0)
-        (internal-border-width . 15)))
+        (internal-border-width . 6)))
    #+end_src
 ** icons
    #+begin_src emacs-lisp
      (use-package all-the-icons)
+     (use-package nerd-icons)
      (use-package nerd-icons-completion
        :after marginalia
        :config
@@ -1673,7 +1677,7 @@
          :defer t
          :config  
          (setq doom-themes-enable-bold t
-               doom-themes-treemacs-theme "doom-colors"
+               ;; doom-themes-treemacs-theme "doom-colors"
                doom-themes-enable-italic t)
          (doom-themes-treemacs-config)
          (doom-themes-org-config))
@@ -1683,21 +1687,15 @@
        (use-package catppuccin-theme
          :defer t
          :init
-         (setq catppuccin-flavor 'mocha
+         (setq catppuccin-flavor 'frappe
                catppuccin-italic-comments t
                catppuccin-italic-variables t
                catppuccin-italic-blockquotes t))
-     #+end_src
-**** ef-themes
-     #+begin_src emacs-lisp
-       (use-package ef-themes
-         :defer t)
      #+end_src
 **** kaolin themes
      #+begin_src emacs-lisp
        (use-package kaolin-themes
          :init
-         (kaolin-treemacs-theme)
          (setq kaolin-themes-bold t
                kaolin-themes-italic t
                kaolin-themes-italic-comments t
@@ -1725,22 +1723,20 @@
     :defer t
     :init (customize-set-variable 'timu-macos-flavour "dark"))
 #+end_src
+***** timu caribbean
+#+begin_src emacs-lisp
+  (use-package timu-caribbean-theme
+    :config (customize-set-variable 'timu-caribbean-org-intense-colors t)
+    :defer t)
+#+end_src
 **** flexoki
 #+begin_src emacs-lisp
   (use-package flexoki-themes)
 #+end_src
-*** COMMENT auto dark
-#+begin_src emacs-lisp
-  (use-package auto-dark
-    :custom
-    (custom-safe-themes t)
-    (auto-dark-themes '((kaolin-dark) (kaolin-light)))
-    (auto-dark-polling-interval-seconds 60)
-    :init (auto-dark-mode))
-#+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load-theme 'doom-one
+      (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
+      (load-theme 'vercel-2024
                   :no-confirm)
     #+end_src
 ** UI
@@ -1848,7 +1844,7 @@
           ("<next>" . tab-bar-switch-to-next-tab)
           ("<prior>" . tab-bar-switch-to-prev-tab))
     :config
-    (setq tab-bar-new-tab-choice "*scratch*"
+    (setq tab-bar-new-tab-choice t
           tab-bar-new-tab-to 'rightmost
           tab-bar-close-button-show nil
           tab-bar-show 1
@@ -1862,6 +1858,9 @@
 #+begin_src emacs-lisp
   (use-package project-tab-groups
     :config
+    (with-eval-after-load 'project
+      (add-to-list 'project-switch-commands '(magit-project-status "Magit") t)
+      (keymap-set project-prefix-map "m" #'magit-project-status))
     (project-tab-groups-mode 1))
 #+end_src
 *** tab spaces
@@ -1913,20 +1912,20 @@
        (window-dedicated-p (selected-window))
 
        ;; Buffer name not match below blocklist.
-       (string-suffix-p "*epc" name)
-       (string-suffix-p "*helm" name)
-       (string-suffix-p "*Helm" name)
-       (string-suffix-p "*Compile-Log*" name)
-       (string-suffix-p "*lsp" name)
-       (string-suffix-p "*company" name)
-       (string-suffix-p "*Flycheck" name)
-       (string-suffix-p "*tramp" name)
-       (string-suffix-p " *Mini" name)
-       (string-suffix-p "*help" name)
-       (string-suffix-p "*straight" name)
-       (string-suffix-p " *temp" name)
-       (string-suffix-p "*Help" name)
-       (string-suffix-p "*mybuf" name)
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Helm" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*company" name)
+       (string-prefix-p "*Flycheck" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p " *Mini" name)
+       (string-prefix-p "*help" name)
+       (string-prefix-p "*straight" name)
+       (string-prefix-p " *temp" name)
+       (string-prefix-p "*Help" name)
+       (string-prefix-p "*mybuf" name)
 
        ;; Is not magit buffer.
        (and (string-prefix-p "magit" name)
@@ -1937,19 +1936,25 @@
   (use-package centaur-tabs
     :demand
     :config
-    (centaur-tabs-change-fonts "Margem Rounded Test" 120)
+    (centaur-tabs-headline-match)
+    (centaur-tabs-change-fonts "VictorMono Nerd Font" 90)
     (centaur-tabs-mode t)
     :bind
     (:map centaur-tabs-mode-map
-          (("C-c t j" . centaur-tabs-ace-jump)
-           ("C-c t RET" . centaur-tabs-local-mode)
+          (([remap next-buffer] . centaur-tabs-forward)
+           ([remap previous-buffer] . centaur-tabs-backward)
+           ("C-c t j" . centaur-tabs-ace-jump)
            ("C-<prior>" . centaur-tabs-backward)
            ("C-<next>" . centaur-tabs-forward)))
     :custom
-    (centaur-tabs-height 16)
+    (centaur-tabs-height 27)
     (centaur-tabs-style "bar")
     (centaur-tabs-hide-tab-function my-centaur-tabs-hide-tab)
     (centaur-tabs-set-bar 'over)
+    (centaur-tabs-cycle-scope 'tabs)
+    (centaur-tabs-gray-out-icons 'buffer)
+    (centaur-tabs-set-icons t)
+    (centaur-tabs-icon-type 'all-the-icons)
     (centaur-tabs-gray-out-icons 'buffer)
     (centaur-tabs-modified-marker t)
     (centaur-tabs-enable-key-bindings t))
@@ -1960,12 +1965,18 @@
        :config
        (treemacs-git-commit-diff-mode t)
        (treemacs-fringe-indicator-mode 'always)
+       (treemacs-follow-mode t)
+       (treemacs-project-follow-mode t)
+       (treemacs-filewatch-mode t)
+       (treemacs-peek-mode t)
+       (setq treemacs-expand-after-init nil)
        :bind
        (:map global-map
              ("C-c ; ;" . treemacs)
              ("C-c ; B" . treemacs-bookmark)
              ("C-c ; f" . treemacs-find-file)
              ("C-c ; g" . treemacs-find-tag)))
+     (treemacs-start-on-boot)
    #+end_src
 *** treemacs extensions
     #+begin_src emacs-lisp
@@ -1973,21 +1984,16 @@
         :after (treemacs magit))
 
       (use-package treemacs-nerd-icons
-        :after  (treemacs))
+        :after (treemacs))
+
+      (use-package treemacs-tab-bar
+        :after (treemacs)
+        :config (treemacs-set-scope-type 'Tabs))
 
       (use-package lsp-treemacs
-        :after (lsp treemacs)
-        :custom
-        (lsp-treemacs-error-list-expand-depth 2)
-        (lsp-treemacs-call-hierarchy-expand-depth 2)
-        (lsp-treemacs-error-list-current-project-only t)
-        (lsp-treemacs-symbols-position-params '((side . right)
-                                                (slot . 1)
-                                                (window-width . 40)))
-        (lsp-treemacs-errors-position-params '((side . right)
-                                               (slot . 2)
-                                               (window-width . 40)))
-        :config
+        :after (treemacs)
+        :commands (lsp-treemacs-symbols lsp-treemacs-errors-list toggle-lsp-treemacs-modes)
+        :init
         (defun toggle-lsp-treemacs-modes ()
           "Toggle both `lsp-treemacs-symbols` and `lsp-treemacs-error-list` modes."
           (interactive)
@@ -2000,18 +2006,34 @@
               (kill-buffer lsp-treemacs-errors-buffer-name) ; this closes it if open
             (lsp-treemacs-errors-list))) ; this opens it if closed
 
-        (define-key lsp-mode-map (kbd "C-c l g s") 'toggle-lsp-treemacs-modes)
-        
-        ;; :bind (:map lsp-mode-map
-        ;;             ("C-c l g s" . toggle-lsp-treemacs-modes))
-        :init (lsp-treemacs-sync-mode 1))
+        :config
+        (setq
+         lsp-treemacs-error-list-expand-depth 2
+         lsp-treemacs-call-hierarchy-expand-depth 2
+         lsp-treemacs-error-list-current-project-only t
+         lsp-treemacs-symbols-position-params '((side . right)
+                                                (slot . 1)
+                                                (window-width . 40))
+         lsp-treemacs-errors-position-params '((side . right)
+                                               (slot . 2)
+                                               (window-width . 40)))
+        (lsp-treemacs-sync-mode 1)
+        :bind (:map lsp-mode-map              
+                    ("C-c l g m" . toggle-lsp-treemacs-modes)))
     #+end_src
 ** font
 *** Set font
     #+begin_src emacs-lisp
+      ;; default face for ui
       (set-face-attribute 'default nil
-                          :font "Dank Mono"
-                          :height 120)
+                          :font "Conta"
+                          :height 130)
+      ;; face for programming
+      (add-hook 'prog-mode-hook
+                (lambda ()
+                  (face-remap-add-relative 'default
+                                          :family "Dank Mono"
+                                          :height 130)))
       (global-auto-composition-mode t)
     #+end_src
 *** COMMENT Pretty symbols
@@ -2071,7 +2093,7 @@
         doom-modeline-position-column-line-format '("%l:%c")
         doom-modeline-buffer-file-name-style 'relative-to-project
         doom-modeline-gnus nil
-        doom-modeline-icon nil ;; remove icons
+        doom-modeline-icon t ;; remove icons
         doom-modeline-time-icon nil
         doom-modeline-buffer-modification-icon nil)
        :hook (after-init . doom-modeline-mode))
@@ -2119,31 +2141,10 @@
 
   ;;   (my-toggle-modeline))
 #+end_src
-** COMMENT vertico posframe
-#+begin_src emacs-lisp
-  (use-package vertico-posframe
-    :config
-    ;; https://github.com/tumashu/vertico-posframe/issues/27#issuecomment-1423156044
-    (defun vertico-posframe-hide-minibuffer (BUFFER WINDOW-POINT)
-      (remove-overlays (point-min) (point-min))
-      (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
-        (overlay-put ov 'window (selected-window))
-        (overlay-put ov 'face
-                     (let ((bg-color (face-background 'default nil)))
-                       `( :background ,bg-color :foreground ,bg-color
-                          :box nil :underline nil
-                          :overline nil :strike-through nil)))
-        (setq-local cursor-type nil)))
-
-    (advice-add 'vertico-posframe--show :after 'vertico-posframe-hide-minibuffer)
-
-    (setq vertico-posframe-width 114)
-    (vertico-posframe-mode))
-#+end_src
 ** custom set faces
    #+begin_src emacs-lisp
      (custom-set-faces
-      '(mode-line ((t (:inherit 'default :family "Conta" :height 120 :box nil))))
+      '(mode-line ((t (:inherit 'default :family "Borg Sans Mono" :height 110 :box nil))))
       '(mode-line-active ((t (:inherit mode-line :box nil))))
       '(mode-line-inactive ((t (:inherit mode-line-active :box nil))))
       '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
@@ -2158,7 +2159,23 @@
       '(centaur-tabs-selected-modified ((t (:slant italic))))
       '(centaur-tabs-unselected-modified ((t (:slant italic))))
 
-      '(font-lock-comment-face ((t :font "Dank Mono" :slant italic :height 110))))
+      '(font-lock-comment-face ((t :font "Dank Mono" :slant italic :height 110)))
+
+      '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
+      '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
+
+     ;; customize the appearence of set-face-attribute; needs to be at runtime
+     (set-face-attribute 'tab-bar nil
+                         :font "VictorMono Nerd Font"
+                         :height 100)
+     (set-face-attribute 'tab-bar-tab nil
+                         :box `(:line-width (7 . -1)
+                                :style nil
+                                :color ,(face-attribute 'tab-bar-tab :background)))
+     (set-face-attribute 'tab-bar-tab-inactive nil
+                         :box `(:line-width (7 . -1)
+                                :style nil
+                                :color ,(face-attribute 'tab-bar-tab-inactive :background)))
 
      (dolist (face '(window-divider
                      window-divider-first-pixel
@@ -2167,17 +2184,6 @@
        (set-face-foreground face (face-attribute 'default :background))
        (set-face-background face (face-attribute 'default :background)))
      (set-face-background 'fringe (face-attribute 'default :background))
-
-     (dolist (face '((org-level-1 . 1.4)
-                     (org-level-2 . 1.2)
-                     (org-level-3 . 1.1)
-                     (org-level-4 . 1.0)
-                     (org-level-5 . 1.0)
-                     (org-level-6 . 1.0)
-                     (org-level-7 . 1.0)
-                     (org-level-8 . 1.0)))
-       (set-face-attribute (car face) nil :font "Margem Condensed Test" :weight 'medium :height (cdr face)))
-
    #+end_src
 ** custom theme set faces
    #+begin_src emacs-lisp
