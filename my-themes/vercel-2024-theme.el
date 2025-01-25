@@ -46,7 +46,6 @@
    ;; BASIC FACES
    `(cursor ((t (:background ,color5))))
    `(default ((t (:background ,color0 :foreground ,color1))))
-   `(error ((t (:foreground ,color10))))
    `(fringe ((t (:background ,color0))))
    ;; `(highlight ((t (:background ,focus-bg))))
    `(highlight ((t (:background ,hover-bg))))
@@ -57,9 +56,10 @@
    `(region ((t (:background ,primary-selection :extend t))))
    ;; `(secondary-selection ((t (:background ,color4))))
    `(secondary-selection ((t (:background ,secondary-selection :extend t))))
-   `(success ((t (:foreground ,color11))))
    `(vertical-border ((t (:foreground ,color7))))
-   `(warning ((t (:foreground ,color12))))
+   `(success ((t (:foreground ,success-muted :weight bold))))
+   `(warning ((t (:foreground ,warning-muted :weight bold))))
+   `(error ((t (:foreground ,error-muted :weight bold))))
 
    ;; Selection-related faces
    `(lazy-highlight ((t (:background ,visual-selection :foreground ,color5))))  ; Search matches
@@ -91,18 +91,18 @@
    `(completions-first-difference ((t (:foreground ,color10))))
 
    ;; FONT LOCK FACES
-   `(font-lock-builtin-face ((t (:foreground ,color8))))
+   `(font-lock-builtin-face ((t (:foreground ,color10))))
    `(font-lock-comment-delimiter-face ((t (:foreground ,color9 :slant italic))))
    `(font-lock-comment-face ((t (:foreground ,color9 :slant italic))))
-   `(font-lock-constant-face ((t (:foreground ,color8))))
+   `(font-lock-constant-face ((t (:foreground ,color8 :weight bold))))
    `(font-lock-doc-face ((t (:foreground ,color9 :slant italic))))
    `(font-lock-function-name-face ((t (:foreground ,color8))))
    `(font-lock-keyword-face ((t (:foreground ,color10 :slant italic))))
-   `(font-lock-preprocessor-face ((t (:foreground ,color10))))
-   `(font-lock-string-face ((t (:foreground ,color11))))
+   `(font-lock-preprocessor-face ((t (:foreground ,color12 :weight bold))))
+   `(font-lock-string-face ((t (:foreground ,color12))))
    `(font-lock-type-face ((t (:foreground ,color12))))
-   `(font-lock-variable-name-face ((t (:foreground ,color1))))
-   `(font-lock-warning-face ((t (:foreground ,color12 :bold t))))
+   `(font-lock-variable-name-face ((t (:foreground ,color1 :slant italic))))
+   `(font-lock-warning-face ((t (:foreground ,warning-muted :bold t))))
 
    `(whitespace-space ((t (:foreground ,color7))))
    `(whitespace-tab ((t (:foreground ,color7))))
@@ -338,12 +338,6 @@
    ;; blamer-mode
    `(blamer-face ((t (:foreground ,color9 :italic t :height 0.9 :weight light))))
 
-   ;; rainbow-delimiters
-   `(rainbow-delimiters-depth-1-face ((t (:foreground ,color8))))
-   `(rainbow-delimiters-depth-2-face ((t (:foreground ,color10))))
-   `(rainbow-delimiters-depth-3-face ((t (:foreground ,color11))))
-   `(rainbow-delimiters-depth-4-face ((t (:foreground ,color12))))
-
    ;; centaur-tabs
    `(centaur-tabs-active-bar-face ((t (:background ,color8))))
    `(centaur-tabs-close-mouse-face ((t (:foreground ,color10))))
@@ -547,10 +541,12 @@
 
    ;; Parentheses and delimiter faces
    ;; Built-in show-paren-mode
-   `(show-paren-match ((t (:foreground ,color11 :weight bold))))
+   `(show-paren-match ((t (:foreground "#be1558" :bold t))))
    `(show-paren-match-expression ((t (:background ,color2))))
-   `(show-paren-mismatch ((t (:background ,color10 :foreground ,color5 :weight bold :strike-through t))))
+   `(show-paren-mismatch ((t (:background ,error-muted :foreground ,color15 :weight bold :strike-through t))))
 
+   
+   
    ;; Smartparens integration
    `(sp-pair-overlay-face ((t (:background ,color2))))
    `(sp-show-pair-match-face ((t (:foreground ,color11 :weight bold))))
@@ -559,8 +555,8 @@
    `(sp-wrap-tag-overlay-face ((t (:background ,color2))))
 
    ;; Rainbow-delimiters faces
-   `(rainbow-delimiters-depth-1-face ((t (:foreground ,color8))))
-   `(rainbow-delimiters-depth-2-face ((t (:foreground ,color10))))
+   `(rainbow-delimiters-depth-1-face ((t (:foreground ,color10))))
+   `(rainbow-delimiters-depth-2-face ((t (:foreground ,color8))))
    `(rainbow-delimiters-depth-3-face ((t (:foreground ,color11))))
    `(rainbow-delimiters-depth-4-face ((t (:foreground ,color12))))
    `(rainbow-delimiters-depth-5-face ((t (:foreground ,color8))))
@@ -568,8 +564,8 @@
    `(rainbow-delimiters-depth-7-face ((t (:foreground ,color11))))
    `(rainbow-delimiters-depth-8-face ((t (:foreground ,color12))))
    `(rainbow-delimiters-depth-9-face ((t (:foreground ,color8))))
-   `(rainbow-delimiters-unmatched-face ((t (:background ,color10 :foreground ,color5 :weight bold :strike-through t))))
-   `(rainbow-delimiters-mismatched-face ((t (:background ,color10 :foreground ,color5 :weight bold :strike-through t))))
+   `(rainbow-delimiters-unmatched-face ((t (:background ,error-muted :foreground ,color5 :strike-through t))))
+   `(rainbow-delimiters-mismatched-face ((t (:background ,error-muted :foreground ,color5 :strike-through t))))
 
    ))
 
