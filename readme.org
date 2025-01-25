@@ -996,7 +996,7 @@
      #+begin_src emacs-lisp
        (show-paren-mode 1)
        (setq show-paren-style 'parenthesis)
-       (set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
+       ;; (set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
      #+end_src
 **** Rainbow delimiters
      #+begin_src emacs-lisp
@@ -1173,6 +1173,8 @@
     #+begin_src emacs-lisp
       (use-package drag-stuff
         :config
+        ;; disable it in org buffers
+        (add-hook 'org-mode-hook (lambda () (drag-stuff-mode -1)))
         (drag-stuff-define-keys)
         (drag-stuff-global-mode))
     #+end_src
@@ -1231,7 +1233,7 @@
         (tsx-ts-mode . treesitter-context-mode)
         :bind
         (:map treesitter-context-mode
-              ("<f6>" . treesitter-context-mode)
+              ;; ("<f6>" . treesitter-context-mode)
               ("C-)" . treesitter-context-focus-mode))
         :config
         (setq treesitter-context-show-context-always nil ;; only show when the outmost parent is invisible
@@ -1249,19 +1251,28 @@
 #+begin_src emacs-lisp
   (use-package treesit-fold
     :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
-    :hook (treesit-mode . treesit-fold-mode)
     :config
     (setq treesit-fold-summary-show nil)
+    :init (global-treesit-fold-mode t)
     :bind (:map treesit-fold-mode-map
                 (("C-{" . treesit-fold-toggle)
                  ("C-*" . treesit-fold-open-all)
                  ("C-}" . treesit-fold-close-all))))
 #+end_src
+*** COMMENT ts-docstr
+can't get this to work?
+#+begin_src emacs-lisp
+  (use-package msgu
+    :straight (msgu type: git :host github :repo "jcs-elpa/msgu"))
+  (use-package ts-docstr
+    :straight (ts-docstr :type git :host github :repo "emacs-vs/ts-docstr"
+                         :files (:defaults "langs/*.el")))
+#+end_src
 *** cognitive complexity
 #+begin_src emacs-lisp
   (use-package cognitive-complexity
     :straight (:host github :repo "emacs-vs/cognitive-complexity")
-    :config (cognitive-complexity-mode 1))
+    :bind (:map lsp-mode-map ("C-c l c" . cognitive-complexity-mode)))
 #+end_src
 ** Languages specifics
 *** Rust
@@ -1275,6 +1286,29 @@
          (add-hook 'before-save-hook (lambda () (when (eq 'rust-ts-mode major-mode)
                                                   (lsp-format-buffer)))))
      #+end_src
+**** special queries
+***** special treatment for ~todo!~ macro
+let's make it more visible
+#+begin_src emacs-lisp
+  (defface my-rust-macro-face
+    '((t (:inherit font-lock-function-call-face :slant italic :underline t)))
+    "Face for Rust todo! macro calls")
+
+  (defun my-rust-ts-mode-macro-highlighting ()
+    (setq-local 
+     treesit-font-lock-settings
+     (append treesit-font-lock-settings
+             (treesit-font-lock-rules
+              :language 'rust
+              :feature 'todo-macro
+              :override t
+              '(((macro_invocation 
+                  (identifier) @my-rust-macro-face)
+                 (:match "^todo$" @my-rust-macro-face))
+                )))))
+
+  (add-hook 'rust-ts-mode-hook #'my-rust-ts-mode-macro-highlighting)
+#+end_src
 **** Better cargo integration
      #+begin_src emacs-lisp
        (use-package cargo-transient
@@ -1627,13 +1661,13 @@
                                       (:underline "#8d77a8"))
            annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
                                                       :slant italic
-                                                      :family "VictorMono Nerd Font")
+                                                      :family alternative-programming-font)
                                             (:inherit 'font-lock-comment-face
                                                       :slant italic
-                                                      :family "VictorMono Nerd Font")
+                                                      :family alternative-programming-font)
                                             (:inherit 'font-lock-comment-face
                                                       :slant italic
-                                                      :family "VictorMono Nerd Font")))
+                                                      :family alternative-programming-font)))
      :hook (prog-mode . annotate-mode)
      :bind ("C-c C-n" . annotate-toggle-annotation-text))
 #+end_src
@@ -1642,6 +1676,75 @@
   (xterm-mouse-mode t)
 #+end_src
 * Appearance
+** font
+*** Set font
+    #+begin_src emacs-lisp 
+      (defconst ui-font
+        "Conta"
+        "Font for ui faces")
+
+      (defconst modeline-font
+        "Borg Sans Mono"
+        "font used by the modeline")
+
+      (defconst org-font
+        "Margem Test"
+        "Font used on org-mode")
+
+      (defconst programming-font
+        "Dank Mono"
+        "Font for programming faces")
+
+      (defconst alternative-programming-font
+        "VictorMono Nerd Font"
+        "Font for alternative faces")
+
+      ;; default face for ui
+      (set-face-attribute 'default nil
+                          :font ui-font
+                          :height 130)
+      ;; face for programming
+      (add-hook 'prog-mode-hook
+                (lambda ()
+                  (face-remap-add-relative 'default
+                                          :family programming-font
+                                          :height 130)))
+      (global-auto-composition-mode t)
+    #+end_src
+*** COMMENT Pretty symbols
+
+    #+begin_src emacs-lisp
+      (when window-system
+        (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+    #+end_src
+*** Fix org mode tables
+    #+begin_src emacs-lisp
+      (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+    #+end_src
+*** ligatures
+    #+begin_src emacs-lisp
+      (use-package ligature
+        :straight (:host github :repo "mickeynp/ligature.el")
+        :config
+        (ligature-set-ligatures 't '("www"))
+        (ligature-set-ligatures
+         'prog-mode
+         '("-->" "//" "/**" "/*" "*/" "<!--" ":=" "->>" "<<-" "->" "<-"
+           "<=>" "==" "!=" "<=" ">=" "=:=" "!==" "&&" "||" "..." ".."
+           "|||" "///" "&&&" "===" "++" "--" "=>" "|>" "<|" "||>" "<||"
+           "|||>" "<|||" ">>" "<<" "::=" "|]" "[|" "{|" "|}"
+           "[<" ">]" ":?>" ":?" "/=" "[||]" "!!" "?:" "?." "::"
+           "+++" "??" "###" "##" ":::" "####" ".?" "?=" "=!=" "<|>"
+           "<:" ":<" ":>" ">:" "<>" "***" ";;" "/==" ".=" ".-" "__"
+           "=/=" "<-<" "<<<" ">>>" "<=<" "<<=" "<==" "<==>" "==>" "=>>"
+           ">=>" ">>=" ">>-" ">-" "<~>" "-<" "-<<" "=<<" "---" "<-|"
+           "<=|" "/\\" "\\/" "|=>" "|~>" "<~~" "<~" "~~" "~~>" "~>"
+           "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</>" "</" "/>"
+           "<->" "..<" "~=" "~-" "-~" "~@" "^=" "-|" "_|_" "|-" "||-"
+           "|=" "||=" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
+           "&="))
+        (global-ligature-mode t))
+    #+end_src
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
@@ -1936,7 +2039,7 @@
     :demand
     :config
     (centaur-tabs-headline-match)
-    (centaur-tabs-change-fonts "VictorMono Nerd Font" 90)
+    (centaur-tabs-change-fonts alternative-programming-font 90)
     (centaur-tabs-mode t)
     :bind
     (:map centaur-tabs-mode-map
@@ -1975,7 +2078,6 @@
              ("C-c ; B" . treemacs-bookmark)
              ("C-c ; f" . treemacs-find-file)
              ("C-c ; g" . treemacs-find-tag)))
-     (treemacs-start-on-boot)
    #+end_src
 *** treemacs extensions
     #+begin_src emacs-lisp
@@ -2020,55 +2122,6 @@
         :bind (:map lsp-mode-map              
                     ("C-c l g m" . toggle-lsp-treemacs-modes)))
     #+end_src
-** font
-*** Set font
-    #+begin_src emacs-lisp
-      ;; default face for ui
-      (set-face-attribute 'default nil
-                          :font "Conta"
-                          :height 130)
-      ;; face for programming
-      (add-hook 'prog-mode-hook
-                (lambda ()
-                  (face-remap-add-relative 'default
-                                          :family "Dank Mono"
-                                          :height 130)))
-      (global-auto-composition-mode t)
-    #+end_src
-*** COMMENT Pretty symbols
-
-    #+begin_src emacs-lisp
-      (when window-system
-        (add-hook 'prog-mode-hook 'prettify-symbols-mode))
-    #+end_src
-*** Fix org mode tables
-    #+begin_src emacs-lisp
-      (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-    #+end_src
-*** ligatures
-    #+begin_src emacs-lisp
-      (use-package ligature
-        :straight (:host github :repo "mickeynp/ligature.el")
-        :config
-        (ligature-set-ligatures 't '("www"))
-        (ligature-set-ligatures
-         'prog-mode
-         '("-->" "//" "/**" "/*" "*/" "<!--" ":=" "->>" "<<-" "->" "<-"
-           "<=>" "==" "!=" "<=" ">=" "=:=" "!==" "&&" "||" "..." ".."
-           "|||" "///" "&&&" "===" "++" "--" "=>" "|>" "<|" "||>" "<||"
-           "|||>" "<|||" ">>" "<<" "::=" "|]" "[|" "{|" "|}"
-           "[<" ">]" ":?>" ":?" "/=" "[||]" "!!" "?:" "?." "::"
-           "+++" "??" "###" "##" ":::" "####" ".?" "?=" "=!=" "<|>"
-           "<:" ":<" ":>" ">:" "<>" "***" ";;" "/==" ".=" ".-" "__"
-           "=/=" "<-<" "<<<" ">>>" "<=<" "<<=" "<==" "<==>" "==>" "=>>"
-           ">=>" ">>=" ">>-" ">-" "<~>" "-<" "-<<" "=<<" "---" "<-|"
-           "<=|" "/\\" "\\/" "|=>" "|~>" "<~~" "<~" "~~" "~~>" "~>"
-           "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</>" "</" "/>"
-           "<->" "..<" "~=" "~-" "-~" "~@" "^=" "-|" "_|_" "|-" "||-"
-           "|=" "||=" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
-           "&="))
-        (global-ligature-mode t))
-    #+end_src
 ** modeline
    #+begin_src emacs-lisp
      (use-package doom-modeline
@@ -2083,16 +2136,16 @@
         doom-modeline-hud t
         doom-modeline-github nil
         doom-modeline-github-interval (* 30 60)
-        doom-modeline-enable-word-count nil
-        doom-modeline-buffer-encoding nil
+        doom-modeline-enable-word-count t
+        doom-modeline-buffer-encoding t
         doom-modeline-support-imenu t
         doom-modeline-irc nil
-        doom-modeline-position-line-format '()
-        doom-modeline-percent-position '()
+        doom-modeline-position-line-format '("L%l")
+        doom-modeline-percent-position '(-3 "%p")
         doom-modeline-position-column-line-format '("%l:%c")
         doom-modeline-buffer-file-name-style 'relative-to-project
         doom-modeline-gnus nil
-        doom-modeline-icon t ;; remove icons
+        doom-modeline-icon nil ;; remove icons
         doom-modeline-time-icon nil
         doom-modeline-buffer-modification-icon nil)
        :hook (after-init . doom-modeline-mode))
@@ -2142,39 +2195,44 @@
 #+end_src
 ** custom set faces
    #+begin_src emacs-lisp
-     (custom-set-faces
-      '(mode-line ((t (:inherit 'default :family "Borg Sans Mono" :height 110 :box nil))))
-      '(mode-line-active ((t (:inherit mode-line :box nil))))
-      '(mode-line-inactive ((t (:inherit mode-line-active :box nil))))
-      '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
+     (set-face-attribute 'mode-line nil
+                         :inherit 'default
+                         :family modeline-font
+                         :height 110
+                         :box nil)
 
-      '(blamer-face ((t :family "Dank Mono" :height 100 :italic t)))
+     (set-face-attribute 'mode-line-active nil
+                         :inherit 'mode-line
+                         :box nil)
 
-      '(lsp-inlay-hint-parameter-face ((t :inherit lsp-inlay-hint-face
-                                          :height 110)))
-      '(lsp-inlay-hint-type-face ((t :inherit lsp-inlay-hint-face
-                                     :height 110)))
+     (set-face-attribute 'mode-line-inactive nil
+                         :inherit 'mode-line-active
+                         :box nil)
 
-      '(centaur-tabs-selected-modified ((t (:slant italic))))
-      '(centaur-tabs-unselected-modified ((t (:slant italic))))
+     (set-face-attribute 'font-lock-comment-face nil
+                         :font programming-font
+                         :slant 'italic
+                         :height 110)
 
-      '(font-lock-comment-face ((t :font "Dank Mono" :slant italic :height 110)))
-
-      '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
-      '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
-
-     ;; customize the appearence of set-face-attribute; needs to be at runtime
      (set-face-attribute 'tab-bar nil
-                         :font "VictorMono Nerd Font"
+                         :font alternative-programming-font
                          :height 100)
+
      (set-face-attribute 'tab-bar-tab nil
                          :box `(:line-width (7 . -1)
-                                :style nil
-                                :color ,(face-attribute 'tab-bar-tab :background)))
+                                            :style nil
+                                            :color ,(face-attribute 'tab-bar-tab :background)))
+
      (set-face-attribute 'tab-bar-tab-inactive nil
                          :box `(:line-width (7 . -1)
-                                :style nil
-                                :color ,(face-attribute 'tab-bar-tab-inactive :background)))
+                                            :style nil
+                                            :color ,(face-attribute 'tab-bar-tab-inactive :background)))
+
+     (with-eval-after-load 'blamer
+       (set-face-attribute 'blamer-face nil
+                           :family programming-font
+                           :height 100
+                           :italic t))
 
      (dolist (face '(window-divider
                      window-divider-first-pixel
@@ -2183,14 +2241,29 @@
        (set-face-foreground face (face-attribute 'default :background))
        (set-face-background face (face-attribute 'default :background)))
      (set-face-background 'fringe (face-attribute 'default :background))
+
+
+     (custom-set-faces
+      '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
+
+      '(lsp-inlay-hint-parameter-face ((t (:inherit lsp-inlay-hint-face
+                                                    :height 110))))
+      '(lsp-inlay-hint-type-face ((t (:inherit lsp-inlay-hint-face
+                                               :height 110))))
+
+      '(centaur-tabs-selected-modified ((t (:slant italic))))
+      '(centaur-tabs-unselected-modified ((t (:slant italic))))
+
+      '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
+      '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
    #+end_src
 ** custom theme set faces
    #+begin_src emacs-lisp
      (require 'org-indent)
      (custom-theme-set-faces
       'user
-      '(fixed-pitch ((t (:family "VictorMono Nerd Font" :height 120))))
-      '(variable-pitch ((t (:family "Margem Test" :height 130)))) ;; short stack
+      '(fixed-pitch ((t (:family alternative-programming-font :height 120))))
+      '(variable-pitch ((t (:family org-font :height 130)))) ;; short stack
       '(org-block ((t (:inherit fixed-pitch))))
       '(org-code ((t (:inherit (shadow fixed-pitch)))))
       '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
