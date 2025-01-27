@@ -403,6 +403,13 @@
        (use-package flycheck-inline
          :after flycheck-mode)
      #+end_src
+** flycheck-overlay
+#+begin_src emacs-lisp
+  (use-package flycheck-overlay
+    :straight (:host github :repo "konrad1977/flycheck-overlay" :files ("*.el"))
+    :after flycheck
+    :hook (flycheck-mode . flycheck-overlay-mode))
+#+end_src
 ** Consult and integrations
 *** Consult
     #+begin_src emacs-lisp
@@ -559,7 +566,90 @@
         ("C-c n l" . consult-org-roam-forward-links)
         ("C-c n r" . consult-org-roam-search))
         #+end_src
-   
+** LLM
+*** Ellama
+#+begin_src emacs-lisp
+  (use-package ellama
+    :bind ("M-n ," . ellama-transient-main-menu)
+    :init
+    (setopt ellama-enable-keymap t)
+    (setopt ellama-keymap-prefix "M-n")
+    (setopt ellama-language "English")
+    (require 'llm-ollama)
+    (setopt ellama-provider
+            (make-llm-ollama
+             :chat-model "coder"
+             :embedding-model "coder")))
+#+end_src
+***  elisa
+#+begin_src emacs-lisp
+  (use-package elisa
+    :init
+    ;; reranker increases answer quality significantly
+    ;; needs its docker running
+    (setopt elisa-reranker-enabled t)
+    (require 'llm-ollama)
+    (setopt elisa-embeddings-provider (make-llm-ollama :embedding-model "mxbai-embed-large"))
+    (setopt elisa-chat-provider
+  	  (make-llm-ollama
+  	   :chat-model "coder"
+  	   :embedding-model "coder"
+  	   :default-chat-temperature 0.1
+  	   :default-chat-non-standard-params '(("num_ctx" . 32768)))))
+#+end_src
+*** Copilot
+   #+begin_src emacs-lisp
+     (defun my/copilot-tab ()
+       (interactive)
+       (or (copilot-accept-completion)
+           (indent-for-tab-command)))
+
+     (use-package copilot
+       :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+       :init
+       (use-package jsonrpc)
+       :config
+       (setq copilot-idle-delay 6)
+       (add-to-list 'copilot-major-mode-alist '("rust-ts-mode" . "rust"))
+       :bind
+       (:map prog-mode-map
+             ("C-c C-o RET" . global-copilot-mode))
+       (:map copilot-mode-map
+             ("<TAB>" . my/copilot-tab)
+             ("C-c C-o n" . copilot-next-completion)
+             ("C-c C-o SPC" . copilot-complete)
+             ("C-c C-o p" . copilot-previous-completion)
+             ("C-c C-o a" . copilot-accept-completion)
+             ("C-c C-o C-a l" . copilot-accept-completion-by-line)
+             ("C-c C-o C-a w" . copilot-accept-completion-by-word)))
+   #+end_src
+*** aider.el
+#+begin_src emacs-lisp
+  (use-package aider
+    :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
+    :config
+    (setq aider-args '("--model" "ollama_chat/coderphi" "--no-auto-commits"))
+    (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434")
+    :bind (:map prog-mode-map
+                ("C--" . aider-transient-menu)))
+#+end_src
+** COMMENT nova
+looks great, but no text are shown
+#+begin_src emacs-lisp
+  (use-package vertico-posframe)
+  (use-package markdown-mode)
+  (use-package nova
+    :straight (:host github :repo "thisisran/nova")
+    :config
+    ;; (require 'nova)
+    ;; (require 'nova-corfu)
+    ;; (require 'nova-corfu-popupinfo)
+    ;; (require 'nova-eldoc)
+    (nova-vertico-mode 1)
+    (nova-corfu-mode 1)
+    (nova-corfu-popupinfo-mode 1)
+    (nova-eldoc-mode 1))
+#+end_src
 * Org
 ** install
    #+begin_src emacs-lisp
@@ -969,23 +1059,41 @@
 *** Parens
 **** Smartparens
      #+begin_src emacs-lisp
+       (defun indent-between-pair (&rest _ignored)
+         (newline)
+         (indent-according-to-mode)
+         (forward-line -1)
+         (indent-according-to-mode))
+
        (use-package smartparens
-         :bind ("C-M-f" . 'sp-forward-sexp)
-         ("C-M-b" . 'sp-backward-sexp)
+         :bind
+         ("C-M f" . sp-forward-sexp)
+         ("C-M b" . sp-backward-sexp)
+         ("C-M (" . sp-wrap-round)
+         ("C-M [" . sp-wrap-square)
+         ("C-M {" . sp-wrap-curly)
          :config
          (require 'smartparens-config)
          (smartparens-global-mode)
          ;; easy <'lifetime>
          (sp-with-modes 'rust-ts-mode
-           (sp-local-pair "<" ">")
-           (sp-local-pair "'" nil :actions nil))
+       	(sp-local-pair "<" ">")
+       	(sp-local-pair "'" nil :actions nil))
          ;; easy ~code~
          (sp-with-modes 'org-mode
-           (sp-local-pair "~" "~")
-           (sp-local-pair "=" "="))
+       	(sp-local-pair "~" "~")
+       	(sp-local-pair "=" "="))
+
+         (sp-local-pair 'prog-mode "{" nil
+                        :post-handlers '((indent-between-pair "RET")))
+         (sp-local-pair 'prog-mode "[" nil
+                        :post-handlers '((indent-between-pair "RET")))
+         (sp-local-pair 'prog-mode "(" nil
+                        :post-handlers '((indent-between-pair "RET")))
+
          (smartparens-strict-mode t))
      #+end_src
-***** close parens in new line
+***** COMMENT close parens in new line
       #+begin_src emacs-lisp
         (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
         (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
@@ -1164,11 +1272,13 @@
     #+end_src
 *** symbol overlay
     #+begin_src emacs-lisp
-      (use-package symbol-overlay
-        :config
-        (setq symbol-overlay-toggle-in-scope t)
-        :bind ("M-i" . symbol-overlay-put))
+      (use-package symbol-overlay)
     #+end_src
+**** transient symbol overlay
+#+begin_src emacs-lisp
+  (use-package casual-symbol-overlay
+    :bind ("M-i" . casual-symbol-overlay-tmenu))
+#+end_src
 *** Moving lines around
     #+begin_src emacs-lisp
       (use-package drag-stuff
@@ -2028,6 +2138,8 @@ let's make it more visible
        (string-prefix-p " *temp" name)
        (string-prefix-p "*Help" name)
        (string-prefix-p "*mybuf" name)
+       (string-prefix-p "*Warnings" name)
+       (string-prefix-p "*aider:" name)
 
        ;; Is not magit buffer.
        (and (string-prefix-p "magit" name)

@@ -1,5 +1,5 @@
+;;; vercel-2024-theme.el --- A theme inspired by One Hunter Vercel 2024 -*- lexical-binding: t; -*-
 (deftheme vercel-2024 "A nice dark theme.")
-
 (let* (
        ;; Base colors
        (color0 "#000000")
@@ -24,9 +24,10 @@
        ;; Additional semantic colors
        (focus-bg "#363636")
        (hover-bg "#404040")
-       (success-muted "#004D1F")
-       (warning-muted "#524200")
-       (error-muted "#4D0015")
+       (success-muted "#009A3D")
+       (warning-muted "#B89F00")
+       (error-muted "#C44B71")
+       (info-muted "#5A91C8")
 
        ;; New selection-specific colors
        (primary-selection "#141414")
@@ -36,8 +37,7 @@
 
        ;; LSP-specific colors
        (hint-fg "#878787")
-       (hint-param-fg "#A89ADD")
-       (hint-type-fg "#4b4b4b") ;; 7E72FC
+       (hint-type-fg "#4b4b4b") ;; #7E72FC
        (completion-bg "#1A1A1A")
        )
 
@@ -296,6 +296,20 @@
    `(flycheck-info-overlay ((t (:underline (:style wave :color ,color8)
                                            :background ,color2))))
 
+   ;; https://github.com/konrad1977/flycheck-overlay
+   `(flycheck-overlay-error ((t :background ,error-muted
+                                :foreground ,color13
+                                :height 0.9
+                                :weight normal)))
+   `(flycheck-overlay-warning ((t :background ,warning-muted
+                                  :foreground ,color13
+                                  :height 0.9
+                                  :weight normal)))
+   `(flycheck-overlay-info ((t :background ,info-muted
+                               :foreground ,color13
+                               :height 0.9
+                               :weight normal)))
+
    ;;
    ;; / ERRORS
    ;;
@@ -545,8 +559,8 @@
    `(show-paren-match-expression ((t (:background ,color2))))
    `(show-paren-mismatch ((t (:background ,error-muted :foreground ,color15 :weight bold :strike-through t))))
 
-   
-   
+
+
    ;; Smartparens integration
    `(sp-pair-overlay-face ((t (:background ,color2))))
    `(sp-show-pair-match-face ((t (:foreground ,color11 :weight bold))))
