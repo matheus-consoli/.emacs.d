@@ -80,10 +80,9 @@
 
    ;; modeline
    `(mode-line ((t (:background ,color6 :foreground ,color5 :box (:line-width 1 :color ,color7)))))
-   ;; `(mode-line ((t (:background ,color6 :foreground ,color5))))
+   `(mode-line-highlight ((t  (:background ,hover-bg :foreground ,color5 :box (:line-width 1 :color ,color7)))))
    `(mode-line-buffer-id ((t (:foreground ,color8 :bold t))))
    `(mode-line-emphasis ((t (:foreground ,color11))))
-   ;; `(mode-line-inactive ((t (:background ,color2 :foreground ,color5))))
    `(mode-line-inactive ((t (:background ,color2 :foreground ,color9 :box (:line-width 1 :color ,color7)))))
 
    ;; Specific minibuffer-related faces
@@ -234,12 +233,13 @@
    `(flycheck-fringe-warning ((t (:foreground ,color12))))
    `(flycheck-fringe-info ((t (:foreground ,color8))))
    `(flycheck-error-list-error ((t (:foreground ,color10))))
+   `(flycheck-error-list-error-message ((t (:foreground ,color10))))
    `(flycheck-error-list-warning ((t (:foreground ,color12))))
    `(flycheck-error-list-info ((t (:foreground ,color8))))
    `(flycheck-error-list-line-number ((t (:foreground ,color9))))
    `(flycheck-error-list-column-number ((t (:foreground ,color9))))
    `(flycheck-error-list-filename ((t (:foreground ,color8))))
-   `(flycheck-error-list-highlight ((t (:background ,color3))))
+   `(flycheck-error-list-highlight ((t (:background ,color3 :foreground ,color5))))
    `(flycheck-verify-select-checker ((t (:background ,color3))))
    `(flycheck-error-list-checker-name ((t (:foreground ,color12))))
    `(flycheck-error-list-id ((t (:foreground ,color8))))
@@ -358,10 +358,10 @@
    `(centaur-tabs-close-selected ((t (:inherit 'centaur-tabs-selected :foreground ,color5))))
    `(centaur-tabs-close-unselected ((t (:inherit 'centaur-tab-sunselected :foreground ,color9))))
    `(centaur-tabs-close-mouse-face ((t (:foreground ,color10))))
-   `(centaur-tabs-default ((t (:background ,color0 :foreground ,color1))))
-   `(centaur-tabs-group-face ((t (:foreground ,color8 :bold t))))
-   `(centaur-tabs-modified-marker-selected ((t (:inherit 'centaur-tabs-selected :foreground ,color10))))
-   `(centaur-tabs-modified-marker-unselected ((t (:inherit 'centaur-tabs-unselected :foreground ,color10))))
+   `(centaur-tabs-default ((t (:background ,color0 :foreground ,color1 :height 0.9))))
+   `(centaur-tabs-group-face ((t (:foreground ,color8))))
+   `(centaur-tabs-modified-marker-selected ((t (:inherit 'centaur-tabs-selected :foreground ,color10 :italic t))))
+   `(centaur-tabs-modified-marker-unselected ((t (:inherit 'centaur-tabs-unselected :foreground ,color10 :italic t))))
    `(centaur-tabs-name-mouse-face ((t (:foreground ,color5 :bold t))))
    `(centaur-tabs-selected ((t (:background ,color6 :foreground ,color5))))
    `(centaur-tabs-selected-modified ((t (:background ,color6 :foreground ,color12))))
@@ -414,15 +414,16 @@
    `(dap-ui-marker-face ((t (:background ,color3))))
    `(dap-ui-compile-errline ((t (:foreground ,color10))))
    `(dap-ui-compile-warnline ((t (:foreground ,color12))))
+
    ;; Corfu completion
-   `(corfu-default ((t (:background ,color14 :foreground ,color15))))
+   `(corfu-default ((t (:background ,color14 :foreground ,color15 :height 0.9))))
    `(corfu-current ((t (:background ,color3 :foreground ,color5))))
    `(corfu-bar ((t (:background ,color7))))
    `(corfu-border ((t (:background ,color7))))
    `(corfu-deprecated ((t (:foreground ,color9 :strike-through t))))
-   `(corfu-annotation ((t (:foreground ,color9))))
-   `(corfu-echo ((t (:foreground ,color9))))
-
+   `(corfu-annotation ((t (:foreground ,color9 :slant italic))))
+   `(corfu-echo ((t (:foreground ,color9 :slant italic))))
+   
    ;; LSP completion via Corfu
    `(corfu-metadata-face ((t (:foreground ,color9))))
    `(corfu-documentation-face ((t (:foreground ,color9))))
@@ -430,6 +431,10 @@
    `(corfu-quick1-face ((t (:foreground ,color8))))
    `(corfu-quick2-face ((t (:foreground ,color10))))
 
+   `(corfu-quick1 ((t (:foreground ,color8 :weight bold))))
+   `(corfu-quick2 ((t (:foreground ,color10 :weight bold))))
+   `(corfu-quick3 ((t (:foreground ,color12 :weight bold))))
+   
    ;; Vertico-specific faces
    `(vertico-current ((t (:background ,color3 :foreground ,color5))))
    `(vertico-group-title ((t (:foreground ,color8 :weight bold))))
@@ -439,6 +444,7 @@
    ;; Vertico quick keys (1-9 shortcuts)
    `(vertico-quick1 ((t (:foreground ,color8 :weight bold))))
    `(vertico-quick2 ((t (:foreground ,color10 :weight bold))))
+   `(vertico-quick3 ((t (:foreground ,color12 :weight bold))))
 
    ;; Vertico documentation/annotation
    `(vertico-posframe ((t (:background ,color14))))
