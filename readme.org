@@ -57,8 +57,8 @@
         corfu-separator ?\s
 
         corfu-auto t
-        corfu-auto-delay 0.25
-        corfu-auto-prefix 0.2
+        corfu-auto-delay 0.2
+        corfu-auto-prefix 3
         corfu-popupinfo-delay '(1.30 . 1.50))
        :bind
        (:map corfu-map
@@ -294,11 +294,11 @@
          lsp-modeline-code-actions-mode t
          lsp-enable-folding t
          lsp-enable-indentation t
-         lsp-enable-on-type-formatting t
+         lsp-enable-on-type-formatting nil
          lsp-enable-snippet t
          lsp-headerline-breadcrumb-icons-enable t
          lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)
-         lsp-idle-delay 0.1
+         lsp-idle-delay 0.3
          lsp-lens-enable t
          lsp-inlay-hint-enable t
          lsp-symbol-highlighting-skip-current t
@@ -403,13 +403,6 @@
        (use-package flycheck-inline
          :after flycheck-mode)
      #+end_src
-** flycheck-overlay
-#+begin_src emacs-lisp
-  (use-package flycheck-overlay
-    :straight (:host github :repo "konrad1977/flycheck-overlay" :files ("*.el"))
-    :after flycheck
-    :hook (flycheck-mode . flycheck-overlay-mode))
-#+end_src
 ** Consult and integrations
 *** Consult
     #+begin_src emacs-lisp
@@ -1067,43 +1060,36 @@ looks great, but no text are shown
 
        (use-package smartparens
          :bind
-         ("C-M f" . sp-forward-sexp)
-         ("C-M b" . sp-backward-sexp)
-         ("C-M (" . sp-wrap-round)
-         ("C-M [" . sp-wrap-square)
-         ("C-M {" . sp-wrap-curly)
-         :config
+         ("C-M-f" . sp-forward-sexp)
+         ("C-M-b" . sp-backward-sexp)
+         ("C-M-(" . sp-wrap-round)
+         ("C-M-[" . sp-wrap-square)
+         ("C-M-{" . sp-wrap-curly)
+         :init
          (require 'smartparens-config)
-         (smartparens-global-mode)
-         ;; easy <'lifetime>
-         (sp-with-modes 'rust-ts-mode
-       	(sp-local-pair "<" ">")
-       	(sp-local-pair "'" nil :actions nil))
-         ;; easy ~code~
-         (sp-with-modes 'org-mode
-       	(sp-local-pair "~" "~")
-       	(sp-local-pair "=" "="))
+         :config
+         (smartparens-global-mode 1)
 
-         (sp-local-pair 'prog-mode "{" nil
-                        :post-handlers '((indent-between-pair "RET")))
-         (sp-local-pair 'prog-mode "[" nil
-                        :post-handlers '((indent-between-pair "RET")))
-         (sp-local-pair 'prog-mode "(" nil
-                        :post-handlers '((indent-between-pair "RET")))
+         ;; Rust-specific pairs
+         (sp-with-modes '(rust-ts-mode)
+                        (sp-local-pair "<" ">")
+                        (sp-local-pair "'" nil :actions nil))
 
-         (smartparens-strict-mode t))
+         ;; Org-mode pairs
+         (sp-with-modes '(org-mode)
+                        (sp-local-pair "~" "~")
+                        (sp-local-pair "=" "="))
+
+         ;; Programming mode pairs with better indentation
+         (sp-with-modes '(prog-mode)
+           (sp-local-pair "{" nil :post-handlers '((indent-between-pair "RET")))
+           (sp-local-pair "[" nil :post-handlers '((indent-between-pair "RET")))
+           (sp-local-pair "(" nil :post-handlers '((indent-between-pair "RET")))))
      #+end_src
-***** COMMENT close parens in new line
-      #+begin_src emacs-lisp
-        (sp-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
-        (sp-pair "(" nil :post-handlers '(("||\n[i]" "RET")))
-        (sp-pair "[" nil :post-handlers '(("||\n[i]" "RET")))
-      #+end_src
-
 **** Show matches
      #+begin_src emacs-lisp
        (show-paren-mode 1)
-       (setq show-paren-style 'parenthesis)
+       (setq show-paren-style 'mixed)
        ;; (set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
      #+end_src
 **** Rainbow delimiters
@@ -1141,7 +1127,7 @@ looks great, but no text are shown
        (use-package git-gutter
          :config (global-git-gutter-mode t)
          :custom
-         (git-gutter:update-interval 0.02))
+         (git-gutter:update-interval 0.2))
 
        (use-package git-gutter-fringe
          :custom
@@ -1156,19 +1142,19 @@ looks great, but no text are shown
        (use-package blamer
          :defer 20
          :bind (("C-c i" . blamer-show-posframe-commit-info))
+         :hook (prog-mode . blamer-mode)
          :custom
          (blamer-datetime-formatter ", %s ")
          (blamer-author-formatter " %s") ;; 
          (blamer-commit-formatter "")
-         (blamer-idle-time 1)
+         (blamer-idle-time 2)
          (blamer-smart-background-p t)
          (blamer-min-offset 5)
          (blamer-type 'visual) ;; only about one line
          (blamer-prettify-time-p t)
          (blamer-max-commit-message-length 30)
          (blamer-show-avatar-p t)
-         (blamer-symbol-count-before-new-line 1)
-         :config (global-blamer-mode 1))
+         (blamer-symbol-count-before-new-line 1))
      #+end_src
 **** forge
      #+begin_src emacs-lisp
@@ -1384,6 +1370,15 @@ can't get this to work?
     :straight (:host github :repo "emacs-vs/cognitive-complexity")
     :bind (:map lsp-mode-map ("C-c l c" . cognitive-complexity-mode)))
 #+end_src
+*** better regexes
+#+begin_src emacs-lisp
+  (use-package visual-regexp)
+  (use-package visual-regexp-steroids
+    :bind
+    ("C-r" . vr/isearch-backward)
+    ("C-s" . vr/isearch-forward)
+    ("C-M-%" . vr/query-replace))
+#+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
@@ -1427,7 +1422,7 @@ let's make it more visible
                      ("C-c C-c c" . cargo-transient-check)
                      ("C-c C-c l" . cargo-transient-clippy)
                      ("C-c C-c f" . cargo-transient-clippy-fix)
-                     ("C-c C-c t" . cargo-transient-clippy-test)
+                     ("C-c C-c k" . cargo-transient-clippy-test)
                      ("C-c C-c r" . cargo-transient-run)))
      #+end_src
 **** LSP config
@@ -1474,6 +1469,15 @@ let's make it more visible
        ;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
        ;;  lsp-rust-analyzer-proc-macro-enable t)
      #+end_src
+*** hyprlang
+#+begin_src emacs-lisp
+  (use-package hyprlang-ts-mode
+    :init
+    (add-to-list 'treesit-language-source-alist
+          '(hyprlang "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"))
+    :custom
+    (hyprlang-ts-mode-indent-offset 4))
+#+end_src
 *** Unison
 **** Unison mode
      #+begin_src emacs-lisp
@@ -1607,6 +1611,9 @@ let's make it more visible
 ** Smooth scrolling
    #+begin_src emacs-lisp
      (use-package good-scroll
+       :bind
+       ([remap next] . good-scroll-up-full-screen)
+       ([remap prior] . good-scroll-down-full-screen)
        :config
        (good-scroll-mode 1))
 
@@ -1845,7 +1852,7 @@ let's make it more visible
            "|||>" "<|||" ">>" "<<" "::=" "|]" "[|" "{|" "|}"
            "[<" ">]" ":?>" ":?" "/=" "[||]" "!!" "?:" "?." "::"
            "+++" "??" "###" "##" ":::" "####" ".?" "?=" "=!=" "<|>"
-           "<:" ":<" ":>" ">:" "<>" "***" ";;" "/==" ".=" ".-" "__"
+           "<:" ":<" ":>" ">:" "***" ";;" "/==" ".=" ".-" "__" ;; "<>"
            "=/=" "<-<" "<<<" ">>>" "<=<" "<<=" "<==" "<==>" "==>" "=>>"
            ">=>" ">>=" ">>-" ">-" "<~>" "-<" "-<<" "=<<" "---" "<-|"
            "<=|" "/\\" "\\/" "|=>" "|~>" "<~~" "<~" "~~" "~~>" "~>"
@@ -1878,8 +1885,6 @@ let's make it more visible
        :demand t
        :config
        (all-the-icons-nerd-fonts-prefer))
-
-     (setq inhibit-compacting-font-caches t)
    #+end_src
 ** themes
 *** downloading themes
@@ -2151,7 +2156,7 @@ let's make it more visible
     :demand
     :config
     (centaur-tabs-headline-match)
-    (centaur-tabs-change-fonts alternative-programming-font 90)
+    (centaur-tabs-change-fonts alternative-programming-font 95)
     (centaur-tabs-mode t)
     :bind
     (:map centaur-tabs-mode-map
@@ -2161,10 +2166,11 @@ let's make it more visible
            ("C-<prior>" . centaur-tabs-backward)
            ("C-<next>" . centaur-tabs-forward)))
     :custom
-    (centaur-tabs-height 27)
-    (centaur-tabs-style "bar")
+    (centaur-tabs-height 25)
+    (centaur-tabs-style "alternate")
     (centaur-tabs-hide-tab-function my-centaur-tabs-hide-tab)
-    (centaur-tabs-set-bar 'over)
+    (centaur-tabs-set-bar 'under)
+    (x-underline-at-descent-line t) ;; to correctly display the icon
     (centaur-tabs-cycle-scope 'tabs)
     (centaur-tabs-gray-out-icons 'buffer)
     (centaur-tabs-set-icons t)
@@ -2180,7 +2186,7 @@ let's make it more visible
        (treemacs-git-commit-diff-mode t)
        (treemacs-fringe-indicator-mode 'always)
        (treemacs-follow-mode t)
-       (treemacs-project-follow-mode t)
+       (treemacs-project-follow-mode nil)
        (treemacs-filewatch-mode t)
        (treemacs-peek-mode t)
        (setq treemacs-expand-after-init nil)
@@ -2362,9 +2368,6 @@ let's make it more visible
                                                     :height 110))))
       '(lsp-inlay-hint-type-face ((t (:inherit lsp-inlay-hint-face
                                                :height 110))))
-
-      '(centaur-tabs-selected-modified ((t (:slant italic))))
-      '(centaur-tabs-unselected-modified ((t (:slant italic))))
 
       '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
       '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))

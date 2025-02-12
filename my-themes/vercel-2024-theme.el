@@ -1,5 +1,6 @@
 ;;; vercel-2024-theme.el --- A theme inspired by One Hunter Vercel 2024 -*- lexical-binding: t; -*-
-(deftheme vercel-2024 "A nice dark theme.")
+(deftheme vercel-2024 "A sophisticated dark theme with modern aesthetics.")
+
 (let* (
        ;; Base colors
        (color0 "#000000")
@@ -10,16 +11,23 @@
        (color5 "#ffffff")
        (color6 "#282828")
        (color7 "#4b4b4b")
-       (color8 "#C372FC")
+       (color8 "#C372FC") ;; primary accent
        (color9 "#A3A3A3")
-       (color10 "#FF4C8D")
-       (color11 "#00CA51")
-       (color12 "#E5B800")
+       (color10 "#FF4C8D") ;; secondary accent
+       (color11 "#00CA51") ;; success accent
+       (color12 "#E5B800") ;; warning accent
        (color13 "#2B2B2B")
        (color14 "#0f0f0f")
        (color15 "#fcfcfc")
        (color16 "#0b0b0b")
        (color17 "#f8f8f8")
+
+       ;; accent colors
+       (accent1 "#B084EB")
+       (accent2 "#FF6B8F")
+       (accent3 "#26D17F")
+       (accent4 "#00C8D3")
+       (syntax-comment "#7E72FC")
 
        ;; Additional semantic colors
        (focus-bg "#363636")
@@ -35,9 +43,16 @@
        (visual-selection "#4B3B66")
        (inactive-selection "#2B2B2B")
 
+       (diff-added-bg "#0B2416")
+       (diff-added-fg "#7EC699")
+       (diff-removed-bg "#2B1216")
+       (diff-removed-fg "#FF8FA3")
+       (diff-changed-bg "#2B2B16")
+       (diff-changed-fg "#E5C07B")
+
        ;; LSP-specific colors
        (hint-fg "#878787")
-       (hint-type-fg "#4b4b4b") ;; #7E72FC
+       (hint-type-fg "#4b4b4b")
        (completion-bg "#1A1A1A")
        )
 
@@ -136,14 +151,15 @@
    `(company-scrollbar-bg ((t (:background ,color14))))
 
    ;; org-mode
-   `(org-block ((t (:background ,color16 :foreground ,color17))))
-   `(org-block-begin-line ((t (:foreground ,color9))))
-   `(org-level-1 ((t (:foreground ,color8))))
-   `(org-level-2 ((t (:foreground ,color10))))
-   `(org-level-3 ((t (:foreground ,color12))))
-   `(org-headline-done ((t (:foreground ,color11))))
-   `(org-todo ((t (:foreground ,color10))))
-   `(org-done ((t (:foreground ,color11))))
+   `(org-level-1 ((t (:foreground ,accent1 :height 1.3))))
+   `(org-level-2 ((t (:foreground ,accent2 :height 1.2))))
+   `(org-level-3 ((t (:foreground ,accent3 :height 1.1))))
+   `(org-level-4 ((t (:foreground ,accent4))))
+   `(org-todo ((t (:foreground ,color10 :bold t))))
+   `(org-done ((t (:foreground ,color11 :bold t))))
+   `(org-block ((t (:background ,color16 :extend t))))
+   `(org-block-begin-line ((t (:foreground ,syntax-comment :extend t))))
+   `(org-quote ((t (:background ,color2 :slant italic :extend t))))
 
    ;; magit
    `(magit-section-heading ((t (:foreground ,color8))))
@@ -158,15 +174,15 @@
    `(magit-blame-summary ((t (:foreground ,color5))))
 
    ;; git
-   `(diff-added ((t (:background ,success-muted :foreground ,color11))))
-   `(diff-removed ((t (:background ,error-muted :foreground ,color10))))
-   `(diff-changed ((t (:background ,warning-muted :foreground ,color12))))
-   `(git-gutter:added ((t (:foreground ,color11))))
-   `(git-gutter:deleted ((t (:foreground ,color10))))
-   `(git-gutter:modified ((t (:foreground ,color12))))
-   `(git-gutter-fr:added ((t (:foreground ,color11))))
-   `(git-gutter-fr:deleted ((t (:foreground ,color10))))
-   `(git-gutter-fr:modified ((t (:foreground ,color12))))
+   `(diff-added ((t (:background ,diff-added-bg :foreground ,diff-added-fg))))
+   `(diff-removed ((t (:background ,diff-removed-bg :foreground ,diff-removed-fg))))
+   `(diff-changed ((t (:background ,diff-changed-bg :foreground ,diff-changed-fg))))
+   `(git-gutter:added ((t (:foreground ,diff-added-bg))))
+   `(git-gutter:deleted ((t (:foreground ,diff-removed-bg))))
+   `(git-gutter:modified ((t (:foreground ,diff-changed-bg))))
+   `(git-gutter-fr:added ((t (:foreground ,diff-added-bg))))
+   `(git-gutter-fr:deleted ((t (:foreground ,diff-removed-bg))))
+   `(git-gutter-fr:modified ((t (:foreground ,diff-changed-bg))))
 
    ;; markdown-mode
    `(markdown-header-face ((t (:foreground ,color8))))
@@ -395,7 +411,6 @@
    `(lsp-ui-sideline-code-action ((t (:foreground ,color12))))
    `(lsp-ui-sideline-current-symbol ((t (:foreground ,color8 :weight bold))))
    `(lsp-ui-sideline-symbol ((t (:foreground ,color8))))
-   ;; `(lsp-ui-sideline-symbol ((t (:foreground ,color9))))
    `(lsp-ui-sideline-symbol-info ((t (:foreground ,color9 :slant italic))))
 
    ;; General inlay hint face (base style for all hints)
@@ -423,7 +438,7 @@
    `(corfu-deprecated ((t (:foreground ,color9 :strike-through t))))
    `(corfu-annotation ((t (:foreground ,color9 :slant italic))))
    `(corfu-echo ((t (:foreground ,color9 :slant italic))))
-   
+
    ;; LSP completion via Corfu
    `(corfu-metadata-face ((t (:foreground ,color9))))
    `(corfu-documentation-face ((t (:foreground ,color9))))
@@ -434,7 +449,7 @@
    `(corfu-quick1 ((t (:foreground ,color8 :weight bold))))
    `(corfu-quick2 ((t (:foreground ,color10 :weight bold))))
    `(corfu-quick3 ((t (:foreground ,color12 :weight bold))))
-   
+
    ;; Vertico-specific faces
    `(vertico-current ((t (:background ,color3 :foreground ,color5))))
    `(vertico-group-title ((t (:foreground ,color8 :weight bold))))
