@@ -1101,7 +1101,9 @@ looks great, but no text are shown
 **** Magit
      #+begin_src emacs-lisp
        (use-package magit
-         :config (setq magit-ediff-dwim-show-on-hunks t))
+         :config
+         (setq magit-ediff-dwim-show-on-hunks t)
+         (setopt magit-format-file-function #'magit-format-file-nerd-icons))
      #+end_src
 
 ***** Magit TODOs
