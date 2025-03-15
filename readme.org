@@ -363,17 +363,19 @@
     #+end_src
 **** sideline
 #+begin_src emacs-lisp
+  (use-package sideline-lsp
+    :init
+    (setq lsp-ui-sideline-enable nil))
+
   (use-package sideline-flycheck
     :hook (flycheck-mode . sideline-flycheck-setup))
-
-  (use-package sideline-lsp)
 
   (use-package sideline
     :hook (lsp-mode . sideline-mode)
     :init
-    (setq sideline-backends-right '(sideline-lsp
-                                    sideline-flycheck)
-          lsp-ui-sideline-enable nil))
+    (setq sideline-backends-right '(sideline-lsp sideline-flycheck)
+          sideline-display-backend-name t
+          sideline-truncate t))
 #+end_src
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
@@ -762,6 +764,10 @@ looks great, but no text are shown
      (setq-default default-justification 'full)
    #+end_src
 ** org-roam
+*** sqlite3
+#+begin_src emacs-lisp
+  (use-package sqlite3)
+#+end_src
 *** Load org-fold
     #+begin_src emacs-lisp
       (require 'org-fold)
@@ -1077,8 +1083,21 @@ looks great, but no text are shown
          ("C-M-f" . sp-forward-sexp)
          ("C-M-b" . sp-backward-sexp)
          ("C-M-(" . sp-wrap-round)
+         ("C-M-)" . sp-unwrap-sexp)
+         ("C-M-<backspace>" . sp-backward-unwrap-sexp)
+         ("C-}" . sp-backward-slurp-sexp)
+         ("C-{" . sp-forward-slurp-sexp)
          ("C-M-[" . sp-wrap-square)
          ("C-M-{" . sp-wrap-curly)
+         ("C-M-t" . sp-transpose-sexp)
+         ("C-M-k" . sp-kill-sexp)
+         ("C-M-w" . sp-copy-sexp)
+         ("C-M-n" . sp-next-sexp)
+         ("C-M-p" . sp-previous-sexp)
+         ("C-M-a" . sp-beginning-of-sexp)
+         ("C-M-e" . sp-end-of-sexp)
+         ("C-M-d" . sp-down-sexp)
+         ("C-M-u" . sp-backward-up-sexp)
          :init
          (require 'smartparens-config)
          :config
@@ -1086,13 +1105,13 @@ looks great, but no text are shown
 
          ;; Rust-specific pairs
          (sp-with-modes '(rust-ts-mode)
-                        (sp-local-pair "<" ">")
-                        (sp-local-pair "'" nil :actions nil))
+           (sp-local-pair "<" ">")
+           (sp-local-pair "'" nil :actions nil))
 
          ;; Org-mode pairs
          (sp-with-modes '(org-mode)
-                        (sp-local-pair "~" "~")
-                        (sp-local-pair "=" "="))
+           (sp-local-pair "~" "~")
+           (sp-local-pair "=" "="))
 
          ;; Programming mode pairs with better indentation
          (sp-with-modes '(prog-mode)
@@ -1147,10 +1166,27 @@ looks great, but no text are shown
 
        (use-package git-gutter-fringe
          :custom
-         (git-gutter-fr:side 'right-fringe))
-       (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
-       (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
-       (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom)
+         (git-gutter-fr:side 'right-fringe)
+         :config
+
+         (define-fringe-bitmap 'git-gutter-fr:added [#b11111000] nil nil '(center repeated))
+         (define-fringe-bitmap 'git-gutter-fr:modified [#b11111000] nil nil '(center repeated))
+         (define-fringe-bitmap 'git-gutter-fr:deleted
+           [#b11000000
+            #b11100000
+            #b11110000
+            #b11111000
+            #b11111100] nil nil 'bottom)
+
+         ;; Automatically update git-gutter on focus change
+         (add-hook 'focus-in-hook #'git-gutter:update-all-windows)
+
+         ;; Update git-gutter when saving buffer
+         (add-hook 'after-save-hook 'git-gutter)
+
+         ;; Integrate with magit for smoother operation
+         (when (fboundp 'magit-mode)
+           (add-hook 'magit-post-refresh-hook 'git-gutter:update-all-windows)))
      #+end_src
 
 **** blame
@@ -1221,11 +1257,13 @@ looks great, but no text are shown
         :config (define-key mc/keymap (kbd "RET") nil)
         :init
         (defvar-keymap me/multiple-cursors-map
-               :repeat t
-               "." #'mc/mark-next-like-this-symbol
-               ">" #'mc/skip-to-next-like-this
-               "," #'mc/mark-previous-like-this-symbol
-               "<" #'mc/skip-to-previous-like-this)
+          :repeat t
+          "r" #'mc/mark-all-in-region
+          "l" #'mc/edit-lines
+          "." #'mc/mark-next-like-this-symbol
+          ">" #'mc/skip-to-next-like-this
+          "," #'mc/mark-previous-like-this-symbol
+          "<" #'mc/skip-to-previous-like-this)
         :bind-keymap ("C->" . me/multiple-cursors-map))
     #+end_src
 *** ts-movement
@@ -1412,23 +1450,42 @@ can't get this to work?
 let's make it more visible
 #+begin_src emacs-lisp
   (defface my-rust-macro-face
-    '((t (:inherit font-lock-function-call-face :slant italic :underline t)))
+    '((t (:inherit font-lock-function-call-face
+                   :slant italic 
+                   :width expanded
+                   :underline t)))
     "Face for Rust todo! macro calls")
 
-  (defun my-rust-ts-mode-macro-highlighting ()
+  (defface my-rust-attribute-face
+    '((t (:inherit font-lock-preprocessor-face
+                   :weight light
+                   :width expanded
+                   :slant oblique
+                   :foreground "#7e57c2")))  ; A purple shade
+    "Face for Rust attribute items")
+
+
+  (defun my-rust-ts-mode-highlighting ()
     (setq-local 
      treesit-font-lock-settings
      (append treesit-font-lock-settings
+             ;; todo!()
              (treesit-font-lock-rules
               :language 'rust
               :feature 'todo-macro
               :override t
               '(((macro_invocation 
                   (identifier) @my-rust-macro-face)
-                 (:match "^todo$" @my-rust-macro-face))
-                )))))
+                 (:match "^todo$" @my-rust-macro-face))))
+             ;; #[attribute]
+             (treesit-font-lock-rules
+              :language 'rust
+              :feature 'attribute-items
+              :override t
+              '((attribute_item) @my-rust-attribute-face)))))
 
-  (add-hook 'rust-ts-mode-hook #'my-rust-ts-mode-macro-highlighting)
+
+  (add-hook 'rust-ts-mode-hook #'my-rust-ts-mode-highlighting)
 #+end_src
 **** Better cargo integration
      #+begin_src emacs-lisp
@@ -1585,6 +1642,16 @@ let's make it more visible
     :hook (scala-ts-mode . lsp))
 #+end_src
 
+*** markdown
+#+begin_src emacs-lisp
+  (use-package markdown-ts-mode
+    :mode ("\\.md\\'" . markdown-ts-mode)
+    :defer 't
+    :config
+    (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
+    (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
+#+end_src
+
 * Utils
 ** Easy increase/decrease font size
    #+begin_src emacs-lisp
@@ -1629,26 +1696,24 @@ let's make it more visible
      (pending-delete-mode t)
      (delete-selection-mode t)
    #+end_src
-** Smooth scrolling
-   #+begin_src emacs-lisp
-     (use-package good-scroll
-       :bind
-       ([remap next] . good-scroll-up-full-screen)
-       ([remap prior] . good-scroll-down-full-screen)
-       :config
-       (good-scroll-mode 1))
-
-     ;; always redraw immediately when scrolling
-     ;; more responsive and doesn't hang
-     (setq fast-but-imprecise-scrolling t
-           redisplay-dont-pause 1
-           jit-lock-defer-time 0)
-   #+end_src
-*** Preserve screen position
+** Preserve screen position
     #+begin_src emacs-lisp
       (setq scroll-preserve-screen-position t
-            scroll-conservatively 101)
+            scroll-conservatively 101
+            fast-but-imprecise-scrolling t
+            redisplay-dont-pause 1
+            jit-lock-defer-time 0)
     #+end_src
+** ultra scroll
+#+begin_src emacs-lisp
+  (use-package ultra-scroll
+    :straight (:host github :repo "jdtsmith/ultra-scroll" :files ("*.el"))
+    :init
+    (setq scroll-conservatively 101 ; important!
+          scroll-margin 0) 
+    :config
+    (ultra-scroll-mode 1))
+#+end_src
 ** Backup files
 *** Change backup directory
     By default, emacs saves the ~backup~~ files in the same directory the file is.
@@ -2059,7 +2124,7 @@ let's make it more visible
      #+end_src
 **** Format
      #+begin_src emacs-lisp
-       (fringe-mode '(15 . 10))
+       (fringe-mode '(20 . 20))
      #+end_src
 *** fix color display when loading emacs in terminal
     #+begin_src emacs-lisp
