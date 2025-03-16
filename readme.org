@@ -7,6 +7,7 @@
        :config
        (setq vertico-cycle t)
        :init
+       (vertico-multiform-mode 1)
        (vertico-mode))
 
      (use-package savehist
@@ -37,6 +38,35 @@
              '(read-only t cursor-intangible t face minibuffer-prompt))
        (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
    #+end_src
+** dabbrev
+   #+begin_src emacs-lisp
+     (setq-default abbrev-mode t)
+     (use-package dabbrev
+       :bind (("M-/" . dabbrev-completion)
+              ("C-M-/" . dabbrev-expand))
+       :config
+       (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
+       ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
+       (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+       (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
+       (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
+   #+end_src
+** cape
+   #+begin_src emacs-lisp
+     (use-package cape
+       :bind ("M-p" . cape-prefix-map)
+       :init
+       (setq-local completion-at-point-functions
+                   (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-file #'cape-history))))
+   #+end_src
+** Orderless
+   #+begin_src emacs-lisp
+     (use-package orderless
+       :init
+       (setq completion-styles '(orderless substring partial-completion basic)
+             completion-category-defaults nil
+             completion-category-overrides '((file (styles basic partial-completion)))))
+   #+end_src
 ** Corfu
    #+begin_src emacs-lisp
      (use-package corfu
@@ -58,7 +88,7 @@
 
         corfu-auto t
         corfu-auto-delay 0.2
-        corfu-auto-prefix 3
+        corfu-auto-prefix 2
         corfu-popupinfo-delay '(1.30 . 1.50))
        :bind
        (:map corfu-map
@@ -82,33 +112,6 @@
           (corfu-mode 1)))
       (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
     #+end_src
-** Orderless
-   #+begin_src emacs-lisp
-     (use-package orderless
-       :init
-       (setq completion-styles '(orderless substring partial-completion basic)
-             completion-category-defaults nil
-             completion-category-overrides '((file (styles basic partial-completion)))))
-   #+end_src
-** dabbrev
-   #+begin_src emacs-lisp
-     (use-package dabbrev
-       :bind (("M-/" . dabbrev-completion)
-              ("C-M-/" . dabbrev-expand))
-       :config
-       (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
-       (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
-       (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
-       (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
-   #+end_src
-** cape
-   #+begin_src emacs-lisp
-     (use-package cape
-       :bind ("M-p" . cape-prefix-map)
-       :init
-       (setq-local completion-at-point-functions
-                   (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-file))))
-   #+end_src
 ** Marginalia
    #+begin_src emacs-lisp
      (use-package marginalia
@@ -1802,9 +1805,14 @@ let's make it more visible
     #+begin_src emacs-lisp
       (use-package jinx
         :hook (emacs-startup . global-jinx-mode)
+        :config
+        (setq jinx-languages "en_UK en_US pt_BR")
+        (add-to-list 'vertico-multiform-categories
+                     '(jinx grid (vertico-grid-annotate . 20)))
+
         ;; `M-$` correct the word at point
-        :config (setq jinx-languages "en_UK en_US pt_BR")
-        :bind ([remap ispell-word] . jinx-correct))
+        :bind ([remap ispell-word] . jinx-correct)
+        ("M-|" . jinx-correct-nearest))
     #+end_src
 ** Ccedilla in emacs
    #+begin_src emacs-lisp
