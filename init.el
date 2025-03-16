@@ -4,8 +4,7 @@
 (require 'package)
 
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
+                         ("melpa" . "https://melpa.org/packages/")))
 
 (prefer-coding-system       'utf-8)
 (set-default-coding-systems 'utf-8)
@@ -31,10 +30,10 @@
   (load bootstrap-file nil 'nomessage))
 
 ;; Always use straight to install on systems other than Linux
-(setq straight-use-package-by-default t)
+(setq straight-use-package-by-default t
+      straight-vc-git-default-clone-depth 1)
       ;; use-package-always-defer nil
       ;; straight-cache-autoloads t
-      ;; straight-vc-git-default-clone-depth 1
       ;; package-enable-at-startup t)
 
 
