@@ -2066,7 +2066,10 @@ let's make it more visible
     #+end_src
 *** Cursor type
     #+begin_src emacs-lisp
-      (setq-default cursor-type 'bar)
+      (setq-default cursor-type '(bar . 1))
+      (setq-default blink-cursor-delay 5)
+      (setq-default blink-cursor-interval 0.75)
+      (setq-default cursor-in-non-selected-windows '(hbar . 1))
     #+end_src
 *** auto show and hide current line
     #+begin_src emacs-lisp
