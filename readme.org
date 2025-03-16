@@ -579,36 +579,6 @@
         ("C-c n r" . consult-org-roam-search))
         #+end_src
 ** LLM
-*** Ellama
-#+begin_src emacs-lisp
-  (use-package ellama
-    :bind ("M-n ," . ellama-transient-main-menu)
-    :init
-    (setopt ellama-enable-keymap t)
-    (setopt ellama-keymap-prefix "M-n")
-    (setopt ellama-language "English")
-    (require 'llm-ollama)
-    (setopt ellama-provider
-            (make-llm-ollama
-             :chat-model "coder"
-             :embedding-model "coder")))
-#+end_src
-***  elisa
-#+begin_src emacs-lisp
-  (use-package elisa
-    :init
-    ;; reranker increases answer quality significantly
-    ;; needs its docker running
-    (setopt elisa-reranker-enabled t)
-    (require 'llm-ollama)
-    (setopt elisa-embeddings-provider (make-llm-ollama :embedding-model "mxbai-embed-large"))
-    (setopt elisa-chat-provider
-  	  (make-llm-ollama
-  	   :chat-model "coder"
-  	   :embedding-model "coder"
-  	   :default-chat-temperature 0.1
-  	   :default-chat-non-standard-params '(("num_ctx" . 32768)))))
-#+end_src
 *** Copilot
    #+begin_src emacs-lisp
      (defun my/copilot-tab ()
@@ -635,16 +605,6 @@
              ("C-c C-o C-a l" . copilot-accept-completion-by-line)
              ("C-c C-o C-a w" . copilot-accept-completion-by-word)))
    #+end_src
-*** aider.el
-#+begin_src emacs-lisp
-  (use-package aider
-    :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
-    :config
-    (setq aider-args '("--model" "ollama_chat/coderphi" "--no-auto-commits"))
-    (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434")
-    :bind (:map prog-mode-map
-                ("C--" . aider-transient-menu)))
-#+end_src
 ** COMMENT nova
 looks great, but no text are shown
 #+begin_src emacs-lisp
