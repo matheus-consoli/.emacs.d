@@ -1123,9 +1123,7 @@ looks great, but no text are shown
 **** git gutter
      #+begin_src emacs-lisp
        (use-package git-gutter
-         :config (global-git-gutter-mode t)
-         :custom
-         (git-gutter:update-interval 0.2))
+         :config (global-git-gutter-mode t))
 
        (use-package git-gutter-fringe
          :custom
@@ -1496,7 +1494,7 @@ let's make it more visible
 
              ;; testing rust-analyzer features from main
              ;; https://www.reddit.com/r/rust/comments/1jbyunp/call_for_testing_rustanalyzer/
-             lsp-rust-analyzer-server-command "/home/consoli/.cargo/bin/rust-analyzer"
+             lsp-rust-analyzer-server-command '("/home/consoli/.cargo/bin/rust-analyzer")
              ;; 
 
              lsp-semantic-tokens-enable t)
