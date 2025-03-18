@@ -38,6 +38,21 @@
              '(read-only t cursor-intangible t face minibuffer-prompt))
        (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
    #+end_src
+*** posframe
+#+begin_src emacs-lisp
+  (use-package vertico-posframe
+    :config
+    (defvar my-vertico-disable-posframe-commands
+      '(consult-line consult-todo consult-ripgrep))
+
+    (setq vertico-multiform-commands
+          (append
+           (mapcar (lambda (cmd) `(,cmd (:not posframe)))
+                   my-vertico-disable-posframe-commands)
+           '((t posframe))))
+    (setq vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
+    (vertico-posframe-mode 1))
+#+end_src
 ** dabbrev
    #+begin_src emacs-lisp
      (setq-default abbrev-mode t)
@@ -608,7 +623,6 @@
 ** COMMENT nova
 looks great, but no text are shown
 #+begin_src emacs-lisp
-  (use-package vertico-posframe)
   (use-package markdown-mode)
   (use-package nova
     :straight (:host github :repo "thisisran/nova")
