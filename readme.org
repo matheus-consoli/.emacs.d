@@ -1,6 +1,10 @@
 #+PROPERTY: header-args:emacs-lisp :lexical t
 
 * Completion system
+** preview mode
+#+begin_src emacs-lisp
+  (global-completion-preview-mode t)
+#+end_src
 ** Vertico
    #+begin_src emacs-lisp
      (use-package vertico
@@ -38,7 +42,7 @@
              '(read-only t cursor-intangible t face minibuffer-prompt))
        (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
    #+end_src
-*** posframe
+*** COMMENT posframe
 #+begin_src emacs-lisp
   (use-package vertico-posframe
     :config
@@ -1059,22 +1063,27 @@ looks great, but no text are shown
          :bind
          ("C-M-f" . sp-forward-sexp)
          ("C-M-b" . sp-backward-sexp)
-         ("C-M-(" . sp-wrap-round)
-         ("C-M-)" . sp-unwrap-sexp)
-         ("C-M-<backspace>" . sp-backward-unwrap-sexp)
-         ("C-}" . sp-backward-slurp-sexp)
-         ("C-{" . sp-forward-slurp-sexp)
-         ("C-M-[" . sp-wrap-square)
-         ("C-M-{" . sp-wrap-curly)
-         ("C-M-t" . sp-transpose-sexp)
-         ("C-M-k" . sp-kill-sexp)
-         ("C-M-w" . sp-copy-sexp)
          ("C-M-n" . sp-next-sexp)
          ("C-M-p" . sp-previous-sexp)
          ("C-M-a" . sp-beginning-of-sexp)
          ("C-M-e" . sp-end-of-sexp)
          ("C-M-d" . sp-down-sexp)
          ("C-M-u" . sp-backward-up-sexp)
+
+         ("C-M-[" . sp-wrap-square)
+         ("C-M-{" . sp-wrap-curly)
+         ("C-M-(" . sp-wrap-round)
+         ("C-M-)" . sp-unwrap-sexp)
+         ("C-M-<backspace>" . sp-backward-unwrap-sexp)
+
+         ("C-{" . sp-backward-slurp-sexp)
+         ("C-}" . sp-forward-slurp-sexp)
+         ("C-M--" . sp-backward-barf-sexp)
+         ("C-M-=" . sp-forward-barf-sexp)
+
+         ("C-M-t" . sp-transpose-sexp)
+         ("C-M-k" . sp-kill-sexp)
+         ("C-M-w" . sp-copy-sexp)
          :init
          (require 'smartparens-config)
          :config
@@ -1506,11 +1515,6 @@ let's make it more visible
              lsp-rust-analyzer-completion-auto-import-enable t
              lsp-rust-analyzer-expression-adjustment-hints-mode "prefer_postfix"
 
-             ;; testing rust-analyzer features from main
-             ;; https://www.reddit.com/r/rust/comments/1jbyunp/call_for_testing_rustanalyzer/
-             lsp-rust-analyzer-server-command '("/home/consoli/.cargo/bin/rust-analyzer")
-             ;; 
-
              lsp-semantic-tokens-enable t)
      #+end_src
 **** When creating news language bugs
@@ -1625,6 +1629,13 @@ let's make it more visible
     :config
     (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
     (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
+#+end_src
+
+*** just files
+#+begin_src emacs-lisp
+  (use-package just-ts-mode
+    :config
+    (just-ts-mode-install-grammar))
 #+end_src
 
 * Utils
@@ -1863,15 +1874,15 @@ let's make it more visible
 *** Set font
     #+begin_src emacs-lisp 
       (defconst ui-font
-        "Conta"
+        "Atkinson Hyperlegible Mono"
         "Font for ui faces")
 
       (defconst modeline-font
-        "Borg Sans Mono"
+        "Caffeine Mono"
         "font used by the modeline")
 
       (defconst org-font
-        "Margem Test"
+        "Margem Rounded Test"
         "Font used on org-mode")
 
       (defconst programming-font
@@ -1879,7 +1890,7 @@ let's make it more visible
         "Font for programming faces")
 
       (defconst alternative-programming-font
-        "VictorMono Nerd Font"
+        "Dank Mono"
         "Font for alternative faces")
 
       ;; default face for ui
@@ -2415,6 +2426,20 @@ let's make it more visible
                                             :style nil
                                             :color ,(face-attribute 'tab-bar-tab-inactive :background)))
 
+     (set-face-attribute 'fixed-pitch nil :family alternative-programming-font :height 120)
+     (set-face-attribute 'variable-pitch nil :family org-font :height 130)
+     (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
+     (set-face-attribute 'org-code nil :inherit '(shadow fixed-pitch))
+     (set-face-attribute 'org-document-info-keyword nil :inherit '(shadow fixed-pitch))
+     (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+     (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+     (set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-string-face :height 120)
+     (set-face-attribute 'org-property-value nil :inherit 'fixed-pitch)
+     (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+     (set-face-attribute 'org-tag nil :inherit '(shadow fixed-pitch) :weight 'bold :height 0.8)
+     (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+
+
      (with-eval-after-load 'blamer
        (set-face-attribute 'blamer-face nil
                            :family programming-font
@@ -2440,23 +2465,4 @@ let's make it more visible
 
       '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
       '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
-   #+end_src
-** custom theme set faces
-   #+begin_src emacs-lisp
-     (require 'org-indent)
-     (custom-theme-set-faces
-      'user
-      '(fixed-pitch ((t (:family alternative-programming-font :height 120))))
-      '(variable-pitch ((t (:family org-font :height 130)))) ;; short stack
-      '(org-block ((t (:inherit fixed-pitch))))
-      '(org-code ((t (:inherit (shadow fixed-pitch)))))
-      '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
-      '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
-      '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-      '(font-lock-doc-face ((t (:inherit font-lock-string-face :height 120))))
-      '(org-property-value ((t (:inherit fixed-pitch))) t)
-      '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-      ;; '(org-table ((t (:inherit fixed-pitch :foreground "#83a598")))) ;; beatiful green... but why?
-      '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-      '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))
    #+end_src
