@@ -86,7 +86,7 @@
              completion-category-defaults nil
              completion-category-overrides '((file (styles basic partial-completion)))))
    #+end_src
-** Corfu
+** COMMENT Corfu
    #+begin_src emacs-lisp
      (use-package corfu
        :init
@@ -131,6 +131,41 @@
           (corfu-mode 1)))
       (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
     #+end_src
+** Company
+#+begin_src emacs-lisp
+  (use-package company
+    :commands company-abort
+    :init (global-company-mode 1)
+    :custom
+    (company-tooltip-align-annotations t)
+    (company-tooltip-limit 15)
+    (company-idle-delay 0.0)
+    (company-echo-delay 0)
+    (company-tooltip-limit 5)
+    (company-minimum-prefix-length 1)
+    (company-require-match nil)
+    (company-show-quick-access 'left)
+    (company-tooltip-maximum-width 60)
+    (company-dabbrev-ignore-case nil)
+    (company-dabbrev-downcase nil)
+    :config
+    (setq company-tooltip-align-annotations t
+          company-tooltip-limit 15
+          company-idle-delay 0.0
+          company-echo-delay 0
+          company-tooltip-limit 5
+          company-minimum-prefix-length 1
+          company-require-match nil
+          company-show-quick-access 'left
+          company-tooltip-maximum-width 60
+          company-dabbrev-ignore-case nil
+          company-dabbrev-downcase nil))
+#+end_src
+*** company box
+#+begin_src emacs-lisp
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+#+end_src
 ** Marginalia
    #+begin_src emacs-lisp
      (use-package marginalia
@@ -202,10 +237,12 @@
 ** Avy
    #+begin_src emacs-lisp
      (use-package avy
+       :defer t
        :bind
        ("C-:" . avy-goto-char-timer)
        ("C-c a l" . avy-goto-line)
        ("C-c a w" . avy-goto-subword-0)
+       ("C-c a d" . avu-goto-word-0)
        ("C-c a s" . avy-goto-symbol-1))
    #+end_src
 
@@ -305,6 +342,7 @@
 *** LSP mode
     #+begin_src emacs-lisp
       (use-package lsp-mode
+        :defer t
         :config
         (setq
          lsp-completion-provider :none ;; using Corfu!
@@ -333,6 +371,7 @@
                     ("C-c l r" . lsp-rename)
                     ("C-c l a" . lsp-execute-code-action)
                     ("C-c l t" . lsp-find-type-definition)
+                    ("C-c l v" . lsp-avy-lens)
                     ("<f4>" . lsp-inlay-hints-mode))
         :init
         (defun my/orderless-dispatch-flex-first (_pattern index _total)
@@ -352,6 +391,7 @@
 *** LSP UI
     #+begin_src emacs-lisp
       (use-package lsp-ui
+        :defer t
         :bind
         (:map lsp-ui-mode-map
               ("C-c C-M-d". lsp-ui-doc-focus-frame)
@@ -386,13 +426,16 @@
 **** sideline
 #+begin_src emacs-lisp
   (use-package sideline-lsp
+    :defer t
     :init
     (setq lsp-ui-sideline-enable nil))
 
   (use-package sideline-flycheck
+    :defer t
     :hook (flycheck-mode . sideline-flycheck-setup))
 
   (use-package sideline
+    :defer t
     :hook (lsp-mode . sideline-mode)
     :init
     (setq sideline-backends-right '(sideline-lsp sideline-flycheck)
@@ -402,6 +445,7 @@
 ** DAP - Debug Adapter Protocol
    #+begin_src emacs-lisp
      (use-package dap-mode
+       :defer t
        :config
        (require 'dap-lldb)
        (require 'dap-gdb-lldb)
@@ -426,6 +470,7 @@
 *** Flycheck
     #+begin_src emacs-lisp
       (use-package flycheck
+        :defer t
         :config
         (add-to-list 'display-buffer-alist
                      `(,(rx bos "*Flycheck errors*" eos)
@@ -439,6 +484,7 @@
 **** flycheck inline
      #+begin_src emacs-lisp
        (use-package flycheck-inline
+         :defer t
          :after flycheck-mode)
      #+end_src
 ** Consult and integrations
@@ -551,18 +597,21 @@
 *** Consult flycheck
     #+begin_src emacs-lisp
       (use-package consult-flycheck
+        :defer t
         :after (flycheck consult))
     #+end_src
 
 *** Consult yasnippet
     #+begin_src emacs-lisp
       (use-package consult-yasnippet
+        :defer t
         :after (yasnippet consult))
     #+end_src
 
 *** Consult LSP
     #+begin_src emacs-lisp
       (use-package consult-lsp
+        :defer t
         :after (consult marginalia lsp-mode)
         :bind ("C-c l e" . consult-lsp-diagnostics))
     #+end_src
@@ -570,7 +619,7 @@
 *** Consult org-roam
     #+begin_src emacs-lisp
       (use-package consult-org-roam
-        :ensure t
+        :defer t
         :after org-roam
         :init
         (require 'consult-org-roam)
@@ -606,6 +655,7 @@
            (indent-for-tab-command)))
 
      (use-package copilot
+       :defer t
        :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
        :init
        (use-package jsonrpc)
@@ -640,11 +690,604 @@ looks great, but no text are shown
     (nova-corfu-popupinfo-mode 1)
     (nova-eldoc-mode 1))
 #+end_src
+* Appearance
+** font
+*** Set font
+    #+begin_src emacs-lisp 
+      (defconst ui-font
+        "Atkinson Hyperlegible Mono"
+        "Font for ui faces")
+
+      (defconst modeline-font
+        "Caffeine Mono"
+        "font used by the modeline")
+
+      (defconst org-font
+        "Margem Rounded Test"
+        "Font used on org-mode")
+
+      (defconst programming-font
+        "Dank Mono"
+        "Font for programming faces")
+
+      (defconst alternative-programming-font
+        "Dank Mono"
+        "Font for alternative faces")
+
+      ;; default face for ui
+      (set-face-attribute 'default nil
+                          :font ui-font
+                          :height 130)
+      ;; face for programming
+      (add-hook 'prog-mode-hook
+                (lambda ()
+                  (face-remap-add-relative 'default
+                                          :family programming-font
+                                          :height 130)))
+      (global-auto-composition-mode t)
+    #+end_src
+*** COMMENT Pretty symbols
+
+    #+begin_src emacs-lisp
+      (when window-system
+        (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+    #+end_src
+*** Fix org mode tables
+    #+begin_src emacs-lisp
+      (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+    #+end_src
+*** ligatures
+    #+begin_src emacs-lisp
+      (use-package ligature
+        :straight (:host github :repo "mickeynp/ligature.el")
+        :config
+        (ligature-set-ligatures 't '("www"))
+        (ligature-set-ligatures
+         'prog-mode
+         '("-->" "//" "/**" "/*" "*/" "<!--" ":=" "->>" "<<-" "->" "<-"
+           "<=>" "==" "!=" "<=" ">=" "=:=" "!==" "&&" "||" "..." ".."
+           "|||" "///" "&&&" "===" "++" "--" "=>" "|>" "<|" "||>" "<||"
+           "|||>" "<|||" ">>" "<<" "::=" "|]" "[|" "{|" "|}"
+           "[<" ">]" ":?>" ":?" "/=" "[||]" "!!" "?:" "?." "::"
+           "+++" "??" "###" "##" ":::" "####" ".?" "?=" "=!=" "<|>"
+           "<:" ":<" ":>" ">:" "***" ";;" "/==" ".=" ".-" "__" ;; "<>"
+           "=/=" "<-<" "<<<" ">>>" "<=<" "<<=" "<==" "<==>" "==>" "=>>"
+           ">=>" ">>=" ">>-" ">-" "<~>" "-<" "-<<" "=<<" "---" "<-|"
+           "<=|" "/\\" "\\/" "|=>" "|~>" "<~~" "<~" "~~" "~~>" "~>"
+           "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</>" "</" "/>"
+           "<->" "..<" "~=" "~-" "-~" "~@" "^=" "-|" "_|_" "|-" "||-"
+           "|=" "||=" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
+           "&="))
+        (global-ligature-mode t))
+    #+end_src
+** add frame borders and window dividers
+   #+begin_src emacs-lisp
+     (modify-all-frames-parameters
+      '((right-divider-width . 0)
+        (internal-border-width . 6)))
+   #+end_src
+** icons
+   #+begin_src emacs-lisp
+     (use-package all-the-icons
+       :defer t)
+     (use-package nerd-icons
+       :defer t)
+     (use-package nerd-icons-completion
+       :defer t
+       :after marginalia
+       :config
+       (nerd-icons-completion-mode)
+       (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+     (use-package all-the-icons-nerd-fonts
+       :defer t
+       :straight
+       (all-the-icons-nerd-fonts :host github :repo "mohkale/all-the-icons-nerd-fonts")
+       :after all-the-icons
+       :demand t
+       :config
+       (all-the-icons-nerd-fonts-prefer))
+   #+end_src
+** themes
+*** downloading themes
+**** Doom themes
+     #+begin_src emacs-lisp
+       (use-package doom-themes
+         :defer t
+         :config  
+         (setq doom-themes-enable-bold t
+               ;; doom-themes-treemacs-theme "doom-colors"
+               doom-themes-enable-italic t)
+         (doom-themes-treemacs-config)
+         (doom-themes-org-config))
+     #+end_src
+**** catppuccin
+     #+begin_src emacs-lisp
+       (use-package catppuccin-theme
+         :defer t
+         :init
+         (setq catppuccin-flavor 'frappe
+               catppuccin-italic-comments t
+               catppuccin-italic-variables t
+               catppuccin-italic-blockquotes t))
+     #+end_src
+**** kaolin themes
+     #+begin_src emacs-lisp
+       (use-package kaolin-themes
+         :init
+         (setq kaolin-themes-bold t
+               kaolin-themes-italic t
+               kaolin-themes-italic-comments t
+               kaolin-themes-distinct-parentheses t
+               kaolin-themes-distinct-fringe nil
+               kaolin-themes-comments-style 'alt
+               kaolin-themes-hl-line-colored t
+               kaolin-themes-underline t)
+         :defer t)
+     #+end_src
+**** spacemacs themes
+     #+begin_src emacs-lisp
+       (use-package spacemacs-theme
+         :defer t
+         :config
+         (setq spacemacs-theme-comment-bg nil
+               spacemacs-theme-keyword-italic t
+               spacemacs-theme-org-bold t
+               spacemacs-theme-comment-italic t))
+     #+end_src
+**** timu
+***** timu macos
+#+begin_src emacs-lisp
+  (use-package timu-macos-theme
+    :defer t
+    :init (customize-set-variable 'timu-macos-flavour "dark"))
+#+end_src
+***** timu caribbean
+#+begin_src emacs-lisp
+  (use-package timu-caribbean-theme
+    :config (customize-set-variable 'timu-caribbean-org-intense-colors t)
+    :defer t)
+#+end_src
+**** flexoki
+#+begin_src emacs-lisp
+    (use-package flexoki-themes
+      :defer t)
+#+end_src
+*** loading theme
+    #+begin_src emacs-lisp
+      (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
+      (load-theme 'vercel-2024
+                  :no-confirm)
+    #+end_src
+** UI
+*** Splash screen
+    #+begin_src emacs-lisp
+      (setq inhibit-startup-screen t)
+    #+end_src
+*** Scratch buffer message
+    #+begin_src emacs-lisp
+      (setq initial-scratch-message nil
+            inhibit-startup-echo-area-message t)
+    #+end_src
+*** Scroll bar
+    #+begin_src emacs-lisp
+      (scroll-bar-mode -1)
+    #+end_src
+*** Menu bar
+    #+begin_src emacs-lisp
+      (menu-bar-mode -1)
+    #+end_src
+*** Tool bar
+    #+begin_src emacs-lisp
+      (tool-bar-mode -1)
+    #+end_src
+*** Cursor type
+    #+begin_src emacs-lisp
+      (setq-default cursor-type '(bar . 1))
+      (setq-default blink-cursor-delay 5)
+      (setq-default blink-cursor-interval 0.75)
+      (setq-default cursor-in-non-selected-windows '(hbar . 1))
+    #+end_src
+*** auto show and hide current line
+    #+begin_src emacs-lisp
+      (use-package hl-line
+        :ensure nil
+        :config
+        (defvar my-hide-hl-line-timer nil
+          "Timer to show the hl-line after a certain idle time.")
+
+        (defun my-show-hl-line ()
+          "Show the hl-line by disabling `hide-mode-line-mode`."
+          (unless hl-line-mode
+            (hl-line-mode 1)))
+
+        (defun my-hide-hl-line ()
+          "Hide the hl-line by enabling `hide-mode-line-mode`."
+          (when hl-line-mode
+            (hl-line-mode -1)))
+
+        (defun my-start-idle-timer ()
+          "Start the idle timer to show the hl-line after a certain time."
+          (when my-hide-hl-line-timer
+            (cancel-timer my-hide-hl-line-timer))  ;; Cancel any existing timer
+          (setq my-hide-hl-line-timer (run-with-idle-timer 5 nil #'my-show-hl-line)))
+
+        (defun my-hl-line-reset-on-command ()
+          "Hide the hl-line and reset the idle timer when a command is executed."
+          (my-hide-hl-line)
+          (my-start-idle-timer))
+
+        (defun my-toggle-hl-line ()
+          "Set up hooks to hide/show the hl-line based on idle time and input."
+          (add-hook 'post-command-hook #'my-hl-line-reset-on-command)
+          (my-start-idle-timer))
+        (my-toggle-hl-line))
+    #+end_src
+*** highlight todo
+    #+begin_src emacs-lisp
+      (use-package hl-todo
+        :config
+        (global-hl-todo-mode t))
+
+      (define-key prog-mode-map (kbd "C-|") (lambda ()
+                                              (interactive)
+                                              (hl-todo-insert "TODO(matheus-consoli): ")))
+    #+end_src
+*** Only highlight text region
+    #+begin_src emacs-lisp
+      (set-face-attribute 'region nil :extend nil)
+    #+end_src
+*** Line numbers
+**** Hook
+     #+begin_src emacs-lisp
+       (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+     #+end_src
+**** Format
+     #+begin_src emacs-lisp
+       (fringe-mode '(20 . 20))
+     #+end_src
+*** fix color display when loading emacs in terminal
+    #+begin_src emacs-lisp
+      (defun enable-256color-term ()
+        (interactive)
+        (load-library "term/xterm")
+        (terminal-init-xterm))
+
+      (unless (display-graphic-p)
+        (if (string-suffix-p "256color" (getenv "TERM"))
+          (enable-256color-term)))
+    #+end_src
+** tabs
+*** tab bar mode
+#+begin_src emacs-lisp
+  (use-package tab-bar
+    :defer t
+    :bind
+    (:map tab-bar-map
+          ("<next>" . tab-bar-switch-to-next-tab)
+          ("<prior>" . tab-bar-switch-to-prev-tab))
+    :config
+    (setq tab-bar-new-tab-choice t
+          tab-bar-new-tab-to 'rightmost
+          tab-bar-close-button-show nil
+          tab-bar-show 1
+          tab-bar-new-button-show nil
+          tab-bar-tab-hints t
+          tab-bar-auto-width t
+          tab-bar-auto-width-max '((130) 10))
+    (tab-bar-mode 1))
+#+end_src
+*** project tab groups
+#+begin_src emacs-lisp
+  (use-package project-tab-groups
+    :config
+    (with-eval-after-load 'project
+      (add-to-list 'project-switch-commands '(magit-project-status "Magit") t)
+      (keymap-set project-prefix-map "m" #'magit-project-status))
+    (project-tab-groups-mode 1))
+#+end_src
+*** tab spaces
+#+begin_src emacs-lisp
+  (use-package tabspaces
+    :straight (:type git :host github :repo "mclear-tools/tabspaces")
+    :hook (after-init . tabspaces-mode)
+    :commands (tabspaces-switch-or-create-workspace
+               tabspaces-open-or-create-project-and-workspace)
+    :custom
+    (tabspaces-use-filtered-buffers-as-default t)
+    (tabspaces-default-tab "Default")
+    (tabspaces-remove-to-default t)
+    (tabspaces-initialize-project-with-todo t)
+    (tabspaces-todo-file-name "project-todo.org")
+    ;; sessions
+    (tabspaces-session t)
+    (tabspaces-session-auto-restore nil)
+    :config
+    ;; Filter Buffers for Consult-Buffer
+    (with-eval-after-load 'consult
+      ;; hide full buffer list (still available with "b" prefix)
+      (consult-customize consult--source-buffer :hidden t :default nil)
+      ;; set consult-workspace buffer list
+      (defvar consult--source-workspace
+        (list :name     "Workspace Buffers"
+              :narrow   ?w
+              :history  'buffer-name-history
+              :category 'buffer
+              :state    #'consult--buffer-state
+              :default  t
+              :items    (lambda () (consult--buffer-query
+                                    :predicate #'tabspaces--local-buffer-p
+                                    :sort 'visibility
+                                    :as #'buffer-name)))
+
+        "Set workspace buffer list for consult-buffer.")
+      (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+#+end_src
+*** tabs
+**** hide special tabs
+#+begin_src emacs-lisp
+  (defun my-centaur-tabs-hide-tab (x)
+    "Do no to show buffer X in tabs."
+    (let ((name (format "%s" x)))
+      (message "NAME: %s" name)
+      (or
+       ;; Current window is not dedicated window.
+       (window-dedicated-p (selected-window))
+
+       ;; Buffer name not match below blocklist.
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*helm" name)
+       (string-prefix-p "*Helm" name)
+       (string-prefix-p "*Compile-Log*" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*company" name)
+       (string-prefix-p "*Flycheck" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p " *Mini" name)
+       (string-prefix-p "*help" name)
+       (string-prefix-p "*straight" name)
+       (string-prefix-p " *temp" name)
+       (string-prefix-p "*Help" name)
+       (string-prefix-p "*mybuf" name)
+       (string-prefix-p "*Warnings" name)
+       (string-prefix-p "*aider:" name)
+
+       ;; Is not magit buffer.
+       (and (string-prefix-p "magit" name)
+            (not (file-name-extension name))))))
+#+end_src
+**** centaur tabs
+#+begin_src emacs-lisp
+  (use-package centaur-tabs
+    :demand
+    :config
+    (centaur-tabs-headline-match)
+    (centaur-tabs-change-fonts alternative-programming-font 95)
+    (centaur-tabs-mode t)
+    :bind
+    (:map centaur-tabs-mode-map
+          (([remap next-buffer] . centaur-tabs-forward)
+           ([remap previous-buffer] . centaur-tabs-backward)
+           ("C-c t j" . centaur-tabs-ace-jump)
+           ("C-<prior>" . centaur-tabs-backward)
+           ("C-<next>" . centaur-tabs-forward)))
+    :custom
+    (centaur-tabs-height 25)
+    (centaur-tabs-style "alternate")
+    (centaur-tabs-hide-tab-function my-centaur-tabs-hide-tab)
+    (centaur-tabs-set-bar 'under)
+    (x-underline-at-descent-line t) ;; to correctly display the icon
+    (centaur-tabs-cycle-scope 'tabs)
+    (centaur-tabs-gray-out-icons 'buffer)
+    (centaur-tabs-set-icons t)
+    (centaur-tabs-icon-type 'all-the-icons)
+    (centaur-tabs-gray-out-icons 'buffer)
+    (centaur-tabs-modified-marker t)
+    (centaur-tabs-enable-key-bindings t))
+#+end_src
+** treemacs
+   #+begin_src emacs-lisp
+     (use-package treemacs
+       :defer t
+       :config
+       (treemacs-git-commit-diff-mode t)
+       (treemacs-fringe-indicator-mode 'always)
+       (treemacs-follow-mode t)
+       (treemacs-project-follow-mode nil)
+       (treemacs-filewatch-mode t)
+       (treemacs-peek-mode t)
+       (setq treemacs-expand-after-init nil)
+       :bind
+       (:map global-map
+             ("C-c ; ;" . treemacs)
+             ("C-c ; B" . treemacs-bookmark)
+             ("C-c ; f" . treemacs-find-file)
+             ("C-c ; g" . treemacs-find-tag)))
+   #+end_src
+*** treemacs extensions
+    #+begin_src emacs-lisp
+      (use-package treemacs-magit
+        :defer t
+        :after (treemacs magit))
+
+      (use-package treemacs-nerd-icons
+        :defer t
+        :after (treemacs))
+
+      (use-package treemacs-tab-bar
+        :defer t
+        :after (treemacs)
+        :config (treemacs-set-scope-type 'Tabs))
+
+      (use-package lsp-treemacs
+        :defer t
+        :after (treemacs)
+        :commands (lsp-treemacs-symbols lsp-treemacs-errors-list toggle-lsp-treemacs-modes)
+        :init
+        (defun toggle-lsp-treemacs-modes ()
+          "Toggle both `lsp-treemacs-symbols` and `lsp-treemacs-error-list` modes."
+          (interactive)
+          ;; Toggle lsp-treemacs-symbols
+          (if (get-buffer lsp-treemacs-symbols-buffer-name)
+              (kill-buffer lsp-treemacs-symbols-buffer-name) ; this closes it if open
+            (lsp-treemacs-symbols)) ; this opens it if closed
+          ;; Toggle lsp-treemacs-error-list
+          (if (get-buffer lsp-treemacs-errors-buffer-name)
+              (kill-buffer lsp-treemacs-errors-buffer-name) ; this closes it if open
+            (lsp-treemacs-errors-list))) ; this opens it if closed
+
+        :config
+        (setq
+         lsp-treemacs-error-list-expand-depth 2
+         lsp-treemacs-call-hierarchy-expand-depth 2
+         lsp-treemacs-error-list-current-project-only t
+         lsp-treemacs-symbols-position-params '((side . right)
+                                                (slot . 1)
+                                                (window-width . 40))
+         lsp-treemacs-errors-position-params '((side . right)
+                                               (slot . 2)
+                                               (window-width . 40)))
+        (lsp-treemacs-sync-mode 1)
+        :bind (:map lsp-mode-map              
+                    ("C-c l g m" . toggle-lsp-treemacs-modes)))
+    #+end_src
+** modeline
+   #+begin_src emacs-lisp
+     (use-package doom-modeline
+       :config
+       (use-package async)
+       (use-package ghub)
+       (setq
+        auth-sources '("~/.authinfo.gpg")
+        doom-modeline-height 30
+        doom-modeline-bar-width 8
+        doom-modeline-time-clock-size 0.4
+        doom-modeline-hud t
+        doom-modeline-github nil
+        doom-modeline-github-interval (* 30 60)
+        doom-modeline-enable-word-count t
+        doom-modeline-buffer-encoding t
+        doom-modeline-support-imenu t
+        doom-modeline-irc nil
+        doom-modeline-position-line-format '("L%l")
+        doom-modeline-percent-position '(-3 "%p")
+        doom-modeline-position-column-line-format '("%l:%c")
+        doom-modeline-buffer-file-name-style 'relative-to-project
+        doom-modeline-gnus nil
+        doom-modeline-icon nil ;; remove icons
+        doom-modeline-time-icon nil
+        doom-modeline-buffer-modification-icon nil)
+       :hook (after-init . doom-modeline-mode))
+   #+end_src
+*** Clock
+    #+BEGIN_SRC emacs-lisp
+      (setq-default display-time-default-load-average nil)
+      (setq display-time-format " %I:%M\t")
+      (display-time-mode 1)
+    #+END_SRC
+*** toggle modeline when idle for some time
+#+begin_src emacs-lisp
+  ;; (use-package hide-mode-line
+  ;;   :config
+  ;;   (defvar my-hide-modeline-timer nil
+  ;;     "Timer to show the modeline after a certain idle time.")
+
+  ;;   (defun my-show-modeline ()
+  ;;     "Show the modeline by disabling `hide-mode-line-mode`."
+  ;;     (when hide-mode-line-mode
+  ;;       (hide-mode-line-mode -1))
+  ;;     (force-mode-line-update t))
+
+  ;;   (defun my-hide-modeline ()
+  ;;     "Hide the modeline by enabling `hide-mode-line-mode`."
+  ;;     (unless hide-mode-line-mode
+  ;;       (hide-mode-line-mode 1))
+  ;;     (force-mode-line-update t))
+
+  ;;   (defun my-start-idle-timer ()
+  ;;     "Start the idle timer to show the modeline after a certain time."
+  ;;     (when my-hide-modeline-timer
+  ;;       (cancel-timer my-hide-modeline-timer))  ;; Cancel any existing timer
+  ;;     (setq my-hide-modeline-timer (run-with-idle-timer 3 nil #'my-show-modeline)))
+
+  ;;   (defun my-reset-on-command ()
+  ;;     "Hide the modeline and reset the idle timer when a command is executed."
+  ;;     (my-hide-modeline)
+  ;;     (my-start-idle-timer))
+
+  ;;   (defun my-toggle-modeline ()
+  ;;     "Set up hooks to hide/show the modeline based on idle time and input."
+  ;;     (add-hook 'post-command-hook #'my-reset-on-command)
+  ;;     (my-start-idle-timer))
+
+  ;;   (my-toggle-modeline))
+#+end_src
+** custom set faces
+   #+begin_src emacs-lisp
+     (set-face-attribute 'mode-line nil
+                         :inherit 'default
+                         :family modeline-font
+                         :height 110
+                         :box nil)
+
+     (set-face-attribute 'mode-line-active nil
+                         :inherit 'mode-line
+                         :box nil)
+
+     (set-face-attribute 'mode-line-inactive nil
+                         :inherit 'mode-line-active
+                         :box nil)
+
+     (set-face-attribute 'font-lock-comment-face nil
+                         :font programming-font
+                         :slant 'italic
+                         :height 110)
+
+     (set-face-attribute 'tab-bar nil
+                         :font alternative-programming-font
+                         :height 100)
+
+     (set-face-attribute 'tab-bar-tab nil
+                         :box `(:line-width (7 . -1)
+                                            :style nil
+                                            :color ,(face-attribute 'tab-bar-tab :background)))
+
+     (set-face-attribute 'tab-bar-tab-inactive nil
+                         :box `(:line-width (7 . -1)
+                                            :style nil
+                                            :color ,(face-attribute 'tab-bar-tab-inactive :background)))
+
+     (with-eval-after-load 'blamer
+       (set-face-attribute 'blamer-face nil
+                           :family programming-font
+                           :height 100
+                           :italic t))
+
+     (dolist (face '(window-divider
+                     window-divider-first-pixel
+                     window-divider-last-pixel))
+       (face-spec-reset-face face)
+       (set-face-foreground face (face-attribute 'default :background))
+       (set-face-background face (face-attribute 'default :background)))
+     (set-face-background 'fringe (face-attribute 'default :background))
+
+
+     (custom-set-faces
+      '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
+
+      '(lsp-inlay-hint-parameter-face ((t (:inherit lsp-inlay-hint-face
+                                                    :height 110))))
+      '(lsp-inlay-hint-type-face ((t (:inherit lsp-inlay-hint-face
+                                               :height 110))))
+
+      '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
+      '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
+   #+end_src
 * Org
 ** install
    #+begin_src emacs-lisp
      (use-package org
-       :ensure org-contrib)
+       :defer t)
    #+end_src
 ** org modern
 #+begin_src emacs-lisp
@@ -660,15 +1303,21 @@ looks great, but no text are shown
 *** fixed pitch
     #+begin_src emacs-lisp
       (require 'org-indent)
-      (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-      (set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
-      (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-      (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-      (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
-      (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-      (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-      (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'fixed-pitch nil :family alternative-programming-font :height 120)
+      (set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-string-face :height 120)
+      (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
       (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
+      (set-face-attribute 'org-code nil :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-document-info-keyword nil :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+      (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+      (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'org-property-value nil :inherit 'fixed-pitch)
+      (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'org-table nil  :inherit 'fixed-pitch)
+      (set-face-attribute 'org-tag nil :inherit '(shadow fixed-pitch) :weight 'bold :height 0.8)
+      (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'variable-pitch nil :family org-font :height 130)
     #+end_src
 
 *** column views
@@ -747,7 +1396,8 @@ looks great, but no text are shown
 ** org-roam
 *** sqlite3
 #+begin_src emacs-lisp
-  (use-package sqlite3)
+    (use-package sqlite3
+      :defer t)
 #+end_src
 *** Load org-fold
     #+begin_src emacs-lisp
@@ -756,6 +1406,7 @@ looks great, but no text are shown
 *** Install it
     #+begin_src emacs-lisp
       (use-package org-roam
+        :defer t
         :bind (("C-c b f" . org-roam-node-find)
                ("C-c b i" . org-roam-node-insert)
                ("C-c b c" . org-roam-capture)
@@ -856,6 +1507,7 @@ looks great, but no text are shown
 *** Org-roam-ui
     #+begin_src emacs-lisp
       (use-package org-roam-ui
+        :defer t
         :after org-roam
         :config
         (setq org-roam-ui-sync-theme t
@@ -873,6 +1525,7 @@ looks great, but no text are shown
 *** Deft
     #+begin_src emacs-lisp
       (use-package deft
+        :defer t
         :after org
         :bind
         ("<f8>" . deft)
@@ -1044,6 +1697,7 @@ looks great, but no text are shown
 *** treesit-auto
     #+begin_src emacs-lisp
       (use-package treesit-auto
+        :defer t
         :custom
         (treesit-auto-install 'prompt)
         :config
@@ -1120,7 +1774,6 @@ looks great, but no text are shown
 **** Magit
      #+begin_src emacs-lisp
        (use-package magit
-         :defer t
          :config
          (setq magit-ediff-dwim-show-on-hunks t)
          (setopt magit-format-file-function #'magit-format-file-nerd-icons)
@@ -1132,6 +1785,7 @@ looks great, but no text are shown
 ***** Magit TODOs
       #+begin_src emacs-lisp
         (use-package magit-todos
+          :after magit
           :config (magit-todos-mode t))
       #+end_src
 ***** magit delta
@@ -1270,15 +1924,18 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 **** forge
      #+begin_src emacs-lisp
        (use-package forge
+         :defer t
          :after magit)
      #+end_src
 **** github notifications
      #+begin_src emacs-lisp
-       (use-package gh-notify)
+       (use-package gh-notify
+         :defer t)
      #+end_src
 **** review
 #+begin_src emacs-lisp
   (use-package github-review
+    :defer t
     :straight
     (github-review :type git :host github :repo "charignon/github-review" :files ("*.el"))
     :after forge
@@ -1407,6 +2064,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
           (setq toggle-term-state (not toggle-term-state))))
 
       (use-package multi-term
+        :defer t
         :custom (multi-term-program "/bin/fish")
         :bind (("<f11>" . multi-term-dedicated-toggle)
                ("<f10>" . multi-term-dedicated-select)
@@ -1429,6 +2087,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** treesitter context
     #+begin_src emacs-lisp
       (use-package treesitter-context
+        :defer t
         :straight
         (treesitter-context-mode
          :type git
@@ -1459,6 +2118,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** treesit-fold
 #+begin_src emacs-lisp
   (use-package treesit-fold
+    :defer t
     :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
     :config
     (setq treesit-fold-summary-show nil)
@@ -1480,6 +2140,7 @@ can't get this to work?
 *** cognitive complexity
 #+begin_src emacs-lisp
   (use-package cognitive-complexity
+    :defer t
     :straight (:host github :repo "emacs-vs/cognitive-complexity")
     :bind (:map lsp-mode-map ("C-c l c" . cognitive-complexity-mode)))
 #+end_src
@@ -1549,6 +2210,7 @@ let's make it more visible
 **** Better cargo integration
      #+begin_src emacs-lisp
        (use-package cargo-transient
+         :defer t
          :bind (:map rust-ts-mode-map
                      ("C-c C-c t" . cargo-transient)
                      ("C-c C-c c" . cargo-transient-check)
@@ -1604,6 +2266,7 @@ let's make it more visible
 *** hyprlang
 #+begin_src emacs-lisp
   (use-package hyprlang-ts-mode
+    :defer t
     :init
     (add-to-list 'treesit-language-source-alist
           '(hyprlang "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"))
@@ -1614,7 +2277,8 @@ let's make it more visible
 **** Unison mode
      #+begin_src emacs-lisp
        (use-package unison-ts-mode
-        :straight (unison-ts-mode :type git :host github :repo "fmguerreiro/unison-ts-mode" :files ("*.el")))
+         :defer t
+         :straight (unison-ts-mode :type git :host github :repo "fmguerreiro/unison-ts-mode" :files ("*.el")))
      #+end_src
 ***** COMMENT grammar
       #+begin_src emacs-lisp
@@ -1625,22 +2289,26 @@ let's make it more visible
 **** Elixir mode
      #+begin_src emacs-lisp
        (use-package elixir-mode
+         :defer t
          :hook (elixir-mode . lsp)
          :init (add-to-list 'exec-path "~/.elixir_ls/"))
      #+end_src
 **** Elixir snippets
      #+begin_src emacs-lisp
-       (use-package elixir-yasnippets)
+       (use-package elixir-yasnippets
+         :defer t)
      #+end_src
 **** Elixir flycheck
      #+begin_src emacs-lisp
-       (use-package flycheck-elixir)
+       (use-package flycheck-elixir
+         :defer t)
      #+end_src
 
 *** Haskell
 **** LSP
      #+begin_src emacs-lisp
        (use-package lsp-haskell
+         :defer t
          :config
          (setq lsp-haskell-server-path "haskell-language-server-wrapper"
                lsp-haskell-plugin-semantic-tokens-global-on nil)
@@ -1651,11 +2319,13 @@ let's make it more visible
 **** ocaml mode
      #+begin_src emacs-lisp
        (use-package tuareg-mode
+         :defer t
          :hook (tuareg-mode . lsp))
      #+end_src
 **** dune mode
      #+begin_src emacs-lisp
-       (use-package dune)
+       (use-package dune
+         :defer t)
      #+end_src
 
 *** TypeScript
@@ -1670,6 +2340,7 @@ let's make it more visible
 **** lsp
 #+begin_src emacs-lisp
   (use-package lsp-metals
+    :defer t
     :hook (scala-mode . lsp)
     :custom
     (lsp-metals-enable-semantic-highlighting t))
@@ -1678,6 +2349,7 @@ let's make it more visible
 **** sbt-mode
 #+begin_src emacs-lisp
   (use-package sbt-mode
+    :defer t
     :commands sbt-start sbt-command
     :config
     ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
@@ -1700,7 +2372,7 @@ let's make it more visible
 #+begin_src emacs-lisp
   (use-package markdown-ts-mode
     :mode ("\\.md\\'" . markdown-ts-mode)
-    :defer 't
+    :defer t
     :config
     (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
     (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
@@ -1708,7 +2380,8 @@ let's make it more visible
 
 *** just files
 #+begin_src emacs-lisp
-  (use-package just-ts-mode)
+  (use-package just-ts-mode
+    :defer t)
 #+end_src
 
 * Utils
@@ -1942,600 +2615,3 @@ let's make it more visible
 #+begin_src emacs-lisp
   (xterm-mouse-mode t)
 #+end_src
-* Appearance
-** font
-*** Set font
-    #+begin_src emacs-lisp 
-      (defconst ui-font
-        "Atkinson Hyperlegible Mono"
-        "Font for ui faces")
-
-      (defconst modeline-font
-        "Caffeine Mono"
-        "font used by the modeline")
-
-      (defconst org-font
-        "Margem Rounded Test"
-        "Font used on org-mode")
-
-      (defconst programming-font
-        "Dank Mono"
-        "Font for programming faces")
-
-      (defconst alternative-programming-font
-        "Dank Mono"
-        "Font for alternative faces")
-
-      ;; default face for ui
-      (set-face-attribute 'default nil
-                          :font ui-font
-                          :height 130)
-      ;; face for programming
-      (add-hook 'prog-mode-hook
-                (lambda ()
-                  (face-remap-add-relative 'default
-                                          :family programming-font
-                                          :height 130)))
-      (global-auto-composition-mode t)
-    #+end_src
-*** COMMENT Pretty symbols
-
-    #+begin_src emacs-lisp
-      (when window-system
-        (add-hook 'prog-mode-hook 'prettify-symbols-mode))
-    #+end_src
-*** Fix org mode tables
-    #+begin_src emacs-lisp
-      (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-    #+end_src
-*** ligatures
-    #+begin_src emacs-lisp
-      (use-package ligature
-        :straight (:host github :repo "mickeynp/ligature.el")
-        :config
-        (ligature-set-ligatures 't '("www"))
-        (ligature-set-ligatures
-         'prog-mode
-         '("-->" "//" "/**" "/*" "*/" "<!--" ":=" "->>" "<<-" "->" "<-"
-           "<=>" "==" "!=" "<=" ">=" "=:=" "!==" "&&" "||" "..." ".."
-           "|||" "///" "&&&" "===" "++" "--" "=>" "|>" "<|" "||>" "<||"
-           "|||>" "<|||" ">>" "<<" "::=" "|]" "[|" "{|" "|}"
-           "[<" ">]" ":?>" ":?" "/=" "[||]" "!!" "?:" "?." "::"
-           "+++" "??" "###" "##" ":::" "####" ".?" "?=" "=!=" "<|>"
-           "<:" ":<" ":>" ">:" "***" ";;" "/==" ".=" ".-" "__" ;; "<>"
-           "=/=" "<-<" "<<<" ">>>" "<=<" "<<=" "<==" "<==>" "==>" "=>>"
-           ">=>" ">>=" ">>-" ">-" "<~>" "-<" "-<<" "=<<" "---" "<-|"
-           "<=|" "/\\" "\\/" "|=>" "|~>" "<~~" "<~" "~~" "~~>" "~>"
-           "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</>" "</" "/>"
-           "<->" "..<" "~=" "~-" "-~" "~@" "^=" "-|" "_|_" "|-" "||-"
-           "|=" "||=" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
-           "&="))
-        (global-ligature-mode t))
-    #+end_src
-** add frame borders and window dividers
-   #+begin_src emacs-lisp
-     (modify-all-frames-parameters
-      '((right-divider-width . 0)
-        (internal-border-width . 6)))
-   #+end_src
-** icons
-   #+begin_src emacs-lisp
-     (use-package all-the-icons)
-     (use-package nerd-icons)
-     (use-package nerd-icons-completion
-       :after marginalia
-       :config
-       (nerd-icons-completion-mode)
-       (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
-
-     (use-package all-the-icons-nerd-fonts
-       :straight
-       (all-the-icons-nerd-fonts :host github :repo "mohkale/all-the-icons-nerd-fonts")
-       :after all-the-icons
-       :demand t
-       :config
-       (all-the-icons-nerd-fonts-prefer))
-   #+end_src
-** themes
-*** downloading themes
-**** Doom themes
-     #+begin_src emacs-lisp
-       (use-package doom-themes
-         :defer t
-         :config  
-         (setq doom-themes-enable-bold t
-               ;; doom-themes-treemacs-theme "doom-colors"
-               doom-themes-enable-italic t)
-         (doom-themes-treemacs-config)
-         (doom-themes-org-config))
-     #+end_src
-**** catppuccin
-     #+begin_src emacs-lisp
-       (use-package catppuccin-theme
-         :defer t
-         :init
-         (setq catppuccin-flavor 'frappe
-               catppuccin-italic-comments t
-               catppuccin-italic-variables t
-               catppuccin-italic-blockquotes t))
-     #+end_src
-**** kaolin themes
-     #+begin_src emacs-lisp
-       (use-package kaolin-themes
-         :init
-         (setq kaolin-themes-bold t
-               kaolin-themes-italic t
-               kaolin-themes-italic-comments t
-               kaolin-themes-distinct-parentheses t
-               kaolin-themes-distinct-fringe nil
-               kaolin-themes-comments-style 'alt
-               kaolin-themes-hl-line-colored t
-               kaolin-themes-underline t)
-         :defer t)
-     #+end_src
-**** spacemacs themes
-     #+begin_src emacs-lisp
-       (use-package spacemacs-theme
-         :defer t
-         :config
-         (setq spacemacs-theme-comment-bg nil
-               spacemacs-theme-keyword-italic t
-               spacemacs-theme-org-bold t
-               spacemacs-theme-comment-italic t))
-     #+end_src
-**** timu
-***** timu macos
-#+begin_src emacs-lisp
-  (use-package timu-macos-theme
-    :defer t
-    :init (customize-set-variable 'timu-macos-flavour "dark"))
-#+end_src
-***** timu caribbean
-#+begin_src emacs-lisp
-  (use-package timu-caribbean-theme
-    :config (customize-set-variable 'timu-caribbean-org-intense-colors t)
-    :defer t)
-#+end_src
-**** flexoki
-#+begin_src emacs-lisp
-  (use-package flexoki-themes)
-#+end_src
-*** loading theme
-    #+begin_src emacs-lisp
-      (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
-      (load-theme 'vercel-2024
-                  :no-confirm)
-    #+end_src
-** UI
-*** Splash screen
-    #+begin_src emacs-lisp
-      (setq inhibit-startup-screen t)
-    #+end_src
-*** Scratch buffer message
-    #+begin_src emacs-lisp
-      (setq initial-scratch-message nil
-            inhibit-startup-echo-area-message t)
-    #+end_src
-*** Scroll bar
-    #+begin_src emacs-lisp
-      (scroll-bar-mode -1)
-    #+end_src
-*** Menu bar
-    #+begin_src emacs-lisp
-      (menu-bar-mode -1)
-    #+end_src
-*** Tool bar
-    #+begin_src emacs-lisp
-      (tool-bar-mode -1)
-    #+end_src
-*** Cursor type
-    #+begin_src emacs-lisp
-      (setq-default cursor-type '(bar . 1))
-      (setq-default blink-cursor-delay 5)
-      (setq-default blink-cursor-interval 0.75)
-      (setq-default cursor-in-non-selected-windows '(hbar . 1))
-    #+end_src
-*** auto show and hide current line
-    #+begin_src emacs-lisp
-      (use-package hl-line
-        :ensure nil
-        :config
-        (defvar my-hide-hl-line-timer nil
-          "Timer to show the hl-line after a certain idle time.")
-
-        (defun my-show-hl-line ()
-          "Show the hl-line by disabling `hide-mode-line-mode`."
-          (unless hl-line-mode
-            (hl-line-mode 1)))
-
-        (defun my-hide-hl-line ()
-          "Hide the hl-line by enabling `hide-mode-line-mode`."
-          (when hl-line-mode
-            (hl-line-mode -1)))
-
-        (defun my-start-idle-timer ()
-          "Start the idle timer to show the hl-line after a certain time."
-          (when my-hide-hl-line-timer
-            (cancel-timer my-hide-hl-line-timer))  ;; Cancel any existing timer
-          (setq my-hide-hl-line-timer (run-with-idle-timer 5 nil #'my-show-hl-line)))
-
-        (defun my-hl-line-reset-on-command ()
-          "Hide the hl-line and reset the idle timer when a command is executed."
-          (my-hide-hl-line)
-          (my-start-idle-timer))
-
-        (defun my-toggle-hl-line ()
-          "Set up hooks to hide/show the hl-line based on idle time and input."
-          (add-hook 'post-command-hook #'my-hl-line-reset-on-command)
-          (my-start-idle-timer))
-        (my-toggle-hl-line))
-    #+end_src
-*** highlight todo
-    #+begin_src emacs-lisp
-      (use-package hl-todo
-        :config
-        (global-hl-todo-mode t))
-
-      (define-key prog-mode-map (kbd "C-|") (lambda ()
-                                              (interactive)
-                                              (hl-todo-insert "TODO(matheus-consoli): ")))
-    #+end_src
-*** Only highlight text region
-    #+begin_src emacs-lisp
-      (set-face-attribute 'region nil :extend nil)
-    #+end_src
-*** Line numbers
-**** Hook
-     #+begin_src emacs-lisp
-       (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-     #+end_src
-**** Format
-     #+begin_src emacs-lisp
-       (fringe-mode '(20 . 20))
-     #+end_src
-*** fix color display when loading emacs in terminal
-    #+begin_src emacs-lisp
-      (defun enable-256color-term ()
-        (interactive)
-        (load-library "term/xterm")
-        (terminal-init-xterm))
-
-      (unless (display-graphic-p)
-        (if (string-suffix-p "256color" (getenv "TERM"))
-          (enable-256color-term)))
-    #+end_src
-** tabs
-*** tab bar mode
-#+begin_src emacs-lisp
-  (use-package tab-bar
-    :ensure nil
-    :bind
-    (:map tab-bar-map
-          ("<next>" . tab-bar-switch-to-next-tab)
-          ("<prior>" . tab-bar-switch-to-prev-tab))
-    :config
-    (setq tab-bar-new-tab-choice t
-          tab-bar-new-tab-to 'rightmost
-          tab-bar-close-button-show nil
-          tab-bar-show 1
-          tab-bar-new-button-show nil
-          tab-bar-tab-hints t
-          tab-bar-auto-width t
-          tab-bar-auto-width-max '((130) 10))
-    (tab-bar-mode 1))
-#+end_src
-*** project tab groups
-#+begin_src emacs-lisp
-  (use-package project-tab-groups
-    :config
-    (with-eval-after-load 'project
-      (add-to-list 'project-switch-commands '(magit-project-status "Magit") t)
-      (keymap-set project-prefix-map "m" #'magit-project-status))
-    (project-tab-groups-mode 1))
-#+end_src
-*** tab spaces
-#+begin_src emacs-lisp
-  (use-package tabspaces
-    :straight (:type git :host github :repo "mclear-tools/tabspaces")
-    :hook (after-init . tabspaces-mode)
-    :commands (tabspaces-switch-or-create-workspace
-               tabspaces-open-or-create-project-and-workspace)
-    :custom
-    (tabspaces-use-filtered-buffers-as-default t)
-    (tabspaces-default-tab "Default")
-    (tabspaces-remove-to-default t)
-    (tabspaces-initialize-project-with-todo t)
-    (tabspaces-todo-file-name "project-todo.org")
-    ;; sessions
-    (tabspaces-session t)
-    (tabspaces-session-auto-restore nil)
-    :config
-    ;; Filter Buffers for Consult-Buffer
-    (with-eval-after-load 'consult
-      ;; hide full buffer list (still available with "b" prefix)
-      (consult-customize consult--source-buffer :hidden t :default nil)
-      ;; set consult-workspace buffer list
-      (defvar consult--source-workspace
-        (list :name     "Workspace Buffers"
-              :narrow   ?w
-              :history  'buffer-name-history
-              :category 'buffer
-              :state    #'consult--buffer-state
-              :default  t
-              :items    (lambda () (consult--buffer-query
-                                    :predicate #'tabspaces--local-buffer-p
-                                    :sort 'visibility
-                                    :as #'buffer-name)))
-
-        "Set workspace buffer list for consult-buffer.")
-      (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
-#+end_src
-*** tabs
-**** hide special tabs
-#+begin_src emacs-lisp
-  (defun my-centaur-tabs-hide-tab (x)
-    "Do no to show buffer X in tabs."
-    (let ((name (format "%s" x)))
-      (message "NAME: %s" name)
-      (or
-       ;; Current window is not dedicated window.
-       (window-dedicated-p (selected-window))
-
-       ;; Buffer name not match below blocklist.
-       (string-prefix-p "*epc" name)
-       (string-prefix-p "*helm" name)
-       (string-prefix-p "*Helm" name)
-       (string-prefix-p "*Compile-Log*" name)
-       (string-prefix-p "*lsp" name)
-       (string-prefix-p "*company" name)
-       (string-prefix-p "*Flycheck" name)
-       (string-prefix-p "*tramp" name)
-       (string-prefix-p " *Mini" name)
-       (string-prefix-p "*help" name)
-       (string-prefix-p "*straight" name)
-       (string-prefix-p " *temp" name)
-       (string-prefix-p "*Help" name)
-       (string-prefix-p "*mybuf" name)
-       (string-prefix-p "*Warnings" name)
-       (string-prefix-p "*aider:" name)
-
-       ;; Is not magit buffer.
-       (and (string-prefix-p "magit" name)
-            (not (file-name-extension name))))))
-#+end_src
-**** centaur tabs
-#+begin_src emacs-lisp
-  (use-package centaur-tabs
-    :demand
-    :config
-    (centaur-tabs-headline-match)
-    (centaur-tabs-change-fonts alternative-programming-font 95)
-    (centaur-tabs-mode t)
-    :bind
-    (:map centaur-tabs-mode-map
-          (([remap next-buffer] . centaur-tabs-forward)
-           ([remap previous-buffer] . centaur-tabs-backward)
-           ("C-c t j" . centaur-tabs-ace-jump)
-           ("C-<prior>" . centaur-tabs-backward)
-           ("C-<next>" . centaur-tabs-forward)))
-    :custom
-    (centaur-tabs-height 25)
-    (centaur-tabs-style "alternate")
-    (centaur-tabs-hide-tab-function my-centaur-tabs-hide-tab)
-    (centaur-tabs-set-bar 'under)
-    (x-underline-at-descent-line t) ;; to correctly display the icon
-    (centaur-tabs-cycle-scope 'tabs)
-    (centaur-tabs-gray-out-icons 'buffer)
-    (centaur-tabs-set-icons t)
-    (centaur-tabs-icon-type 'all-the-icons)
-    (centaur-tabs-gray-out-icons 'buffer)
-    (centaur-tabs-modified-marker t)
-    (centaur-tabs-enable-key-bindings t))
-#+end_src
-** treemacs
-   #+begin_src emacs-lisp
-     (use-package treemacs
-       :config
-       (treemacs-git-commit-diff-mode t)
-       (treemacs-fringe-indicator-mode 'always)
-       (treemacs-follow-mode t)
-       (treemacs-project-follow-mode nil)
-       (treemacs-filewatch-mode t)
-       (treemacs-peek-mode t)
-       (setq treemacs-expand-after-init nil)
-       :bind
-       (:map global-map
-             ("C-c ; ;" . treemacs)
-             ("C-c ; B" . treemacs-bookmark)
-             ("C-c ; f" . treemacs-find-file)
-             ("C-c ; g" . treemacs-find-tag)))
-   #+end_src
-*** treemacs extensions
-    #+begin_src emacs-lisp
-      (use-package treemacs-magit
-        :after (treemacs magit))
-
-      (use-package treemacs-nerd-icons
-        :after (treemacs))
-
-      (use-package treemacs-tab-bar
-        :after (treemacs)
-        :config (treemacs-set-scope-type 'Tabs))
-
-      (use-package lsp-treemacs
-        :after (treemacs)
-        :commands (lsp-treemacs-symbols lsp-treemacs-errors-list toggle-lsp-treemacs-modes)
-        :init
-        (defun toggle-lsp-treemacs-modes ()
-          "Toggle both `lsp-treemacs-symbols` and `lsp-treemacs-error-list` modes."
-          (interactive)
-          ;; Toggle lsp-treemacs-symbols
-          (if (get-buffer lsp-treemacs-symbols-buffer-name)
-              (kill-buffer lsp-treemacs-symbols-buffer-name) ; this closes it if open
-            (lsp-treemacs-symbols)) ; this opens it if closed
-          ;; Toggle lsp-treemacs-error-list
-          (if (get-buffer lsp-treemacs-errors-buffer-name)
-              (kill-buffer lsp-treemacs-errors-buffer-name) ; this closes it if open
-            (lsp-treemacs-errors-list))) ; this opens it if closed
-
-        :config
-        (setq
-         lsp-treemacs-error-list-expand-depth 2
-         lsp-treemacs-call-hierarchy-expand-depth 2
-         lsp-treemacs-error-list-current-project-only t
-         lsp-treemacs-symbols-position-params '((side . right)
-                                                (slot . 1)
-                                                (window-width . 40))
-         lsp-treemacs-errors-position-params '((side . right)
-                                               (slot . 2)
-                                               (window-width . 40)))
-        (lsp-treemacs-sync-mode 1)
-        :bind (:map lsp-mode-map              
-                    ("C-c l g m" . toggle-lsp-treemacs-modes)))
-    #+end_src
-** modeline
-   #+begin_src emacs-lisp
-     (use-package doom-modeline
-       :config
-       (use-package async)
-       (use-package ghub)
-       (setq
-        auth-sources '("~/.authinfo.gpg")
-        doom-modeline-height 30
-        doom-modeline-bar-width 8
-        doom-modeline-time-clock-size 0.4
-        doom-modeline-hud t
-        doom-modeline-github nil
-        doom-modeline-github-interval (* 30 60)
-        doom-modeline-enable-word-count t
-        doom-modeline-buffer-encoding t
-        doom-modeline-support-imenu t
-        doom-modeline-irc nil
-        doom-modeline-position-line-format '("L%l")
-        doom-modeline-percent-position '(-3 "%p")
-        doom-modeline-position-column-line-format '("%l:%c")
-        doom-modeline-buffer-file-name-style 'relative-to-project
-        doom-modeline-gnus nil
-        doom-modeline-icon nil ;; remove icons
-        doom-modeline-time-icon nil
-        doom-modeline-buffer-modification-icon nil)
-       :hook (after-init . doom-modeline-mode))
-   #+end_src
-*** Clock
-    #+BEGIN_SRC emacs-lisp
-      (setq-default display-time-default-load-average nil)
-      (setq display-time-format " %I:%M\t")
-      (display-time-mode 1)
-    #+END_SRC
-*** toggle modeline when idle for some time
-#+begin_src emacs-lisp
-  ;; (use-package hide-mode-line
-  ;;   :config
-  ;;   (defvar my-hide-modeline-timer nil
-  ;;     "Timer to show the modeline after a certain idle time.")
-
-  ;;   (defun my-show-modeline ()
-  ;;     "Show the modeline by disabling `hide-mode-line-mode`."
-  ;;     (when hide-mode-line-mode
-  ;;       (hide-mode-line-mode -1))
-  ;;     (force-mode-line-update t))
-
-  ;;   (defun my-hide-modeline ()
-  ;;     "Hide the modeline by enabling `hide-mode-line-mode`."
-  ;;     (unless hide-mode-line-mode
-  ;;       (hide-mode-line-mode 1))
-  ;;     (force-mode-line-update t))
-
-  ;;   (defun my-start-idle-timer ()
-  ;;     "Start the idle timer to show the modeline after a certain time."
-  ;;     (when my-hide-modeline-timer
-  ;;       (cancel-timer my-hide-modeline-timer))  ;; Cancel any existing timer
-  ;;     (setq my-hide-modeline-timer (run-with-idle-timer 3 nil #'my-show-modeline)))
-
-  ;;   (defun my-reset-on-command ()
-  ;;     "Hide the modeline and reset the idle timer when a command is executed."
-  ;;     (my-hide-modeline)
-  ;;     (my-start-idle-timer))
-
-  ;;   (defun my-toggle-modeline ()
-  ;;     "Set up hooks to hide/show the modeline based on idle time and input."
-  ;;     (add-hook 'post-command-hook #'my-reset-on-command)
-  ;;     (my-start-idle-timer))
-
-  ;;   (my-toggle-modeline))
-#+end_src
-** custom set faces
-   #+begin_src emacs-lisp
-     (set-face-attribute 'mode-line nil
-                         :inherit 'default
-                         :family modeline-font
-                         :height 110
-                         :box nil)
-
-     (set-face-attribute 'mode-line-active nil
-                         :inherit 'mode-line
-                         :box nil)
-
-     (set-face-attribute 'mode-line-inactive nil
-                         :inherit 'mode-line-active
-                         :box nil)
-
-     (set-face-attribute 'font-lock-comment-face nil
-                         :font programming-font
-                         :slant 'italic
-                         :height 110)
-
-     (set-face-attribute 'tab-bar nil
-                         :font alternative-programming-font
-                         :height 100)
-
-     (set-face-attribute 'tab-bar-tab nil
-                         :box `(:line-width (7 . -1)
-                                            :style nil
-                                            :color ,(face-attribute 'tab-bar-tab :background)))
-
-     (set-face-attribute 'tab-bar-tab-inactive nil
-                         :box `(:line-width (7 . -1)
-                                            :style nil
-                                            :color ,(face-attribute 'tab-bar-tab-inactive :background)))
-
-     (set-face-attribute 'fixed-pitch nil :family alternative-programming-font :height 120)
-     (set-face-attribute 'variable-pitch nil :family org-font :height 130)
-     (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
-     (set-face-attribute 'org-code nil :inherit '(shadow fixed-pitch))
-     (set-face-attribute 'org-document-info-keyword nil :inherit '(shadow fixed-pitch))
-     (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
-     (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-     (set-face-attribute 'font-lock-doc-face nil :inherit 'font-lock-string-face :height 120)
-     (set-face-attribute 'org-property-value nil :inherit 'fixed-pitch)
-     (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-     (set-face-attribute 'org-tag nil :inherit '(shadow fixed-pitch) :weight 'bold :height 0.8)
-     (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-
-
-     (with-eval-after-load 'blamer
-       (set-face-attribute 'blamer-face nil
-                           :family programming-font
-                           :height 100
-                           :italic t))
-
-     (dolist (face '(window-divider
-                     window-divider-first-pixel
-                     window-divider-last-pixel))
-       (face-spec-reset-face face)
-       (set-face-foreground face (face-attribute 'default :background))
-       (set-face-background face (face-attribute 'default :background)))
-     (set-face-background 'fringe (face-attribute 'default :background))
-
-
-     (custom-set-faces
-      '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
-
-      '(lsp-inlay-hint-parameter-face ((t (:inherit lsp-inlay-hint-face
-                                                    :height 110))))
-      '(lsp-inlay-hint-type-face ((t (:inherit lsp-inlay-hint-face
-                                               :height 110))))
-
-      '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
-      '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
-   #+end_src

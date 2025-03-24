@@ -4,6 +4,10 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
+(set-frame-parameter nil 'ns-appearance 'dark)
+(set-frame-parameter nil 'ns-transparent-titlebar nil)
+
+(make-directory (concat user-emacs-directory "backup" "auto-save") t)
 
 ;; Disable package.el in favor of straight.el
 (setq package-enable-at-startup nil)
@@ -29,7 +33,6 @@
 
 (setq native-comp-speed 2)
 (setq native-comp-compiler-options '("-O2"
-                                     "-mtune=native"
                                      "-fno-semantic-interposition"
                                      "-fipa-pta"
                                      "--param=max-inline-insns-auto=100"))

@@ -4,6 +4,8 @@
 (require 'package)
 
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                         ("org" . "http://orgmode.org/elpa/")
+                         ("melpa-stable" . "https://stable.melpa.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")))
 
 (prefer-coding-system       'utf-8)
@@ -31,13 +33,18 @@
 
 ;; Always use straight to install on systems other than Linux
 (setq straight-use-package-by-default t
+      straight-cache-autoloads t
       straight-vc-git-default-clone-depth 1)
-      ;; use-package-always-defer nil
-      ;; straight-cache-autoloads t
-      ;; package-enable-at-startup t)
+;; use-package-always-defer nil
+;; straight-cache-autoloads t
+;; package-enable-at-startup t)
 
-
-(straight-use-package 'org)
+(straight-use-package
+ '(org
+   :type git
+   :host github
+   :repo "emacsmirror/org"
+   :files ("lisp/*.el" "contrib/lisp/*.el")))
 
 ;; Use straight.el for use-package expressions
 (straight-use-package 'use-package)
@@ -75,4 +82,3 @@
           (cons "emacs-lsp-booster" orig-result))
       orig-result)))
 (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
-
