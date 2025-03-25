@@ -5,8 +5,8 @@
 
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
                          ("org" . "http://orgmode.org/elpa/")
-                         ("melpa-stable" . "https://stable.melpa.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")))
+                         ("melpa" . "https://melpa.org/packages/")
+                         ("melpa-stable" . "https://stable.melpa.org/packages/")))
 
 (prefer-coding-system       'utf-8)
 (set-default-coding-systems 'utf-8)

@@ -334,7 +334,7 @@
 ** Yasnippet
    #+begin_src emacs-lisp
      (use-package yasnippet
-       :config (yas-reload-all)
+       :config
        (use-package yasnippet-snippets)
        :hook (prog-mode . yas-minor-mode))
    #+end_src
@@ -1697,7 +1697,6 @@ looks great, but no text are shown
 *** treesit-auto
     #+begin_src emacs-lisp
       (use-package treesit-auto
-        :defer t
         :custom
         (treesit-auto-install 'prompt)
         :config
@@ -2285,7 +2284,7 @@ let's make it more visible
         (push '((unison "https://github.com/fmguerreiro/tree-sitter-unison-kylegoetz" "build/include-parser-in-src-control"))
               treesit-language-source-alist)
       #+end_src
-*** Elixir
+*** COMMENT Elixir
 **** Elixir mode
      #+begin_src emacs-lisp
        (use-package elixir-mode
