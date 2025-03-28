@@ -90,3 +90,6 @@ ellama-sessions/
 forge-database*
 multisession/
 url/
+
+places.eld
+projects.eld

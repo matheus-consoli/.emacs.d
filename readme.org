@@ -271,9 +271,8 @@
 ** Company
 #+begin_src emacs-lisp
   (use-package company
-    :defer 10
+    :hook (after-ini . global-company-mode)
     :commands company-abort
-    :init (global-company-mode 1)
     :config
     (setq company-tooltip-align-annotations t
           company-tooltip-limit 15
@@ -372,6 +371,15 @@
        ("C-c a d" . avu-goto-word-0)
        ("C-c a s" . avy-goto-symbol-1))
    #+end_src
+
+*** avy zap
+#+begin_src emacs-lisp
+  (use-package avy-zap
+    :defer t
+    :bind
+    ("M-z" . avy-zap-to-char-dwim)
+    ("M-Z" . avy-zap-up-to-char-dwim))
+#+end_src
 
 *** using treesit with avy
     #+begin_src emacs-lisp
@@ -942,7 +950,7 @@ looks great, but no text are shown
 *** tab bar mode
 #+begin_src emacs-lisp
   (use-package tab-bar
-    :defer t
+    :hook (after-init . tab-bar-mode)
     :bind
     (:map tab-bar-map
           ("<next>" . tab-bar-switch-to-next-tab)
@@ -955,8 +963,7 @@ looks great, but no text are shown
           tab-bar-new-button-show nil
           tab-bar-tab-hints t
           tab-bar-auto-width t
-          tab-bar-auto-width-max '((130) 10))
-    (tab-bar-mode 1))
+          tab-bar-auto-width-max '((130) 10)))
 #+end_src
 *** project tab groups
 #+begin_src emacs-lisp
@@ -1850,15 +1857,17 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 **** Fringe Helper
      #+BEGIN_SRC emacs-lisp
        (use-package fringe-helper
+         :defer t
          :ensure t)
      #+END_SRC
 
 **** git gutter
      #+begin_src emacs-lisp
        (use-package git-gutter
-         :config (global-git-gutter-mode t))
+         :hook (after-init . global-git-gutter-mode))
 
        (use-package git-gutter-fringe
+         :after git-gutter
          :custom
          (git-gutter-fr:side 'right-fringe)
          :config
@@ -1939,6 +1948,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** Region Expansion
     #+begin_src emacs-lisp
       (use-package expand-region
+        :defer t
         :bind ("C-c e =" . 'er/expand-region)
         ("C-c e p" . 'er/mark-inside-pairs)
         ("C-c e P" . 'er/mark-outside-pairs)
@@ -1951,6 +1961,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** multiple-cursors
     #+begin_src emacs-lisp
       (use-package multiple-cursors
+        :defer t
         :config (define-key mc/keymap (kbd "RET") nil)
         :init
         (defvar-keymap me/multiple-cursors-map
@@ -1966,6 +1977,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** ts-movement
     #+begin_src emacs-lisp
       (use-package ts-movement
+        :defer t
         :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
         :ensure multiple-cursors
         :init
@@ -2033,7 +2045,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
     #+begin_src emacs-lisp
       (save-place-mode 1)
     #+end_src
-*** Get ansi-term
+*** COMMENT Get ansi-term
     #+begin_src emacs-lisp
       (defvar toggle-term-state nil)
       (defun toggle-term ()
