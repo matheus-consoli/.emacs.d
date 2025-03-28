@@ -57,288 +57,16 @@
     (setq vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
     (vertico-posframe-mode 1))
 #+end_src
-** dabbrev
-   #+begin_src emacs-lisp
-     (setq-default abbrev-mode t)
-     (use-package dabbrev
-       :bind (("M-/" . dabbrev-completion)
-              ("C-M-/" . dabbrev-expand))
-       :config
-       (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
-       ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
-       (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
-       (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
-       (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
-   #+end_src
-** cape
-   #+begin_src emacs-lisp
-     (use-package cape
-       :bind ("M-p" . cape-prefix-map)
-       :init
-       (setq-local completion-at-point-functions
-                   (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-file #'cape-history))))
-   #+end_src
-** Orderless
-   #+begin_src emacs-lisp
-     (use-package orderless
-       :init
-       (setq completion-styles '(orderless substring partial-completion basic)
-             completion-category-defaults nil
-             completion-category-overrides '((file (styles basic partial-completion)))))
-   #+end_src
-** COMMENT Corfu
-   #+begin_src emacs-lisp
-     (use-package corfu
-       :init
-       (global-corfu-mode)
-       (corfu-history-mode 1)
-       (corfu-popupinfo-mode 1)
-
-       :config
-       (add-to-list 'savehist-additional-variables 'corfu-history)
-       (setq
-        corfu-cycle t
-        corfu-scroll-margin 2
-        corfu-preselect 'first
-        corfu-preview-current nil
-        corfu-quit-no-match 'separator
-        corfu-quit-at-boundary t
-        corfu-separator ?\s
-
-        corfu-auto t
-        corfu-auto-delay 0.2
-        corfu-auto-prefix 2
-        corfu-popupinfo-delay '(1.30 . 1.50))
-       :bind
-       (:map corfu-map
-             ("M-q" . corfu-quick-complete)
-             ("C-i" . corfu-quick-insert)))
-   #+end_src
-*** icons for corfu
-    #+begin_src emacs-lisp
-      (use-package nerd-icons-corfu
-        :config
-        (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
-    #+end_src
-*** corfu in the minibuffer
-    #+begin_src emacs-lisp
-      (defun corfu-enable-in-minibuffer ()
-        "Enable Corfu in the minibuffer."
-        (when (local-variable-p 'completion-at-point-functions)
-          ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
-          (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
-                      corfu-popupinfo-delay nil)
-          (corfu-mode 1)))
-      (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
-    #+end_src
-** Company
-#+begin_src emacs-lisp
-  (use-package company
-    :commands company-abort
-    :init (global-company-mode 1)
-    :custom
-    (company-tooltip-align-annotations t)
-    (company-tooltip-limit 15)
-    (company-idle-delay 0.0)
-    (company-echo-delay 0)
-    (company-tooltip-limit 5)
-    (company-minimum-prefix-length 1)
-    (company-require-match nil)
-    (company-show-quick-access 'left)
-    (company-tooltip-maximum-width 60)
-    (company-dabbrev-ignore-case nil)
-    (company-dabbrev-downcase nil)
-    :config
-    (setq company-tooltip-align-annotations t
-          company-tooltip-limit 15
-          company-idle-delay 0.0
-          company-echo-delay 0
-          company-tooltip-limit 5
-          company-minimum-prefix-length 1
-          company-require-match nil
-          company-show-quick-access 'left
-          company-tooltip-maximum-width 60
-          company-dabbrev-ignore-case nil
-          company-dabbrev-downcase nil))
-#+end_src
-*** company box
-#+begin_src emacs-lisp
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
-#+end_src
-** Marginalia
-   #+begin_src emacs-lisp
-     (use-package marginalia
-       :after vertico
-       ;; :config
-       ;;(setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
-       :init (marginalia-mode))
-   #+end_src
-
-** Which-key
-   #+begin_src emacs-lisp
-     (use-package which-key
-       :config
-       (setq which-key-idle-delay 0.25
-             which-key-max-description-length 45
-             which-key-idle-secondary-delay 0.05
-             which-key-show-remaining-keys t)
-       :init (which-key-mode)
-       ;; config for which-key output for repeat-mode maps
-       ;; taken from https://gist.github.com/karthink/9f054dc8fba07fd117738bec31652a90
-       ;; (slightly modified)
-       :preface
-       (setq --my-which-key-last-timer nil)
-       (defun --my-which-key-reset-last-timer ()
-         ;; `--my-which-key-last-timer' holds the timer returned by `run-with-idle-timer'
-         ;; it is set on every key pressed while on repeat-mode, and reset to nil on both entry and exit
-         ;; of repeat-mode through `repeat-mode-hook'
-         (setq --my-which-key-last-timer nil))
-
-       :hook ((repeat-mode . --my-which-key-reset-last-timer))
-       :config
-       (defun --my-which-key-repeat ()
-         (unless (null --my-which-key-last-timer)
-           (cancel-timer --my-which-key-last-timer))
-         (when-let* ((cmd (or this-command real-this-command))
-                     (keymap1 (repeat--command-property 'repeat-mode-map)))
-           (run-with-idle-timer
-            which-key-idle-delay nil
-            (lambda ()
-              (which-key--create-buffer-and-show
-               nil (symbol-value keymap1))))))
-
-       (defun --my-which-key-repeat-mode-dispatch ()
-         (interactive)
-         (setq this-command last-command)
-         (when-let (keymap2 (repeat--command-property 'repeat-map))
-           (which-key--create-buffer-and-show
-            nil (symbol-value keymap2))))
-
-       (defun --my-which-key-repeat-mode-binding ()
-         (when repeat-mode
-           (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
-                       (keymap3 (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
-             (set-transient-map
-              (make-composed-keymap
-               (let ((map (make-sparse-keymap)))
-                 (define-key map (kbd "C-h") #'--my-which-key-repeat-mode-dispatch)
-                 map)
-               keymap3)))))
-
-       ;; for some odd reason `repeat-post-hook' and `repeat-pre-hook' are functions instead
-       ;; of variables so functions on hook must be added through `advice-add'
-       (advice-add 'repeat-post-hook :after #'--my-which-key-repeat)
-       (advice-add 'repeat-post-hook :after #'--my-which-key-repeat-mode-binding)
-       :bind ("C-c c w" . which-key-show-major-mode))
-     (repeat-mode t)
-   #+end_src
-
-** Avy
-   #+begin_src emacs-lisp
-     (use-package avy
-       :defer t
-       :bind
-       ("C-:" . avy-goto-char-timer)
-       ("C-c a l" . avy-goto-line)
-       ("C-c a w" . avy-goto-subword-0)
-       ("C-c a d" . avu-goto-word-0)
-       ("C-c a s" . avy-goto-symbol-1))
-   #+end_src
-
-*** using treesit with avy
-    #+begin_src emacs-lisp
-      (use-package treesit-jump
-        :straight (:host github :repo "dmille56/treesit-jump" :files ("*.el" "treesit-queries"))
-        :bind
-        ("C-, ," . treesit-jump-jump)
-        ("C-, j" . treesit-jump-jump)
-        ("C-, s" . treesit-jump-select)
-        ("C-, d" . treesit-jump-delete)
-        ("C-, p" . treesit-jump-parent-jump)
-        ("C-, t" . treesit-jump-transient))
-    #+end_src
-
-** Embark
-   #+begin_src emacs-lisp
-     (use-package embark
-       :ensure t
-       :bind
-       (("C-." . embark-act)         ;; pick some comfortable binding
-        ("C-;" . embark-dwim)        ;; good alternative: M-.
-        ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-       :init
-       ;; Optionally replace the key help with a completing-read interface
-       (setq prefix-help-command #'embark-prefix-help-command)
-       :config
-       ;; Hide the mode line of the Embark live/completions buffers
-       (add-to-list 'display-buffer-alist
-                    '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                      nil
-                      (window-parameters (mode-line-format . none)))))
-   #+end_src
-
-*** Embark consult
-#+begin_src emacs-lisp
-(use-package embark-consult
-  :ensure t
-  :after (embark consult)
-  :demand t ; only necessary if you have the hook below
-  ;; if you want to have consult previews as you move around an
-  ;; auto-updating embark collect buffer
-  :hook (embark-collect-mode . consult-preview-at-point-mode))
-#+end_src
-
-*** Embark use whick-key like a key menu prompt
-    #+begin_src emacs-lisp
-      (defun embark-which-key-indicator ()
-        "An embark indicator that displays keymaps using which-key.
-      The which-key help message will show the type and value of the
-      current target followed by an ellipsis if there are further
-      targets."
-        
-        (when (bound-and-true-p which-key-mode)
-          (lambda (&optional keymap targets prefix)
-            (if (null keymap)
-                (which-key--hide-popup-ignore-command)
-              (which-key--show-keymap
-               (if (eq (plist-get (car targets) :type) 'embark-become)
-                   "Become"
-                 (format "Act on %s '%s'%s"
-                         (plist-get (car targets) :type)
-                         (embark--truncate-target (plist-get (car targets) :target))
-                         (if (cdr targets) "…" "")))
-               (if prefix
-                   (pcase (lookup-key keymap prefix 'accept-default)
-                     ((and (pred keymapp) km) km)
-                     (_ (key-binding prefix 'accept-default)))
-                 keymap)
-               nil nil t (lambda (binding)
-                           (not (string-suffix-p "-argument" (cdr binding)))))))))
-
-      (setq embark-indicators
-            '(embark-which-key-indicator
-              embark-highlight-indicator
-              embark-isearch-highlight-indicator))
-
-      (defun embark-hide-which-key-indicator (fn &rest args)
-        "Hide the which-key indicator immediately when using the completing-read prompter."
-        (which-key--hide-popup-ignore-command)
-        (let ((embark-indicators
-               (remq #'embark-which-key-indicator embark-indicators)))
-          (apply fn args)))
-
-      (advice-add #'embark-completing-read-prompter
-                  :around #'embark-hide-which-key-indicator)
-    #+end_src
-** Yasnippet
-   #+begin_src emacs-lisp
-     (use-package yasnippet
-       :config
-       (use-package yasnippet-snippets)
-       :hook (prog-mode . yas-minor-mode))
-   #+end_src
 ** LSP - Language Server Protocol
+*** COMMENT eglot
+#+begin_src emacs-lisp
+  (use-package eglot
+    :defer t
+    :hook ((rust-ts-mode git-commit-mode markdown-mode markdown-ts-mode) . eglot-ensure)
+    :config
+    (add-to-list 'eglot-server-programs
+                 '((rust-ts-mode git-commit-mode markdown-mode markdown-ts-mode) . ("harper-ls" "--stdio"))))
+#+end_src
 *** LSP mode
     #+begin_src emacs-lisp
       (use-package lsp-mode
@@ -465,6 +193,277 @@
                                           :target nil
                                           :cwd nil))
        :bind ("<f5>" . dap-breakpoint-toggle))
+   #+end_src
+** dabbrev
+   #+begin_src emacs-lisp
+     (setq-default abbrev-mode t)
+     (use-package dabbrev
+       :bind (("M-/" . dabbrev-completion)
+              ("C-M-/" . dabbrev-expand))
+       :config
+       (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
+       ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
+       (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+       (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
+       (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
+   #+end_src
+** cape
+   #+begin_src emacs-lisp
+     (use-package cape
+       :bind ("M-p" . cape-prefix-map)
+       :init
+       (setq-local completion-at-point-functions
+                   (list (cape-capf-super #'cape-dabbrev #'cape-dict #'cape-keyword #'cape-file #'cape-history))))
+   #+end_src
+** Orderless
+   #+begin_src emacs-lisp
+     (use-package orderless
+       :init
+       (setq completion-styles '(orderless substring partial-completion basic)
+             completion-category-defaults nil
+             completion-category-overrides '((file (styles basic partial-completion)))))
+   #+end_src
+** COMMENT Corfu
+   #+begin_src emacs-lisp
+     (use-package corfu
+       :init
+       (global-corfu-mode)
+       (corfu-history-mode 1)
+       (corfu-popupinfo-mode 1)
+
+       :config
+       (add-to-list 'savehist-additional-variables 'corfu-history)
+       (setq
+        corfu-cycle t
+        corfu-scroll-margin 2
+        corfu-preselect 'first
+        corfu-preview-current nil
+        corfu-quit-no-match 'separator
+        corfu-quit-at-boundary t
+        corfu-separator ?\s
+
+        corfu-auto t
+        corfu-auto-delay 0.2
+        corfu-auto-prefix 2
+        corfu-popupinfo-delay '(1.30 . 1.50))
+       :bind
+       (:map corfu-map
+             ("M-q" . corfu-quick-complete)
+             ("C-i" . corfu-quick-insert)))
+   #+end_src
+*** icons for corfu
+    #+begin_src emacs-lisp
+      (use-package nerd-icons-corfu
+        :config
+        (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+    #+end_src
+*** corfu in the minibuffer
+    #+begin_src emacs-lisp
+      (defun corfu-enable-in-minibuffer ()
+        "Enable Corfu in the minibuffer."
+        (when (local-variable-p 'completion-at-point-functions)
+          ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+          (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                      corfu-popupinfo-delay nil)
+          (corfu-mode 1)))
+      (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+    #+end_src
+** Company
+#+begin_src emacs-lisp
+  (use-package company
+    :defer 10
+    :commands company-abort
+    :init (global-company-mode 1)
+    :config
+    (setq company-tooltip-align-annotations t
+          company-tooltip-limit 15
+          company-idle-delay 0.0
+          company-echo-delay 0
+          company-tooltip-limit 5
+          company-minimum-prefix-length 1
+          company-require-match nil
+          company-show-quick-access 'left
+          company-tooltip-maximum-width 60
+          company-dabbrev-ignore-case nil
+          company-dabbrev-downcase nil))
+#+end_src
+*** company box
+#+begin_src emacs-lisp
+  (use-package company-box
+    :defer 10
+    :hook (company-mode . company-box-mode))
+#+end_src
+** Marginalia
+   #+begin_src emacs-lisp
+     (use-package marginalia
+       :after vertico
+       ;; :config
+       ;;(setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+       :init (marginalia-mode))
+   #+end_src
+
+** Which-key
+   #+begin_src emacs-lisp
+     (use-package which-key
+       :config
+       (setq which-key-idle-delay 0.25
+             which-key-max-description-length 45
+             which-key-idle-secondary-delay 0.05
+             which-key-show-remaining-keys t)
+       :init (which-key-mode)
+       ;; config for which-key output for repeat-mode maps
+       ;; taken from https://gist.github.com/karthink/9f054dc8fba07fd117738bec31652a90
+       ;; (slightly modified)
+       :preface
+       (setq --my-which-key-last-timer nil)
+       (defun --my-which-key-reset-last-timer ()
+         ;; `--my-which-key-last-timer' holds the timer returned by `run-with-idle-timer'
+         ;; it is set on every key pressed while on repeat-mode, and reset to nil on both entry and exit
+         ;; of repeat-mode through `repeat-mode-hook'
+         (setq --my-which-key-last-timer nil))
+
+       :hook ((repeat-mode . --my-which-key-reset-last-timer))
+       :config
+       (defun --my-which-key-repeat ()
+         (unless (null --my-which-key-last-timer)
+           (cancel-timer --my-which-key-last-timer))
+         (when-let* ((cmd (or this-command real-this-command))
+                     (keymap1 (repeat--command-property 'repeat-mode-map)))
+           (run-with-idle-timer
+            which-key-idle-delay nil
+            (lambda ()
+              (which-key--create-buffer-and-show
+               nil (symbol-value keymap1))))))
+
+       (defun --my-which-key-repeat-mode-dispatch ()
+         (interactive)
+         (setq this-command last-command)
+         (when-let* (keymap2 (repeat--command-property 'repeat-map))
+           (which-key--create-buffer-and-show
+            nil (symbol-value keymap2))))
+
+       (defun --my-which-key-repeat-mode-binding ()
+         (when repeat-mode
+           (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
+                       (keymap3 (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
+             (set-transient-map
+              (make-composed-keymap
+               (let ((map (make-sparse-keymap)))
+                 (define-key map (kbd "C-h") #'--my-which-key-repeat-mode-dispatch)
+                 map)
+               keymap3)))))
+
+       ;; for some odd reason `repeat-post-hook' and `repeat-pre-hook' are functions instead
+       ;; of variables so functions on hook must be added through `advice-add'
+       (advice-add 'repeat-post-hook :after #'--my-which-key-repeat)
+       (advice-add 'repeat-post-hook :after #'--my-which-key-repeat-mode-binding)
+       :bind ("C-c c w" . which-key-show-major-mode))
+     (repeat-mode t)
+   #+end_src
+
+** Avy
+   #+begin_src emacs-lisp
+     (use-package avy
+       :defer t
+       :bind
+       ("C-:" . avy-goto-char-timer)
+       ("C-c a l" . avy-goto-line)
+       ("C-c a w" . avy-goto-subword-0)
+       ("C-c a d" . avu-goto-word-0)
+       ("C-c a s" . avy-goto-symbol-1))
+   #+end_src
+
+*** using treesit with avy
+    #+begin_src emacs-lisp
+      (use-package treesit-jump
+        :straight (:host github :repo "dmille56/treesit-jump" :files ("*.el" "treesit-queries"))
+        :bind
+        ("C-, ," . treesit-jump-jump)
+        ("C-, j" . treesit-jump-jump)
+        ("C-, s" . treesit-jump-select)
+        ("C-, d" . treesit-jump-delete)
+        ("C-, p" . treesit-jump-parent-jump)
+        ("C-, t" . treesit-jump-transient))
+    #+end_src
+
+** Embark
+   #+begin_src emacs-lisp
+     (use-package embark
+       :ensure t
+       :bind
+       (("C-." . embark-act)         ;; pick some comfortable binding
+        ("C-;" . embark-dwim)        ;; good alternative: M-.
+        ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+       :init
+       ;; Optionally replace the key help with a completing-read interface
+       (setq prefix-help-command #'embark-prefix-help-command)
+       :config
+       ;; Hide the mode line of the Embark live/completions buffers
+       (add-to-list 'display-buffer-alist
+                    '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                      nil
+                      (window-parameters (mode-line-format . none)))))
+   #+end_src
+
+*** Embark consult
+#+begin_src emacs-lisp
+(use-package embark-consult
+  :ensure t
+  :after (embark consult)
+  :demand t ; only necessary if you have the hook below
+  ;; if you want to have consult previews as you move around an
+  ;; auto-updating embark collect buffer
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
+
+*** Embark use whick-key like a key menu prompt
+    #+begin_src emacs-lisp
+      (defun embark-which-key-indicator ()
+        "An embark indicator that displays keymaps using which-key.
+      The which-key help message will show the type and value of the
+      current target followed by an ellipsis if there are further
+      targets."
+        
+        (when (bound-and-true-p which-key-mode)
+          (lambda (&optional keymap targets prefix)
+            (if (null keymap)
+                (which-key--hide-popup-ignore-command)
+              (which-key--show-keymap
+               (if (eq (plist-get (car targets) :type) 'embark-become)
+                   "Become"
+                 (format "Act on %s '%s'%s"
+                         (plist-get (car targets) :type)
+                         (embark--truncate-target (plist-get (car targets) :target))
+                         (if (cdr targets) "…" "")))
+               (if prefix
+                   (pcase (lookup-key keymap prefix 'accept-default)
+                     ((and (pred keymapp) km) km)
+                     (_ (key-binding prefix 'accept-default)))
+                 keymap)
+               nil nil t (lambda (binding)
+                           (not (string-suffix-p "-argument" (cdr binding)))))))))
+
+      (setq embark-indicators
+            '(embark-which-key-indicator
+              embark-highlight-indicator
+              embark-isearch-highlight-indicator))
+
+      (defun embark-hide-which-key-indicator (fn &rest args)
+        "Hide the which-key indicator immediately when using the completing-read prompter."
+        (which-key--hide-popup-ignore-command)
+        (let ((embark-indicators
+               (remq #'embark-which-key-indicator embark-indicators)))
+          (apply fn args)))
+
+      (advice-add #'embark-completing-read-prompter
+                  :around #'embark-hide-which-key-indicator)
+    #+end_src
+** Yasnippet
+   #+begin_src emacs-lisp
+     (use-package yasnippet
+       :config
+       (use-package yasnippet-snippets)
+       :hook (prog-mode . yas-minor-mode))
    #+end_src
 ** Linter
 *** Flycheck
@@ -835,24 +834,6 @@ looks great, but no text are shown
                spacemacs-theme-org-bold t
                spacemacs-theme-comment-italic t))
      #+end_src
-**** timu
-***** timu macos
-#+begin_src emacs-lisp
-  (use-package timu-macos-theme
-    :defer t
-    :init (customize-set-variable 'timu-macos-flavour "dark"))
-#+end_src
-***** timu caribbean
-#+begin_src emacs-lisp
-  (use-package timu-caribbean-theme
-    :config (customize-set-variable 'timu-caribbean-org-intense-colors t)
-    :defer t)
-#+end_src
-**** flexoki
-#+begin_src emacs-lisp
-    (use-package flexoki-themes
-      :defer t)
-#+end_src
 *** loading theme
     #+begin_src emacs-lisp
       (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
@@ -1059,11 +1040,11 @@ looks great, but no text are shown
 **** centaur tabs
 #+begin_src emacs-lisp
   (use-package centaur-tabs
-    :demand
+    :hook (after-init . centaur-tabs-mode)
     :config
     (centaur-tabs-headline-match)
     (centaur-tabs-change-fonts alternative-programming-font 95)
-    (centaur-tabs-mode t)
+    ;; (centaur-tabs-mode t)
     :bind
     (:map centaur-tabs-mode-map
           (([remap next-buffer] . centaur-tabs-forward)
@@ -1155,8 +1136,8 @@ looks great, but no text are shown
    #+begin_src emacs-lisp
      (use-package doom-modeline
        :config
-       (use-package async)
-       (use-package ghub)
+       (use-package async :defer t)
+       (use-package ghub :defer t)
        (setq
         auth-sources '("~/.authinfo.gpg")
         doom-modeline-height 30
@@ -1773,6 +1754,7 @@ looks great, but no text are shown
 **** Magit
      #+begin_src emacs-lisp
        (use-package magit
+         :defer t
          :config
          (setq magit-ediff-dwim-show-on-hunks t)
          (setopt magit-format-file-function #'magit-format-file-nerd-icons)
@@ -2490,7 +2472,7 @@ let's make it more visible
        ("C-c d" . crux-duplicate-current-line-or-region)
        ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
        #+end_src
-** Read $PATH
+** COMMENT Read $PATH
    #+begin_src emacs-lisp
      (use-package exec-path-from-shell
        :init (exec-path-from-shell-initialize))

@@ -31,11 +31,23 @@
 
 (setq native-comp-always-compile t)
 
+(defconst options '("-O2"
+                    "-Ofast"
+                    "-fdevirtualize-at-ltrans"
+                    "-fgraphite-identity"
+                    "-fipa-pta"
+                    "-floop-nest-optimize"
+                    "-flto=auto"
+                    "-fno-finite-math-only"
+                    "-fno-semantic-interposition"
+                    "-fuse-linker-plugin"
+                    "-g0"
+                    "--param=max-inline-insns-auto=100"))
+
 (setq native-comp-speed 2)
-(setq native-comp-compiler-options '("-O2"
-                                     "-fno-semantic-interposition"
-                                     "-fipa-pta"
-                                     "--param=max-inline-insns-auto=100"))
+(setq native-comp-compiler-options options)
+(setq native-comp-driver-options options)
+
 
 ;; Profile emacs startup
 (add-hook 'emacs-startup-hook
