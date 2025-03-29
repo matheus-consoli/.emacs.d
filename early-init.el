@@ -31,8 +31,9 @@
 
 (setq native-comp-always-compile t)
 
-(defconst options '("-O2"
-                    "-Ofast"
+(defconst options '("-march=znver3"
+		            "-mtune=znver3"
+                    "-O3"
                     "-fdevirtualize-at-ltrans"
                     "-fgraphite-identity"
                     "-fipa-pta"
@@ -42,7 +43,7 @@
                     "-fno-semantic-interposition"
                     "-fuse-linker-plugin"
                     "-g0"
-                    "--param=max-inline-insns-auto=100"))
+                    "--param=max-inline-insns-auto=1000"))
 
 (setq native-comp-speed 2)
 (setq native-comp-compiler-options options)

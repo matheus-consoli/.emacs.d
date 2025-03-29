@@ -3,7 +3,7 @@
 * Completion system
 ** preview mode
 #+begin_src emacs-lisp
-  (global-completion-preview-mode t)
+  (add-hook 'after-init-hook #'global-completion-preview-mode)
 #+end_src
 ** Vertico
    #+begin_src emacs-lisp
@@ -271,7 +271,7 @@
 ** Company
 #+begin_src emacs-lisp
   (use-package company
-    :hook (after-ini . global-company-mode)
+    :hook (after-init . global-company-mode)
     :commands company-abort
     :config
     (setq company-tooltip-align-annotations t
@@ -357,7 +357,8 @@
        (advice-add 'repeat-post-hook :after #'--my-which-key-repeat)
        (advice-add 'repeat-post-hook :after #'--my-which-key-repeat-mode-binding)
        :bind ("C-c c w" . which-key-show-major-mode))
-     (repeat-mode t)
+
+     (add-hook 'after-init-hook 'repeat-mode)
    #+end_src
 
 ** Avy
@@ -368,7 +369,7 @@
        ("C-:" . avy-goto-char-timer)
        ("C-c a l" . avy-goto-line)
        ("C-c a w" . avy-goto-subword-0)
-       ("C-c a d" . avu-goto-word-0)
+       ("C-c a d" . avy-goto-word-0)
        ("C-c a s" . avy-goto-symbol-1))
    #+end_src
 
@@ -477,7 +478,7 @@
 *** Flycheck
     #+begin_src emacs-lisp
       (use-package flycheck
-        :defer t
+        :hook (after-init . global-flycheck-mode)
         :config
         (add-to-list 'display-buffer-alist
                      `(,(rx bos "*Flycheck errors*" eos)
@@ -485,8 +486,7 @@
                         display-buffer-in-side-window)
                        (side            . bottom)
                        (reusable-frames . visible)
-                       (window-height   . 0.33)))
-        :init (global-flycheck-mode))
+                       (window-height   . 0.33))))
     #+end_src
 **** flycheck inline
      #+begin_src emacs-lisp
@@ -681,22 +681,6 @@
              ("C-c C-o C-a l" . copilot-accept-completion-by-line)
              ("C-c C-o C-a w" . copilot-accept-completion-by-word)))
    #+end_src
-** COMMENT nova
-looks great, but no text are shown
-#+begin_src emacs-lisp
-  (use-package markdown-mode)
-  (use-package nova
-    :straight (:host github :repo "thisisran/nova")
-    :config
-    ;; (require 'nova)
-    ;; (require 'nova-corfu)
-    ;; (require 'nova-corfu-popupinfo)
-    ;; (require 'nova-eldoc)
-    (nova-vertico-mode 1)
-    (nova-corfu-mode 1)
-    (nova-corfu-popupinfo-mode 1)
-    (nova-eldoc-mode 1))
-#+end_src
 * Appearance
 ** font
 *** Set font
@@ -731,13 +715,7 @@ looks great, but no text are shown
                   (face-remap-add-relative 'default
                                           :family programming-font
                                           :height 130)))
-      (global-auto-composition-mode t)
-    #+end_src
-*** COMMENT Pretty symbols
-
-    #+begin_src emacs-lisp
-      (when window-system
-        (add-hook 'prog-mode-hook 'prettify-symbols-mode))
+      (add-hook 'after-init-hook #'global-auto-composition-mode)
     #+end_src
 *** Fix org mode tables
     #+begin_src emacs-lisp
@@ -747,6 +725,7 @@ looks great, but no text are shown
     #+begin_src emacs-lisp
       (use-package ligature
         :straight (:host github :repo "mickeynp/ligature.el")
+        :hook (after-init . global-ligature-mode)
         :config
         (ligature-set-ligatures 't '("www"))
         (ligature-set-ligatures
@@ -764,8 +743,7 @@ looks great, but no text are shown
            "<$>" "<$" "$>" "<+>" "<+" "+>" "<*>" "<*" "*>" "</>" "</" "/>"
            "<->" "..<" "~=" "~-" "-~" "~@" "^=" "-|" "_|_" "|-" "||-"
            "|=" "||=" "#{" "#[" "]#" "#(" "#?" "#_" "#_(" "#:" "#!" "#="
-           "&="))
-        (global-ligature-mode t))
+           "&=")))
     #+end_src
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
@@ -915,8 +893,7 @@ looks great, but no text are shown
 *** highlight todo
     #+begin_src emacs-lisp
       (use-package hl-todo
-        :config
-        (global-hl-todo-mode t))
+        :hook (after-init . global-hl-todo-mode))
 
       (define-key prog-mode-map (kbd "C-|") (lambda ()
                                               (interactive)
@@ -1685,11 +1662,11 @@ looks great, but no text are shown
 *** treesit-auto
     #+begin_src emacs-lisp
       (use-package treesit-auto
+        :hook (after-init . global-treesit-auto-mode)
         :custom
         (treesit-auto-install 'prompt)
         :config
-        (treesit-auto-add-to-auto-mode-alist 'all)
-        (global-treesit-auto-mode))
+        (treesit-auto-add-to-auto-mode-alist 'all))
     #+end_src
 *** Parens
 **** Smartparens
@@ -1701,6 +1678,7 @@ looks great, but no text are shown
          (indent-according-to-mode))
 
        (use-package smartparens
+         :hook (after-init . smartparens-global-mode)
          :bind
          ("C-M-f" . sp-forward-sexp)
          ("C-M-b" . sp-backward-sexp)
@@ -1728,8 +1706,6 @@ looks great, but no text are shown
          :init
          (require 'smartparens-config)
          :config
-         (smartparens-global-mode 1)
-
          ;; Rust-specific pairs
          (sp-with-modes '(rust-ts-mode)
            (sp-local-pair "<" ">")
@@ -2031,15 +2007,15 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** Moving lines around
     #+begin_src emacs-lisp
       (use-package drag-stuff
+        :hook (after-init . drag-stuff-global-mode)
         :config
         ;; disable it in org buffers
         (add-hook 'org-mode-hook (lambda () (drag-stuff-mode -1)))
-        (drag-stuff-define-keys)
-        (drag-stuff-global-mode))
+        (drag-stuff-define-keys))
     #+end_src
 *** Auto reload files
     #+begin_src emacs-lisp
-      (global-auto-revert-mode t)
+      (add-hook 'after-init-hook #'global-auto-revert-mode)
     #+end_src
 *** Save last cursor position
     #+begin_src emacs-lisp
@@ -2111,11 +2087,10 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** treesit-fold
 #+begin_src emacs-lisp
   (use-package treesit-fold
-    :defer t
+    :hook (after-init . global-treesit-fold-mode)
     :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold")
     :config
     (setq treesit-fold-summary-show nil)
-    :init (global-treesit-fold-mode t)
     :bind (:map treesit-fold-mode-map
                 (("C-{" . treesit-fold-toggle)
                  ("C-*" . treesit-fold-open-all)
@@ -2139,7 +2114,8 @@ can't get this to work?
 #+end_src
 *** better regexes
 #+begin_src emacs-lisp
-  (use-package visual-regexp)
+  (use-package visual-regexp
+    :defer t)
   (use-package visual-regexp-steroids
     :bind
     ("C-r" . vr/isearch-backward)
@@ -2572,10 +2548,10 @@ let's make it more visible
 ** undo tree
 #+begin_src emacs-lisp
   (use-package undo-tree
+    :hook (after-init . global-undo-tree-mode)
     :config
     (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))
-          undo-tree-visualizer-lazy-drawing 10)
-    (global-undo-tree-mode))
+          undo-tree-visualizer-lazy-drawing 10))
 #+end_src
 ** rainbow mode
 #+begin_src emacs-lisp
