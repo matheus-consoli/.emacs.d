@@ -58,7 +58,8 @@
     (vertico-posframe-mode 1))
 #+end_src
 ** LSP - Language Server Protocol
-*** COMMENT eglot
+I only use eglot for harper-ls integration, for programing i use lsp-mode
+*** eglot
 #+begin_src emacs-lisp
   (use-package eglot
     :defer t
