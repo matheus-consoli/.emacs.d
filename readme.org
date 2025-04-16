@@ -103,6 +103,38 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
                     ("C-c l v" . lsp-avy-lens)
                     ("<f4>" . lsp-inlay-hints-mode))
         :init
+        ;; https://github.com/blahgeek/emacs-lsp-booster
+        (defun lsp-booster--advice-json-parse (old-fn &rest args)
+          "Try to parse bytecode instead of json."
+          (or
+           (when (equal (following-char) ?#)
+             (let ((bytecode (read (current-buffer))))
+               (when (byte-code-function-p bytecode)
+                 (funcall bytecode))))
+           (apply old-fn args)))
+        (advice-add (if (progn (require 'json)
+                               (fboundp 'json-parse-buffer))
+                        'json-parse-buffer
+                      'json-read)
+                    :around
+                    #'lsp-booster--advice-json-parse)
+
+        (defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+          "Prepend emacs-lsp-booster command to lsp CMD."
+          (let ((orig-result (funcall old-fn cmd test?)))
+            (if (and (not test?)                             ;; for check lsp-server-present?
+                     (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+                     lsp-use-plists
+                     (not (functionp 'json-rpc-connection))  ;; native json-rpc
+                     (executable-find "emacs-lsp-booster"))
+                (when-let* ((command-from-exec-path (executable-find (car orig-result))))  ;; resolve command from exec-path (in case not found in $PATH)
+                  (setcar orig-result command-from-exec-path)
+                  ;;(message "Using emacs-lsp-booster for %s!" orig-result)
+                  (cons "emacs-lsp-booster" orig-result))
+              orig-result)))
+
+        (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+
         (defun my/orderless-dispatch-flex-first (_pattern index _total)
           (and (eq index 0) 'orderless-flex))
 
@@ -114,8 +146,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
           ;; Optionally configure the cape-capf-buster.
           (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point))))
 
-        :hook (lsp-completion-mode . my/lsp-mode-setup-completion)
-        :commands lsp)
+        :hook (lsp-completion-mode . my/lsp-mode-setup-completion))
     #+end_src
 *** LSP UI
     #+begin_src emacs-lisp
@@ -124,7 +155,6 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
         :bind
         (:map lsp-ui-mode-map
               ("C-c C-M-d". lsp-ui-doc-focus-frame)
-              ("C-c C-M-q". lsp-ui-doc-unfocus-frame)
               ("M-." . lsp-ui-peek-find-definitions)
               ("M-?" . lsp-ui-peek-find-references)
               ("M-<right>" . lsp-ui-peek-jump-backward)
@@ -133,10 +163,19 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
               ("C-c l d" . lsp-ui-doc-glance)
               ("C-c l s" . consult-lsp-symbols))
         :config
+        (setq lsp-ui-doc-frame-parameters
+              (let ((params lsp-ui-doc-frame-parameters))
+                (let ((entry (assoc 'internal-border-width params)))
+                  (if entry
+                      (setcdr entry 0)
+                    (push '(internal-border-width . 0) params)))
+                params))
         (setq lsp-ui-doc-enable t
               lsp-ui-doc-position 'bottom
               lsp-ui-doc-header nil
               lsp-ui-doc-delay 0.5
+              lsp-ui-doc-text-scale-level 0.5
+              lsp-ui-doc-include-signature t
               lsp-ui-doc-show-with-cursor t
               lsp-ui-doc-show-with-mouse nil
 
@@ -199,6 +238,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
    #+begin_src emacs-lisp
      (setq-default abbrev-mode t)
      (use-package dabbrev
+       :defer t
        :bind (("M-/" . dabbrev-completion)
               ("C-M-/" . dabbrev-expand))
        :config
@@ -386,6 +426,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 *** using treesit with avy
     #+begin_src emacs-lisp
       (use-package treesit-jump
+        :defer t
         :straight (:host github :repo "dmille56/treesit-jump" :files ("*.el" "treesit-queries"))
         :bind
         ("C-, ," . treesit-jump-jump)
@@ -665,10 +706,8 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
      (use-package copilot
        :defer t
        :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-       :init
-       (use-package jsonrpc)
        :config
-       (setq copilot-idle-delay 6)
+       (setq copilot-idle-delay 7)
        (add-to-list 'copilot-major-mode-alist '("rust-ts-mode" . "rust"))
        :bind
        (:map prog-mode-map
@@ -787,16 +826,6 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
          (doom-themes-treemacs-config)
          (doom-themes-org-config))
      #+end_src
-**** catppuccin
-     #+begin_src emacs-lisp
-       (use-package catppuccin-theme
-         :defer t
-         :init
-         (setq catppuccin-flavor 'frappe
-               catppuccin-italic-comments t
-               catppuccin-italic-variables t
-               catppuccin-italic-blockquotes t))
-     #+end_src
 **** kaolin themes
      #+begin_src emacs-lisp
        (use-package kaolin-themes
@@ -823,8 +852,8 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
      #+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
-      (load-theme 'vercel-2024
+      ;; (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
+      (load-theme 'kaolin-dark
                   :no-confirm)
     #+end_src
 ** UI
@@ -861,29 +890,38 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
       (use-package hl-line
         :ensure nil
         :config
+        (defvar my-hl-line-ignored-modes
+          '(treemacs-mode dired-mode magit-mode)
+          "List of major modes where the idle hl-line behavior should be ignored.")
+
         (defvar my-hide-hl-line-timer nil
           "Timer to show the hl-line after a certain idle time.")
 
         (defun my-show-hl-line ()
-          "Show the hl-line by disabling `hide-mode-line-mode`."
-          (unless hl-line-mode
+          "Show the hl-line by enabling `hl-line-mode` if not in ignored modes."
+          (unless (or hl-line-mode
+                      (member major-mode my-hl-line-ignored-modes))
             (hl-line-mode 1)))
 
         (defun my-hide-hl-line ()
-          "Hide the hl-line by enabling `hide-mode-line-mode`."
-          (when hl-line-mode
+          "Hide the hl-line by disabling `hl-line-mode`."
+          (when (and hl-line-mode
+                     (not (member major-mode my-hl-line-ignored-modes)))
             (hl-line-mode -1)))
 
         (defun my-start-idle-timer ()
           "Start the idle timer to show the hl-line after a certain time."
-          (when my-hide-hl-line-timer
+          (when (and my-hide-hl-line-timer
+                     (not (member major-mode my-hl-line-ignored-modes)))
             (cancel-timer my-hide-hl-line-timer))  ;; Cancel any existing timer
-          (setq my-hide-hl-line-timer (run-with-idle-timer 5 nil #'my-show-hl-line)))
+          (unless (member major-mode my-hl-line-ignored-modes)
+            (setq my-hide-hl-line-timer (run-with-idle-timer 5 nil #'my-show-hl-line))))
 
         (defun my-hl-line-reset-on-command ()
           "Hide the hl-line and reset the idle timer when a command is executed."
-          (my-hide-hl-line)
-          (my-start-idle-timer))
+          (unless (member major-mode my-hl-line-ignored-modes)
+            (my-hide-hl-line)
+            (my-start-idle-timer)))
 
         (defun my-toggle-hl-line ()
           "Set up hooks to hide/show the hl-line based on idle time and input."
@@ -1055,14 +1093,19 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
    #+begin_src emacs-lisp
      (use-package treemacs
        :defer t
+       :custom
+       (treemacs-file-follow-delay 3)
        :config
+       (treemacs-resize-icons 11)
        (treemacs-git-commit-diff-mode t)
        (treemacs-fringe-indicator-mode 'always)
        (treemacs-follow-mode t)
        (treemacs-project-follow-mode nil)
        (treemacs-filewatch-mode t)
        (treemacs-peek-mode t)
-       (setq treemacs-expand-after-init nil)
+       (treemacs-resize-icons 11)
+       (setq treemacs-expand-after-init nil
+             treemacs-file-follow-delay 1.5)
        :bind
        (:map global-map
              ("C-c ; ;" . treemacs)
@@ -1087,7 +1130,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 
       (use-package lsp-treemacs
         :defer t
-        :after (treemacs)
+        :after (treemacs lsp)
         :commands (lsp-treemacs-symbols lsp-treemacs-errors-list toggle-lsp-treemacs-modes)
         :init
         (defun toggle-lsp-treemacs-modes ()
@@ -1104,8 +1147,8 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 
         :config
         (setq
-         lsp-treemacs-error-list-expand-depth 2
-         lsp-treemacs-call-hierarchy-expand-depth 2
+         lsp-treemacs-error-list-expand-depth 1
+         lsp-treemacs-call-hierarchy-expand-depth 1
          lsp-treemacs-error-list-current-project-only t
          lsp-treemacs-symbols-position-params '((side . right)
                                                 (slot . 1)
@@ -1704,8 +1747,6 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
          ("C-M-t" . sp-transpose-sexp)
          ("C-M-k" . sp-kill-sexp)
          ("C-M-w" . sp-copy-sexp)
-         :init
-         (require 'smartparens-config)
          :config
          ;; Rust-specific pairs
          (sp-with-modes '(rust-ts-mode)
@@ -1763,6 +1804,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 ***** convention checks
 #+begin_src emacs-lisp
   (use-package conventional-commit
+    :defer t
     :straight (:host github :repo "akirak/conventional-commit.el")
     :hook
     (git-commit-mode . conventional-commit-setup))
@@ -1955,7 +1997,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
     #+begin_src emacs-lisp
       (use-package ts-movement
         :defer t
-        :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement")
+        :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement" :files ("*.el*"))
         :ensure multiple-cursors
         :init
         (defvar-keymap me/ts-movement-map
@@ -2118,16 +2160,58 @@ can't get this to work?
   (use-package visual-regexp
     :defer t)
   (use-package visual-regexp-steroids
+    :defer t
     :bind
     ("C-r" . vr/isearch-backward)
     ("C-s" . vr/isearch-forward)
     ("C-M-%" . vr/query-replace))
+#+end_src
+*** better jumper
+#+begin_src emacs-lisp
+  (use-package better-jumper
+    :init
+    (defvar-keymap me/better-jumper-map
+      :repeat t
+      "<left>" #'better-jumper-jump-forward
+      "<right>" #'better-jumper-jump-backward
+      "." #'better-jumper-set-jump)
+    ;; :config
+    ;; Add advice to common navigation commands
+    ;; (with-eval-after-load 'better-jumper
+    ;;   (dolist (command '(switch-to-buffer
+    ;;                      other-window
+    ;;                      find-file
+    ;;                      isearch-forward
+    ;;                      isearch-backward
+    ;;                      xref-find-definitions
+    ;;                      consult-imenu
+    ;;                      consult-ripgrep
+    ;;                      consult-line
+    ;;                      beginning-of-buffer
+    ;;                      end-of-buffer
+    ;;                      abort-recursive-edit
+    ;;                      previous-buffer
+    ;;                      next-buffer
+    ;;                      lsp-find-definition
+    ;;                      lsp-find-references
+    ;;                      lsp-find-implementation
+    ;;                      lsp-find-declaration
+    ;;                      lsp-find-type-definition
+    ;;                      lsp-ui-peek-find-definitions
+    ;;                      lsp-ui-peek-find-references
+    ;;                      lsp-ui-peek-find-implementation
+    ;;                      lsp-rename
+    ;;                      lsp-execute-code-action))
+    ;;     (advice-add command :before #'better-jumper-set-jump)))
+    :bind-keymap ("C-c j" . me/better-jumper-map)
+    :hook (prog-mode turn-on-better-jumper-mode))
 #+end_src
 ** Languages specifics
 *** Rust
 **** Rust mode
      #+begin_src emacs-lisp
        (use-package rust-ts-mode
+         :defer t
          :hook
          (rust-ts-mode . lsp)
          (rust-ts-mode . lsp-inlay-hints-mode)
@@ -2243,7 +2327,7 @@ let's make it more visible
     :custom
     (hyprlang-ts-mode-indent-offset 4))
 #+end_src
-*** Unison
+*** COMMENT Unison
 **** Unison mode
      #+begin_src emacs-lisp
        (use-package unison-ts-mode
@@ -2274,7 +2358,7 @@ let's make it more visible
          :defer t)
      #+end_src
 
-*** Haskell
+*** COMMENT Haskell
 **** LSP
      #+begin_src emacs-lisp
        (use-package lsp-haskell
@@ -2285,7 +2369,7 @@ let's make it more visible
          :hook (haskell-mode . lsp))
      #+end_src
 
-*** OCaml
+*** COMMENT OCaml
 **** ocaml mode
      #+begin_src emacs-lisp
        (use-package tuareg-mode
@@ -2305,7 +2389,7 @@ let's make it more visible
       (add-hook 'tsx-ts-mode-hook #'lsp)
     #+end_src
 
-*** Scala3
+*** COMMENT Scala3
 
 **** lsp
 #+begin_src emacs-lisp
@@ -2413,8 +2497,7 @@ let's make it more visible
     :init
     (setq scroll-conservatively 101 ; important!
           scroll-margin 0) 
-    :config
-    (ultra-scroll-mode 1))
+    :hook (after-init . ultra-scroll-mode))
 #+end_src
 ** Backup files
 *** Change backup directory
@@ -2562,24 +2645,37 @@ let's make it more visible
 ** annotate
 #+begin_src  emacs-lisp
   (use-package annotate
-     :config
-     (setq annotate-annotation-column 25
-           annotate-use-messages nil
-           annotate-use-echo-area nil
-           annotate-highlight-faces '((:underline "#c4addd")
-                                      (:underline "#d1c0ec")
-                                      (:underline "#8d77a8"))
-           annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
-                                                      :slant italic
-                                                      :family alternative-programming-font)
-                                            (:inherit 'font-lock-comment-face
-                                                      :slant italic
-                                                      :family alternative-programming-font)
-                                            (:inherit 'font-lock-comment-face
-                                                      :slant italic
-                                                      :family alternative-programming-font)))
-     :hook (prog-mode . annotate-mode)
-     :bind ("C-c C-n" . annotate-toggle-annotation-text))
+    :config
+    (setq annotate-annotation-column 25
+          annotate-use-messages nil
+          annotate-use-echo-area nil
+          annotate-highlight-faces '((:underline "#c4addd")
+                                     (:underline "#d1c0ec")
+                                     (:underline "#8d77a8"))
+          annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
+                                                     :slant italic
+                                                     :family alternative-programming-font)
+                                           (:inherit 'font-lock-comment-face
+                                                     :slant italic
+                                                     :family alternative-programming-font)
+                                           (:inherit 'font-lock-comment-face
+                                                     :slant italic
+                                                     :family alternative-programming-font)))
+    :hook (prog-mode . annotate-mode)
+    :init
+    (setq annotate-mode-map (make-sparse-keymap))
+    (define-prefix-command 'annotate-command-prefix)
+    (define-key annotate-mode-map (kbd "C-c C-a") 'annotate-command-prefix)
+    :bind
+    (:map annotate-command-prefix
+          ("n" . annotate-toggle-annotation-text)
+          ("a" . annotate-annotate)
+          ("d" . annotate-delete-annotation)
+          ("s" . annotate-show-annotation-summary)
+          ("c" . annotate-change-annotation-colors)
+          ("p" . annotate-change-annotation-position)
+          ("<left>" . annotate-goto-next-annotation)
+          ("<right>" . annotate-goto-previous-annotation)))
 #+end_src
 ** mouse
 #+begin_src emacs-lisp

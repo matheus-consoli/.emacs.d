@@ -33,7 +33,7 @@
 
 (defconst options '("-march=znver3"
 		            "-mtune=znver3"
-                    "-O3"
+                    "-O2"
                     "-fdevirtualize-at-ltrans"
                     "-fgraphite-identity"
                     "-fipa-pta"
