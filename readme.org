@@ -134,6 +134,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
               orig-result)))
 
         (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+        (advice-add #'lsp-completion-at-point :around #'cape-wrap-noninterruptible) ;; don't freeze
 
         (defun my/orderless-dispatch-flex-first (_pattern index _total)
           (and (eq index 0) 'orderless-flex))
@@ -264,7 +265,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
              completion-category-defaults nil
              completion-category-overrides '((file (styles basic partial-completion)))))
    #+end_src
-** COMMENT Corfu
+** Corfu
    #+begin_src emacs-lisp
      (use-package corfu
        :init
@@ -309,7 +310,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
           (corfu-mode 1)))
       (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
     #+end_src
-** Company
+** COMMENT Company
 #+begin_src emacs-lisp
   (use-package company
     :hook (after-init . global-company-mode)
@@ -721,6 +722,18 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
              ("C-c C-o C-a l" . copilot-accept-completion-by-line)
              ("C-c C-o C-a w" . copilot-accept-completion-by-word)))
    #+end_src
+*** aidermacs
+#+begin_src emacs-lisp
+  (use-package aidermacs
+    :defer t
+    :bind (("C-*" . aidermacs-transient-menu))
+    :config
+    (setenv "ANTHROPIC_API_KEY" (shell-command-to-string "echo -n $ANTHROPIC_API_KEY"))
+    :custom
+    (aidermacs-auto-commits nil)
+    (aidermacs-use-architect-mode t)
+    (aidermacs-default-model "sonnet"))
+#+end_src
 * Appearance
 ** font
 *** Set font
@@ -2064,27 +2077,6 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
     #+begin_src emacs-lisp
       (save-place-mode 1)
     #+end_src
-*** COMMENT Get ansi-term
-    #+begin_src emacs-lisp
-      (defvar toggle-term-state nil)
-      (defun toggle-term ()
-        (interactive)
-        (progn
-          (if toggle-term-state
-              (term-line-mode)
-            (term-char-mode))
-          (setq toggle-term-state (not toggle-term-state))))
-
-      (use-package multi-term
-        :defer t
-        :custom (multi-term-program "/bin/fish")
-        :bind (("<f11>" . multi-term-dedicated-toggle)
-               ("<f10>" . multi-term-dedicated-select)
-               (:map term-mode-map
-                     ("C-," . toggle-term))
-               (:map term-raw-map
-                     ("C-," . toggle-term))))
-    #+end_src
 *** subword mode
     #+begin_src emacs-lisp
       ;; CamelCase words as individual words
@@ -2093,8 +2085,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** editorconfig compat
     #+begin_src emacs-lisp
       (use-package editorconfig
-        :config
-        (editorconfig-mode 1))
+        :hook (prog-mode . editorconfig-mode))
     #+end_src
 *** treesitter context
     #+begin_src emacs-lisp
@@ -2544,11 +2535,6 @@ let's make it more visible
        ("C-c d" . crux-duplicate-current-line-or-region)
        ("C-c M-d" . crux-duplicate-and-comment-current-line-or-region))
        #+end_src
-** COMMENT Read $PATH
-   #+begin_src emacs-lisp
-     (use-package exec-path-from-shell
-       :init (exec-path-from-shell-initialize))
-   #+end_src
 ** Open lines around
    #+begin_src emacs-lisp
      (defun consoli/insert-new-line-bellow ()
