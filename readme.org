@@ -8,14 +8,14 @@
 ** Vertico
    #+begin_src emacs-lisp
      (use-package vertico
-       :config
-       (setq vertico-cycle t)
-       :init
-       (vertico-multiform-mode 1)
-       (vertico-mode))
+       :custom
+       (vertico-cycle t)
+       :hook
+       (after-init . vertico-mode)
+       (after-init . vertico-multiform-mode))
 
      (use-package savehist
-       :init (savehist-mode))
+       :hook (after-init . savehist-mode))
 
      (use-package emacs
        :custom
@@ -514,7 +514,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
      (use-package yasnippet
        :config
        (use-package yasnippet-snippets)
-       :hook (prog-mode . yas-minor-mode))
+       :hook (after-init . yas-global-mode))
    #+end_src
 ** Linter
 *** Flycheck
