@@ -268,26 +268,24 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 ** Corfu
    #+begin_src emacs-lisp
      (use-package corfu
-       :init
-       (global-corfu-mode)
-       (corfu-history-mode 1)
-       (corfu-popupinfo-mode 1)
+       :hook
+       (after-init . global-corfu-mode)
+       (after-init . corfu-history-mode)
+       (after-init . corfu-popupinfo-mode)
 
-       :config
-       (add-to-list 'savehist-additional-variables 'corfu-history)
-       (setq
-        corfu-cycle t
-        corfu-scroll-margin 2
-        corfu-preselect 'first
-        corfu-preview-current nil
-        corfu-quit-no-match 'separator
-        corfu-quit-at-boundary t
-        corfu-separator ?\s
+       :custom
+       (corfu-cycle t)
+       (corfu-scroll-margin 2)
+       (corfu-preselect 'first)
+       (corfu-preview-current nil)
+       (corfu-quit-no-match 'separator)
+       (corfu-quit-at-boundary t)
+       (corfu-separator ?\s)
 
-        corfu-auto t
-        corfu-auto-delay 0.2
-        corfu-auto-prefix 2
-        corfu-popupinfo-delay '(1.30 . 1.50))
+       (corfu-auto t)
+       (corfu-auto-delay 0.2)
+       (corfu-auto-prefix 2)
+       (corfu-popupinfo-delay '(1.30 . 1.50))
        :bind
        (:map corfu-map
              ("M-q" . corfu-quick-complete)
@@ -296,6 +294,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 *** icons for corfu
     #+begin_src emacs-lisp
       (use-package nerd-icons-corfu
+        :after corfu
         :config
         (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
     #+end_src
