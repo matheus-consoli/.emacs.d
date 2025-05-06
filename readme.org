@@ -2666,3 +2666,8 @@ let's make it more visible
 #+begin_src emacs-lisp
   (xterm-mouse-mode t)
 #+end_src
+** exec path
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+    :init (exec-path-from-shell-initialize))
+#+end_src
