@@ -864,8 +864,8 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
      #+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      ;; (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
-      (load-theme 'kaolin-dark
+      (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
+      (load-theme 'vercel-2024
                   :no-confirm)
     #+end_src
 ** UI
