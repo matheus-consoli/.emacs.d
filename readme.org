@@ -2268,7 +2268,7 @@ let's make it more visible
        (setq lsp-rust-analyzer-lru-capacity (* 15 128)
              lsp-rust-analyzer-binding-mode-hints t
              lsp-rust-analyzer-check-all-targets t
-             lsp-rust-analyzer-closing-brace-hints-min-lines nil
+             lsp-rust-analyzer-closing-brace-hints-min-lines 0
              lsp-rust-analyzer-closure-capture-hints t
              lsp-rust-analyzer-closure-return-type-hints "with_block"
              lsp-rust-analyzer-diagnostics-enable-experimental t
