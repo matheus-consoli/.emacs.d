@@ -147,6 +147,12 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
           ;; Optionally configure the cape-capf-buster.
           (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point))))
 
+        ;; automatically save buffers after renaming variable
+        (add-hook 'lsp-after-apply-edits-hook
+                  (lambda (op)
+                    (when (eq op 'rename)
+                      (save-buffer))))
+
         :hook (lsp-completion-mode . my/lsp-mode-setup-completion))
     #+end_src
 *** LSP UI
@@ -443,7 +449,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
        :ensure t
        :bind
        (("C-." . embark-act)         ;; pick some comfortable binding
-        ("C-;" . embark-dwim)        ;; good alternative: M-.
+        ;;("C-;" . embark-dwim)        ;; good alternative: M-.
         ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
        :init
        ;; Optionally replace the key help with a completing-read interface
@@ -474,7 +480,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
       The which-key help message will show the type and value of the
       current target followed by an ellipsis if there are further
       targets."
-        
+
         (when (bound-and-true-p which-key-mode)
           (lambda (&optional keymap targets prefix)
             (if (null keymap)
@@ -724,19 +730,20 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 *** aidermacs
 #+begin_src emacs-lisp
   (use-package aidermacs
-    :defer t
-    :bind (("C-*" . aidermacs-transient-menu))
+    :bind (("C-;" . aidermacs-transient-menu))
     :config
     (setenv "ANTHROPIC_API_KEY" (shell-command-to-string "echo -n $ANTHROPIC_API_KEY"))
+    (setenv "OPENROUTER_API_KEY" (shell-command-to-string "echo -n $OPENROUTER_API_KEY"))
     :custom
     (aidermacs-auto-commits nil)
     (aidermacs-use-architect-mode t)
-    (aidermacs-default-model "sonnet"))
+    (aidermacs-default-model "anthropic/claude-4-opus-20250514")
+    (aidermacs-architect-model "openrouter/google/gemini-2.5-pro-preview-03-25"))
 #+end_src
 * Appearance
 ** font
 *** Set font
-    #+begin_src emacs-lisp 
+    #+begin_src emacs-lisp
       (defconst ui-font
         "Atkinson Hyperlegible Mono"
         "Font for ui faces")
@@ -831,7 +838,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
      #+begin_src emacs-lisp
        (use-package doom-themes
          :defer t
-         :config  
+         :config
          (setq doom-themes-enable-bold t
                ;; doom-themes-treemacs-theme "doom-colors"
                doom-themes-enable-italic t)
@@ -865,8 +872,26 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 *** loading theme
     #+begin_src emacs-lisp
       (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
-      (load-theme 'vercel-2024
-                  :no-confirm)
+
+      ;; Define variables for your themes
+      (defvar my-gui-theme 'vercel-2024
+        "The theme to use for graphical Emacs frames.")
+      (defvar my-cli-theme 'kaolin-dark
+        "The theme to use for terminal (CLI) Emacs frames.")
+
+      (defun my/apply-theme ()
+        "Apply theme based on display type."
+        (if (display-graphic-p)
+            (load-theme my-gui-theme t)
+          (load-theme my-cli-theme t)))
+
+      (my/apply-theme)
+
+      ;; Reapply theme when creating new frames (useful for emacsclient)
+      (add-hook 'after-make-frame-functions
+                (lambda (frame)
+                  (select-frame frame)
+                  (my/apply-theme)))
     #+end_src
 ** UI
 *** Splash screen
@@ -1169,7 +1194,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
                                                (slot . 2)
                                                (window-width . 40)))
         (lsp-treemacs-sync-mode 1)
-        :bind (:map lsp-mode-map              
+        :bind (:map lsp-mode-map
                     ("C-c l g m" . toggle-lsp-treemacs-modes)))
     #+end_src
 ** modeline
@@ -1268,15 +1293,17 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
                          :font alternative-programming-font
                          :height 100)
 
-     (set-face-attribute 'tab-bar-tab nil
-                         :box `(:line-width (7 . -1)
-                                            :style nil
-                                            :color ,(face-attribute 'tab-bar-tab :background)))
 
-     (set-face-attribute 'tab-bar-tab-inactive nil
-                         :box `(:line-width (7 . -1)
-                                            :style nil
-                                            :color ,(face-attribute 'tab-bar-tab-inactive :background)))
+     (defun set-face-for-tab-bar-tab (_theme)
+       (set-face-attribute 'tab-bar-tab nil
+                           :box `(:line-width (7 . -1)
+                                         :style nil
+                                         :color ,(face-attribute 'tab-bar-tab :background)))
+       (set-face-attribute 'tab-bar-tab-inactive nil
+                           :box `(:line-width (7 . -1)
+                                         :style nil
+                                         :color ,(face-attribute 'tab-bar-tab-inactive :background))))
+     (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
 
      (with-eval-after-load 'blamer
        (set-face-attribute 'blamer-face nil
@@ -1976,6 +2003,16 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
          (format "# ```suggestion\n%s\n# ```\n"
                  (replace-regexp-in-string "^\\+" "# " s-region))))))
 #+end_src
+**** ediff
+#+begin_src emacs-lisp
+  (setq
+   ediff-keep-variants nil
+   ediff-make-buffers-readonly-at-startup nil
+   ediff-merge-revisions-with-ancestor t
+   ediff-show-clashes-only t
+   ediff-split-window-function 'split-window-horizontally
+   ediff-window-setup-function 'ediff-setup-windows-plain)
+#+end_src
 *** Region Expansion
     #+begin_src emacs-lisp
       (use-package expand-region
@@ -2071,6 +2108,7 @@ https://www.adventuresinwhy.com/post/commit-message-linting/
 *** Auto reload files
     #+begin_src emacs-lisp
       (add-hook 'after-init-hook #'global-auto-revert-mode)
+      ;;(add-hook 'after-init-hook #'global-auto-revert-non-file-buffers)
     #+end_src
 *** Save last cursor position
     #+begin_src emacs-lisp
@@ -2215,7 +2253,7 @@ let's make it more visible
 #+begin_src emacs-lisp
   (defface my-rust-macro-face
     '((t (:inherit font-lock-function-call-face
-                   :slant italic 
+                   :slant italic
                    :width expanded
                    :underline t)))
     "Face for Rust todo! macro calls")
@@ -2230,7 +2268,7 @@ let's make it more visible
 
 
   (defun my-rust-ts-mode-highlighting ()
-    (setq-local 
+    (setq-local
      treesit-font-lock-settings
      (append treesit-font-lock-settings
              ;; todo!()
@@ -2238,7 +2276,7 @@ let's make it more visible
               :language 'rust
               :feature 'todo-macro
               :override t
-              '(((macro_invocation 
+              '(((macro_invocation
                   (identifier) @my-rust-macro-face)
                  (:match "^todo$" @my-rust-macro-face))))
              ;; #[attribute]
@@ -2467,11 +2505,6 @@ let's make it more visible
            (suspend-emacs))))
      (global-set-key (kbd "C-z") (lambda () (interactive) (suspend-if-in-shell)))
    #+end_src
-** Delete selection
-   #+begin_src emacs-lisp
-     (pending-delete-mode t)
-     (delete-selection-mode t)
-   #+end_src
 ** Preserve screen position
     #+begin_src emacs-lisp
       (setq scroll-preserve-screen-position t
@@ -2486,7 +2519,7 @@ let's make it more visible
     :straight (:host github :repo "jdtsmith/ultra-scroll" :files ("*.el"))
     :init
     (setq scroll-conservatively 101 ; important!
-          scroll-margin 0) 
+          scroll-margin 0)
     :hook (after-init . ultra-scroll-mode))
 #+end_src
 ** Backup files
@@ -2670,4 +2703,13 @@ let's make it more visible
 #+begin_src emacs-lisp
   (use-package exec-path-from-shell
     :init (exec-path-from-shell-initialize))
+#+end_src
+** Delete selection
+   #+begin_src emacs-lisp
+     (pending-delete-mode t)
+     (delete-selection-mode t)
+   #+end_src
+** always saves bookmarks
+#+begin_src emacs-lisp
+  (setq bookmark-save-flag 1)
 #+end_src
