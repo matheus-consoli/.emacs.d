@@ -28,22 +28,25 @@
 (setq native-comp-jit-compilation t)
 (setq native-comp-prune-cache t)
 (setq native-comp-async-jobs-number (- (num-processors) 1))
+(setq native-comp-async-query-on-exit t)
+(setq confirm-kill-processes t)
 
 (setq native-comp-always-compile t)
+(setq package-native-compile t)
 
 (defconst options '("-march=znver3"
-		            "-mtune=znver3"
-                    "-O2"
-                    "-fdevirtualize-at-ltrans"
-                    "-fgraphite-identity"
-                    "-fipa-pta"
-                    "-floop-nest-optimize"
-                    "-flto=auto"
-                    "-fno-finite-math-only"
-                    "-fno-semantic-interposition"
-                    "-fuse-linker-plugin"
-                    "-g0"
-                    "--param=max-inline-insns-auto=1000"))
+		    "-mtune=znver3"
+		    "-O3"
+		    "-flto"
+		    "-fno-finite-math-only"
+		    "-funroll-loops"
+		    "-finline-functions"
+		    "-fomit-frame-pointer"
+		    "-fgraphite-identity"
+		    "-floop-nest-optimize"
+		    "-fdevirtualize-at-ltrans"
+		    "-fipa-pta"
+		    "-fno-semantic-interposition"))
 
 (setq native-comp-speed 2)
 (setq native-comp-compiler-options options)
