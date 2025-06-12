@@ -93,3 +93,5 @@ url/
 
 places.eld
 projects.eld
+
+*.elc

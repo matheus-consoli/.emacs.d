@@ -1,5 +1,22 @@
 #+PROPERTY: header-args:emacs-lisp :lexical t
 
+* compile angel
+#+begin_src emacs-lisp
+  (use-package compile-angel
+    :ensure t
+    :demand t
+    :config
+    ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
+    ;; (When set to nil, compile-angel won't show which file is being compiled.)
+    (setq compile-angel-verbose nil)
+
+    ;; Uncomment the line below to compile automatically when an Elisp file is saved
+    (add-hook 'emacs-lisp-mode-hook #'compile-angel-on-save-local-mode)
+
+    ;; A global mode that compiles .el files before they are loaded
+    ;; using `load' or `require'.
+    (compile-angel-on-load-mode))
+#+end_src
 * Completion system
 ** preview mode
 #+begin_src emacs-lisp
@@ -737,6 +754,9 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
     :custom
     (aidermacs-auto-commits nil)
     (aidermacs-use-architect-mode t)
+    (aidermacs-watch-files t)
+    (aidermacs-backend 'comint)
+    (aidermacs-show-diff-after-change t)
     (aidermacs-default-model "anthropic/claude-4-opus-20250514")
     (aidermacs-architect-model "openrouter/google/gemini-2.5-pro-preview-03-25"))
 #+end_src
@@ -808,7 +828,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
       '((right-divider-width . 0)
-        (internal-border-width . 6)))
+        (internal-border-width . 0)))
    #+end_src
 ** icons
    #+begin_src emacs-lisp
@@ -1014,7 +1034,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
           tab-bar-close-button-show nil
           tab-bar-show 1
           tab-bar-new-button-show nil
-          tab-bar-tab-hints t
+          tab-bar-tab-hints nil
           tab-bar-auto-width t
           tab-bar-auto-width-max '((130) 10)))
 #+end_src
@@ -1103,8 +1123,7 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
     :hook (after-init . centaur-tabs-mode)
     :config
     (centaur-tabs-headline-match)
-    (centaur-tabs-change-fonts alternative-programming-font 95)
-    ;; (centaur-tabs-mode t)
+    (centaur-tabs-change-fonts alternative-programming-font 90)
     :bind
     (:map centaur-tabs-mode-map
           (([remap next-buffer] . centaur-tabs-forward)
@@ -1270,66 +1289,67 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
 #+end_src
 ** custom set faces
    #+begin_src emacs-lisp
-     (set-face-attribute 'mode-line nil
-                         :inherit 'default
-                         :family modeline-font
-                         :height 110
-                         :box nil)
+          (set-face-attribute 'mode-line nil
+                              :inherit 'default
+                              :family modeline-font
+                              :height 110
+                              :box nil)
 
-     (set-face-attribute 'mode-line-active nil
-                         :inherit 'mode-line
-                         :box nil)
+          (set-face-attribute 'mode-line-active nil
+                              :inherit 'mode-line
+                              :box nil)
 
-     (set-face-attribute 'mode-line-inactive nil
-                         :inherit 'mode-line-active
-                         :box nil)
+          (set-face-attribute 'mode-line-inactive nil
+                              :inherit 'mode-line-active
+                              :box nil)
 
-     (set-face-attribute 'font-lock-comment-face nil
-                         :font programming-font
-                         :slant 'italic
-                         :height 110)
+          (set-face-attribute 'font-lock-comment-face nil
+                              :font programming-font
+                              :slant 'italic
+                              :height 110)
 
-     (set-face-attribute 'tab-bar nil
-                         :font alternative-programming-font
-                         :height 100)
-
-
-     (defun set-face-for-tab-bar-tab (_theme)
-       (set-face-attribute 'tab-bar-tab nil
-                           :box `(:line-width (7 . -1)
-                                         :style nil
-                                         :color ,(face-attribute 'tab-bar-tab :background)))
-       (set-face-attribute 'tab-bar-tab-inactive nil
-                           :box `(:line-width (7 . -1)
-                                         :style nil
-                                         :color ,(face-attribute 'tab-bar-tab-inactive :background))))
-     (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
-
-     (with-eval-after-load 'blamer
-       (set-face-attribute 'blamer-face nil
-                           :family programming-font
-                           :height 100
-                           :italic t))
-
-     (dolist (face '(window-divider
-                     window-divider-first-pixel
-                     window-divider-last-pixel))
-       (face-spec-reset-face face)
-       (set-face-foreground face (face-attribute 'default :background))
-       (set-face-background face (face-attribute 'default :background)))
-     (set-face-background 'fringe (face-attribute 'default :background))
+          (set-face-attribute 'tab-bar nil
+                              :font alternative-programming-font
+                              :height 100)
 
 
-     (custom-set-faces
-      '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
+          (defun set-face-for-tab-bar-tab (_theme)
+            (set-face-attribute 'tab-bar-tab nil
+                                :box `(:line-width (7 . -1)
+                                              :style nil
+                                              :color ,(face-attribute 'tab-bar-tab :background)))
+            (set-face-attribute 'tab-bar-tab-inactive nil
+                                :box `(:line-width (7 . -1)
+                                              :style nil
+                                              :color ,(face-attribute 'tab-bar-tab-inactive :background))))
 
-      '(lsp-inlay-hint-parameter-face ((t (:inherit lsp-inlay-hint-face
+          (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
+
+          (with-eval-after-load 'blamer
+            (set-face-attribute 'blamer-face nil
+                                :family programming-font
+                                :height 100
+                                :italic t))
+
+          (dolist (face '(window-divider
+                          window-divider-first-pixel
+                          window-divider-last-pixel))
+            (face-spec-reset-face face)
+            (set-face-foreground face (face-attribute 'default :background))
+            (set-face-background face (face-attribute 'default :background)))
+          (set-face-background 'fringe (face-attribute 'default :background))
+
+
+          (custom-set-faces
+           '(doom-modeline-buffer-modified ((t (:inherit (warning)))))
+
+           '(lsp-inlay-hint-parameter-face ((t (:inherit lsp-inlay-hint-face
+                                                         :height 110))))
+           '(lsp-inlay-hint-type-face ((t (:inherit lsp-inlay-hint-face
                                                     :height 110))))
-      '(lsp-inlay-hint-type-face ((t (:inherit lsp-inlay-hint-face
-                                               :height 110))))
 
-      '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
-      '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
+           '(lsp-headerline-breadcrumb-path-face ((t (:height 100))))
+           '(lsp-headerline-breadcrumb-symbols-face ((t (:height 100)))))
    #+end_src
 * Org
 ** install
@@ -2712,4 +2732,9 @@ let's make it more visible
 ** always saves bookmarks
 #+begin_src emacs-lisp
   (setq bookmark-save-flag 1)
+#+end_src
+** ibuffer
+#+begin_src emacs-lisp
+  (setq ibuffer-expert t)
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
 #+end_src

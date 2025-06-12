@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;; tell emacs to use plists for lsp
 (setenv "LSP_USE_PLISTS" "true")
 

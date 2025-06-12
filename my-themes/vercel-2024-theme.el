@@ -9,8 +9,8 @@
        (color4 "#171717")
        (color3 "#2d2d2d")
        (color5 "#ffffff")
-       (color6 "#282828")
-       (color7 "#4b4b4b")
+       (color6 "#0C0C0C")
+       (color7 "#585858")
        (color8 "#C372FC") ;; primary accent
        (color9 "#A3A3A3")
        (color10 "#FF4C8D") ;; secondary accent
@@ -29,13 +29,16 @@
        (accent4 "#00C8D3")
        (syntax-comment "#7E72FC")
 
+       ;; Add a new gray for docstrings
+       (doc-string-gray "#B8B8B8")
+
        ;; Additional semantic colors
        (focus-bg "#363636")
        (hover-bg "#404040")
        (success-muted "#009A3D")
        (warning-muted "#B89F00")
        (error-muted "#C44B71")
-       (info-muted "#5A91C8")
+       (info-muted "#68A0D8")
 
        ;; New selection-specific colors
        (primary-selection "#141414")
@@ -68,13 +71,19 @@
    `(link ((t (:foreground ,color8 :underline t))))
    `(minibuffer-prompt ((t (:background ,color0 :foreground ,color8 :bold t))))
    ;; `(region ((t (:background ,color3))))
-   `(region ((t (:background ,primary-selection :extend t))))
+   `(region ((t (:background ,visual-selection :foreground ,color1 :extend t))))
    ;; `(secondary-selection ((t (:background ,color4))))
    `(secondary-selection ((t (:background ,secondary-selection :extend t))))
    `(vertical-border ((t (:foreground ,color7))))
    `(success ((t (:foreground ,success-muted :weight bold))))
    `(warning ((t (:foreground ,warning-muted :weight bold))))
    `(error ((t (:foreground ,error-muted :weight bold))))
+
+   ;; General Purpose Faces
+   `(shadow ((t (:foreground ,color7))))
+   `(tooltip ((t (:background ,color14 :foreground ,color1))))
+   `(button ((t (:foreground ,color8 :underline t))))
+   `(header-line ((t (:background ,color16 :foreground ,color9 :box (:line-width -1 :color ,color7)))))
 
    ;; Selection-related faces
    `(lazy-highlight ((t (:background ,visual-selection :foreground ,color5))))  ; Search matches
@@ -109,13 +118,13 @@
    `(font-lock-comment-delimiter-face ((t (:foreground ,color9 :slant italic))))
    `(font-lock-comment-face ((t (:foreground ,color9 :slant italic))))
    `(font-lock-constant-face ((t (:foreground ,color8 :weight bold))))
-   `(font-lock-doc-face ((t (:foreground ,color9 :slant italic))))
+   `(font-lock-doc-face ((t (:foreground ,doc-string-gray :slant italic))))
    `(font-lock-function-name-face ((t (:foreground ,color8))))
    `(font-lock-keyword-face ((t (:foreground ,color10 :slant italic))))
    `(font-lock-preprocessor-face ((t (:foreground ,color12 :weight bold))))
    `(font-lock-string-face ((t (:foreground ,color12))))
-   `(font-lock-type-face ((t (:foreground ,color12))))
-   `(font-lock-variable-name-face ((t (:foreground ,color1 :slant italic))))
+   `(font-lock-type-face ((t (:foreground ,accent4))))
+   `(font-lock-variable-name-face ((t (:foreground ,accent1 :slant italic))))
    `(font-lock-warning-face ((t (:foreground ,warning-muted :bold t))))
 
    `(whitespace-space ((t (:foreground ,color7))))
@@ -125,7 +134,7 @@
    `(whitespace-empty ((t (:background ,warning-muted))))
 
    ;; tab-bar-mode
-   `(tab-bar ((t (:background ,color0 :foreground ,color1))))
+   `(tab-bar ((t (:background ,color14 :foreground ,color1))))
    `(tab-bar-tab ((t (:background ,color6 :foreground ,color5))))
    `(tab-bar-tab-inactive ((t (:background ,color2 :foreground ,color9))))
    `(tab-bar-tab-ungrouped ((t (:background ,color2 :foreground ,color9))))
@@ -160,6 +169,11 @@
    `(org-block ((t (:background ,color16 :extend t))))
    `(org-block-begin-line ((t (:foreground ,syntax-comment :extend t))))
    `(org-quote ((t (:background ,color2 :slant italic :extend t))))
+   `(org-checkbox-done-text ((t (:foreground ,color7 :strike-through t))))
+   `(org-superstar-leading-bullet-face ((t (:foreground ,color9))))
+   `(org-superstar-item-bullet-face ((t (:foreground ,color8))))
+   `(org-roam-node-highlight-face ((t (:background ,focus-bg))))
+   `(org-modern-tag-face ((t (:foreground ,accent4 :background ,color2 :box (:line-width -1 :color ,color2 :style released-button) :height 0.9))))
 
    ;; magit
    `(magit-section-heading ((t (:foreground ,color8))))
@@ -232,7 +246,7 @@
 
    ;;;
    ;;;
-   ;;; ERRORS
+   ;;;  ERRORS
    ;;;
    ;;;
    ;; Quick-peek faces
@@ -416,7 +430,7 @@
    ;; General inlay hint face (base style for all hints)
    `(lsp-inlay-hint-face ((t (:foreground ,hint-fg :slant italic :height 0.9))))
    ;; Type hints (e.g., variable types)
-   `(lsp-inlay-hint-type-face ((t (:foreground ,hint-type-fg :slant italic :height 0.9))))
+   `(lsp-inlay-hint-type-face ((t (:foreground ,color9 :slant italic :height 0.9))))
    ;; Inline completion suggestions
    `(lsp-inline-completion-overlay-face ((t (:foreground ,color9 :background ,completion-bg :slant italic))))
    ;; Function argument highlighting in signature help
@@ -576,7 +590,7 @@
 
    ;; Parentheses and delimiter faces
    ;; Built-in show-paren-mode
-   `(show-paren-match ((t (:foreground "#be1558" :bold t))))
+   `(show-paren-match ((t (:foreground ,color10 :background ,color3 :bold t))))
    `(show-paren-match-expression ((t (:background ,color2))))
    `(show-paren-mismatch ((t (:background ,error-muted :foreground ,color15 :weight bold :strike-through t))))
 
@@ -594,19 +608,145 @@
    `(rainbow-delimiters-depth-2-face ((t (:foreground ,color8))))
    `(rainbow-delimiters-depth-3-face ((t (:foreground ,color11))))
    `(rainbow-delimiters-depth-4-face ((t (:foreground ,color12))))
-   `(rainbow-delimiters-depth-5-face ((t (:foreground ,color8))))
+   `(rainbow-delimiters-depth-5-face ((t (:foreground ,accent4))))
    `(rainbow-delimiters-depth-6-face ((t (:foreground ,color10))))
-   `(rainbow-delimiters-depth-7-face ((t (:foreground ,color11))))
-   `(rainbow-delimiters-depth-8-face ((t (:foreground ,color12))))
-   `(rainbow-delimiters-depth-9-face ((t (:foreground ,color8))))
+   `(rainbow-delimiters-depth-7-face ((t (:foreground ,color8))))
+   `(rainbow-delimiters-depth-8-face ((t (:foreground ,color11))))
+   `(rainbow-delimiters-depth-9-face ((t (:foreground ,color12))))
    `(rainbow-delimiters-unmatched-face ((t (:background ,error-muted :foreground ,color5 :strike-through t))))
    `(rainbow-delimiters-mismatched-face ((t (:background ,error-muted :foreground ,color5 :strike-through t))))
+
+   ;; Sideline packages
+   `(sideline-flycheck-error-face ((t (:foreground ,color10))))
+   `(sideline-flycheck-warning-face ((t (:foreground ,color12))))
+   `(sideline-flycheck-info-face ((t (:foreground ,color8))))
+   `(sideline-lsp-face ((t (:foreground ,hint-fg))))
+
+   ;; Avy
+   `(avy-highlight-face ((t (:foreground ,color10 :weight bold))))
+
+   ;; Treesit-jump
+   `(treesit-jump-hl-line-flash-face ((t (:background ,visual-selection))))
+
+   ;; Embark
+   `(embark-target-face ((t (:foreground ,color8 :weight bold))))
+   `(embark-keybinding-face ((t (:foreground ,color12))))
+   `(embark-collect-match-face ((t (:background ,focus-bg))))
+
+   ;; Yasnippet
+   `(yas-field-highlight-face ((t (:background ,color3))))
+
+   ;; Consult
+   `(consult-preview-line ((t (:background ,color2))))
+   `(consult-highlight-match-face ((t (:foreground ,color8 :weight bold))))
+
+   ;; Copilot
+   `(copilot-ghost-text-face ((t (:foreground ,color7 :slant italic))))
+   `(copilot-highlight-face ((t (:background ,focus-bg))))
+
+   ;; Aidermacs
+   `(aidermacs-diff-face-added ((t (:inherit diff-added))))
+   `(aidermacs-diff-face-removed ((t (:inherit diff-removed))))
+   `(aidermacs-diff-face-changed ((t (:inherit diff-changed))))
+   `(aidermacs-chat-prompt-face ((t (:foreground ,color8 :weight bold))))
+   `(aidermacs-chat-user-prompt-face ((t (:foreground ,accent3 :weight bold))))
+   `(aidermacs-chat-response-face ((t (:foreground ,color1))))
+   `(aidermacs-chat-model-face ((t (:foreground ,color12 :slant italic))))
+   `(aidermacs-architect-mode-line-face ((t (:foreground ,accent3 :weight bold))))
+
+   ;; Hl-todo
+   `(hl-todo ((t (:foreground ,color12 :weight bold))))
+   `(hl-fixme ((t (:foreground ,color10 :weight bold))))
+   `(hl-note ((t (:foreground ,accent4 :weight bold))))
+   `(hl-done ((t (:foreground ,color11 :weight bold))))
+
+   ;; Deft
+   `(deft-current-line-face ((t (:background ,color2))))
+   `(deft-file-face ((t (:foreground ,color8))))
+   `(deft-title-face ((t (:foreground ,color1 :weight bold))))
+   `(deft-summary-face ((t (:foreground ,color9 :slant italic))))
+
+   ;; Conventional Commit
+   `(conventional-commit-type-face ((t (:foreground ,color10 :weight bold))))
+   `(conventional-commit-scope-face ((t (:foreground ,color12 :slant italic))))
+   `(conventional-commit-breaking-change-face ((t (:foreground ,error-muted :weight bold))))
+
+   ;; Forge
+   `(forge-topic-title-face ((t (:foreground ,color1 :weight bold))))
+   `(forge-pr-author-face ((t (:foreground ,color8))))
+   `(forge-label-face ((t (:background ,color3 :foreground ,color1 :box (:line-width -1 :color ,color3 :style released-button) :height 0.9))))
+
+   ;; Github-review
+   `(github-review-comment-face ((t (:background ,color2))))
+   `(github-review-suggestion-face ((t (:background ,diff-changed-bg :foreground ,diff-changed-fg))))
+
+   ;; Ediff
+   `(ediff-current-diff-A ((t (:background ,diff-removed-bg :foreground ,diff-removed-fg))))
+   `(ediff-current-diff-B ((t (:background ,diff-added-bg :foreground ,diff-added-fg))))
+   `(ediff-current-diff-C ((t (:background ,diff-changed-bg :foreground ,diff-changed-fg))))
+   `(ediff-fine-diff-A ((t (:background ,color10 :foreground ,color0))))
+   `(ediff-fine-diff-B ((t (:background ,color11 :foreground ,color0))))
+   `(ediff-fine-diff-C ((t (:background ,color12 :foreground ,color0))))
+   `(ediff-even-diff-face ((t (:inherit default))))
+   `(ediff-odd-diff-face ((t (:background ,color16))))
+
+   ;; Expand-region
+   `(er--highlight-face ((t (:background ,visual-selection))))
+
+   ;; Symbol-overlay
+   `(symbol-overlay-default-face ((t (:background ,focus-bg))))
+   `(symbol-overlay-current-face ((t (:background ,color8 :foreground ,color0))))
+
+   ;; Treesitter-context
+   `(treesitter-context-face ((t (:background ,color16 :foreground ,color9 :height 0.9))))
+
+   ;; Treesit-fold
+   `(treesit-fold-face ((t (:foreground ,color7))))
+
+   ;; Cognitive-complexity
+   `(cognitive-complexity-highlight-face ((t (:background ,warning-muted :foreground ,color0))))
+
+   ;; Visual-regexp
+   `(vr/match-face ((t (:background ,color8 :foreground ,color0))))
+
+   ;; Better-jumper
+   `(better-jumper-marker-face ((t (:foreground ,accent2 :underline t))))
+
+   ;; Rust custom faces
+   `(my-rust-macro-face ((t (:inherit font-lock-function-call-face :foreground ,color10 :slant italic :weight bold :underline (:style line :color ,color10)))))
+   `(my-rust-attribute-face ((t (:inherit font-lock-preprocessor-face :foreground ,accent1 :slant italic))))
+
+   ;; Jinx
+   `(jinx-correcting-face ((t (:underline (:style wave :color ,color12)))))
+   `(jinx-suggestion-face ((t (:foreground ,color11 :weight bold))))
+
+   ;; Undo-tree
+   `(undo-tree-visualizer-current-face ((t (:foreground ,color11 :weight bold))))
+   `(undo-tree-visualizer-active-branch-face ((t (:foreground ,color8))))
+   `(undo-tree-visualizer-register-face ((t (:foreground ,color12))))
+
+   ;; Annotate
+   `(annotate-highlight-face ((t (:underline (:style line :color ,color8)))))
+   `(annotate-annotation-text-face ((t (:foreground ,color9 :slant italic :height 0.9))))
+
+   ;; Ibuffer
+   `(ibuffer-current-buffer-face ((t (:background ,color2 :weight bold))))
+   `(ibuffer-marked-face ((t (:foreground ,color10 :weight bold))))
+
+   ;; Eglot
+   `(eglot-highlight-symbol-face ((t (:background ,focus-bg))))
 
    ))
 
 (custom-theme-set-variables
  'vercel-2024
- '(linum-format " %3i "))
+ '(linum-format " %3i ")
+ '(hl-todo-keyword-faces
+   (quote (("TODO" . "#E5B800")
+           ("FIXME" . "#FF4C8D")
+           ("DEBUG" . "#C372FC")
+           ("NOTE" . "#00C8D3")
+           ("DONE" . "#00CA51")))))
 
 ;;;###autoload
 (when load-file-name
