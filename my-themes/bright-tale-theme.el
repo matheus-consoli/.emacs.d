@@ -1,59 +1,57 @@
-;;; dark-tale-theme.el --- A sophisticated dark theme with modern aesthetics -*- lexical-binding: t; -*-
+;;; bright-tale-theme.el --- A sophisticated light theme with modern aesthetics -*- lexical-binding: t; -*-
 
-(deftheme dark-tale "A sophisticated dark theme with modern aesthetics.")
+(deftheme bright-tale "A sophisticated light theme with modern aesthetics.")
 
 (let* (
-       (bg-main            "#000000")
-       (bg-alt             "#0C0C0C")
-       (bg-popup           "#0f0f0f")
-       (bg-contrast        "#141414")
-       (bg-code            "#161616")
-       (bg-dim             "#171717")
-       (bg-inactive-sel    "#2B2B2B")
-       (bg-selection       "#2d2d2d")
+       (bg-main            "#FAFAFA")
+       (bg-alt             "#F5F5F5")
+       (bg-popup           "#F8F8F8")
+       (bg-contrast        "#EEEEEE")
+       (bg-code            "#F2F2F2")
+       (bg-dim             "#EFEFEF")
+       (bg-inactive-sel    "#E5E5E5")
+       (bg-selection       "#E0E0E0")
+       (fg-main            "#2A2A2A")
+       (fg-bright          "#000000")
+       (fg-popup           "#1A1A1A")
+       (grey-subtle        "#6B6B6B")
+       (grey-border        "#BDBDBD")
+       (grey-docstring     "#555555")
+       (grey-comment-blue  "#5A6B8C")
 
-       (fg-main            "#EDEDED")
-       (fg-bright          "#ffffff")
-       (fg-popup           "#fcfcfc")
+       (purple             "#8B4CB8")
+       (lavender           "#7A5BA3")
+       (magenta            "#C44569")
+       (rose               "#D1477A")
+       (green              "#6B9B47")
+       (teal               "#1F9C5F")
+       (yellow             "#B8934A")
+       (blue               "#5A7BC0")
 
-       (grey-subtle        "#A3A3A3")
-       (grey-border        "#585858")
-       (grey-docstring     "#B8B8B8")
-       (grey-comment-blue  "#707A9A")
-
-       (purple             "#C372FC")
-       (lavender           "#B084EB")
-       (magenta            "#F7768E")
-       (rose               "#FF6B8F")
-       (green              "#9ECE6A")
-       (teal               "#26D17F")
-       (yellow             "#E0AF68")
-       (blue               "#7AA2F7")
-
-       (focus-bg              "#363636")
-       (hover-bg              "#404040")
+       (focus-bg              "#D8D8D8")
+       (hover-bg              "#CCCCCC")
        (primary-selection     bg-contrast)
-       (secondary-selection   "#2D4B4B")
-       (visual-selection      "#4B3B66")
+       (secondary-selection   "#C8D4D4")
+       (visual-selection      "#D6C8E5")
        (inactive-selection    bg-inactive-sel)
 
-       (success-muted      "#5C8C4A")
-       (warning-muted      "#B0864B")
-       (error-muted        "#AD3E3E")
-       (info-muted         "#566C9E")
+       (success-muted      "#8DB373")
+       (warning-muted      "#D4A574")
+       (error-muted        "#D16B6B")
+       (info-muted         "#7A8FB5")
 
-       (diff-added-bg      "#10341C")
-       (diff-added-fg      "#7EC699")
-       (diff-removed-bg    "#38181D")
-       (diff-removed-fg    "#FF8FA3")
-       (diff-changed-bg    "#2B2B16")
-       (diff-changed-fg    "#E5C07B")
+       (diff-added-bg      "#E8F5EC")
+       (diff-added-fg      "#4A8A5C")
+       (diff-removed-bg    "#F5E8EA")
+       (diff-removed-fg    "#C75A6B")
+       (diff-changed-bg    "#F5F5E8")
+       (diff-changed-fg    "#A68B52")
 
-       (hint-fg            "#878787")
-       (completion-bg      "#1A1A1A"))
+       (hint-fg            "#909090")
+       (completion-bg      "#F0F0F0"))
 
   (custom-theme-set-faces
-   'dark-tale
+   'bright-tale
    ;; BASIC FACES
    `(cursor ((t (:background ,fg-bright))))
    `(default ((t (:background ,bg-main :foreground ,fg-main))))
@@ -601,7 +599,7 @@
    `(dashboard-item-highlight ((t (:background ,focus-bg)))))
 
   (custom-theme-set-variables
-   'dark-tale
+   'bright-tale
    '(linum-format " %3i ")
    ;; Use palette variables for maintainability
    `(hl-todo-keyword-faces
@@ -617,11 +615,11 @@
                (file-name-as-directory (file-name-directory load-file-name))))
 
 ;;;###autoload
-(defun dark-tale-theme()
-  "Apply the dark-tale-theme."
+(defun bright-tale-theme()
+  "Apply the bright-tale-theme."
   (interactive)
-  (load-theme 'dark-tale t))
+  (load-theme 'bright-tale t))
 
-(provide-theme 'dark-tale)
+(provide-theme 'bright-tale)
 
-;;; dark-tale-theme.el ends here
+;;; bright-tale-theme.el ends here
