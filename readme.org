@@ -2271,6 +2271,12 @@ can't get this to work?
 ***** special treatment for ~todo!~ macro
 let's make it more visible
 #+begin_src emacs-lisp
+  (defface my-rust-unwrap-face
+    '((t (:inherit error
+                :weight bold
+                :foreground "#AD3E3E")))
+    "Face for Rust .unwrap() calls")
+
   (defface my-rust-macro-face
     '((t (:inherit font-lock-function-call-face
                    :slant italic
@@ -2283,29 +2289,39 @@ let's make it more visible
                    :weight light
                    :width expanded
                    :slant oblique
-                   :foreground "#7e57c2")))  ; A purple shade
+                   :foreground "#7e57c2")))
     "Face for Rust attribute items")
 
-
   (defun my-rust-ts-mode-highlighting ()
+    "Apply custom tree-sitter highlights for Rust mode."
     (setq-local
      treesit-font-lock-settings
-     (append treesit-font-lock-settings
-             ;; todo!()
-             (treesit-font-lock-rules
-              :language 'rust
-              :feature 'todo-macro
-              :override t
-              '(((macro_invocation
-                  (identifier) @my-rust-macro-face)
-                 (:match "^todo$" @my-rust-macro-face))))
-             ;; #[attribute]
-             (treesit-font-lock-rules
-              :language 'rust
-              :feature 'attribute-items
-              :override t
-              '((attribute_item) @my-rust-attribute-face)))))
+     (append
+      treesit-font-lock-settings
+      ;; Highlight .unwrap() calls
+      (treesit-font-lock-rules
+       :language 'rust
+       :feature 'unwrap-call
+       :override t
+       '(((field_expression
+           field: (field_identifier) @my-rust-unwrap-face)
+          (:match "^unwrap$" @my-rust-unwrap-face))))
 
+      ;; Highlight todo!() macro
+      (treesit-font-lock-rules
+       :language 'rust
+       :feature 'todo-macro
+       :override t
+       '(((macro_invocation
+           (identifier) @my-rust-macro-face)
+          (:match "^todo$" @my-rust-macro-face))))
+
+      ;; Highlight #[attribute] items
+      (treesit-font-lock-rules
+       :language 'rust
+       :feature 'attribute-items
+       :override t
+       '((attribute_item) @my-rust-attribute-face)))))
 
   (add-hook 'rust-ts-mode-hook #'my-rust-ts-mode-highlighting)
 #+end_src
