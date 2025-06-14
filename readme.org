@@ -891,10 +891,10 @@ I only use eglot for harper-ls integration, for programing i use lsp-mode
      #+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load "~/.emacs.d/my-themes/vercel-2024-theme.el")
+      (load "~/.emacs.d/my-themes/dark-tale-theme.el")
 
       ;; Define variables for your themes
-      (defvar my-gui-theme 'vercel-2024
+      (defvar my-gui-theme 'dark-tale
         "The theme to use for graphical Emacs frames.")
       (defvar my-cli-theme 'kaolin-dark
         "The theme to use for terminal (CLI) Emacs frames.")
