@@ -313,6 +313,8 @@
    `(overlay ((t (:background ,bg-contrast))))
    `(pos-tip-overlay ((t (:background ,bg-popup :foreground ,fg-main))))
    `(eldoc-highlight-function-argument-overlay ((t (:foreground ,purple :weight bold))))
+   `(eldoc-box-border ((t (:background ,grey-border))))
+   `(eldoc-box-body ((t (:background ,bg-popup :foreground ,fg-main))))
    `(mc/cursor-overlay ((t (:background ,purple :foreground ,bg-main))))
    `(mc/cursor-bar-overlay ((t (:background ,purple :height 1))))
    `(rectangle-overlay ((t (:background ,bg-selection :foreground ,fg-bright))))
@@ -434,6 +436,11 @@
    `(orderless-match-face-1 ((t (:foreground ,magenta :weight bold))))
    `(orderless-match-face-2 ((t (:foreground ,green :weight bold))))
    `(orderless-match-face-3 ((t (:foreground ,yellow :weight bold))))
+
+   ;; xref
+   `(xref-file-header ((t (:foreground ,purple :weight bold))))
+   `(xref-line-number ((t (:foreground ,grey-subtle))))
+   `(xref-match ((t (:background ,bg-selection :foreground ,fg-bright))))
 
    ;; Treemacs
    `(treemacs-root-face ((t (:foreground ,purple :weight bold :height 1.2))))
@@ -592,13 +599,26 @@
    `(annotate-annotation-text-face ((t (:foreground ,grey-subtle :slant italic :height 0.9))))
    `(ibuffer-current-buffer-face ((t (:background ,bg-contrast :weight bold))))
    `(ibuffer-marked-face ((t (:foreground ,magenta :weight bold))))
-   `(eglot-highlight-symbol-face ((t (:background ,focus-bg))))
 
    ;; Dashboard faces
    `(dashboard-banner ((t (:foreground ,purple))))
    `(dashboard-heading ((t (:foreground ,yellow :bold t))))
    `(dashboard-project-title ((t (:foreground ,blue :bold t))))
-   `(dashboard-item-highlight ((t (:background ,focus-bg)))))
+   `(dashboard-item-highlight ((t (:background ,focus-bg))))
+
+   ;; Eglot diagnostic faces
+   `(eglot-highlight-symbol-face ((t (:background ,focus-bg))))
+   `(eglot-mode-line ((t (:foreground ,purple :weight bold))))
+   `(eglot-diagnostic-tag-deprecated-face ((t (:strike-through t :foreground ,grey-subtle))))
+   `(eglot-diagnostic-tag-unnecessary-face ((t (:foreground ,grey-subtle :slant italic))))
+
+   ;; Eglot inlay hints (similar to lsp inlay hints)
+   `(eglot-inlay-hint-face ((t (:foreground ,hint-fg :slant italic :height 0.9))))
+   `(eglot-type-hint-face ((t (:foreground ,grey-subtle :slant italic :height 0.9))))
+   `(eglot-parameter-hint-face ((t (:foreground ,hint-fg :slant italic :height 0.9))))
+
+   ;; Eglot code actions (appears in modeline and overlays)
+   `(eglot-code-action-face ((t (:foreground ,yellow)))))
 
   (custom-theme-set-variables
    'dark-tale

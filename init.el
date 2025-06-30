@@ -1,3 +1,5 @@
+;;; -*- lexical-binding: t -*-
+
 (setq garbage-collection-messages t)
 
 ;; Initialize package sources

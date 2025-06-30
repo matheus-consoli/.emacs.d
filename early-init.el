@@ -36,18 +36,17 @@
 (setq package-native-compile t)
 
 (defconst options '("-march=znver3"
-		    "-mtune=znver3"
-		    "-O3"
-		    "-flto"
-		    "-fno-finite-math-only"
-		    "-funroll-loops"
-		    "-finline-functions"
-		    "-fomit-frame-pointer"
-		    "-fgraphite-identity"
-		    "-floop-nest-optimize"
-		    "-fdevirtualize-at-ltrans"
-		    "-fipa-pta"
-		    "-fno-semantic-interposition"))
+					"-mtune=znver3"
+					"-O3"
+					"-fno-finite-math-only"
+					"-funroll-loops"
+					"-finline-functions"
+					"-fomit-frame-pointer"
+					"-fgraphite-identity"
+					"-floop-nest-optimize"
+					"-fdevirtualize-at-ltrans"
+					"-fipa-pta"
+					"-fno-semantic-interposition"))
 
 (setq native-comp-speed 2)
 (setq native-comp-compiler-options options)
@@ -56,12 +55,12 @@
 
 ;; Profile emacs startup
 (add-hook 'emacs-startup-hook
-          (lambda ()
-            (message "Emacs loaded in %s with %d garbage collections."
-                     (format "%.2f seconds"
-                             (float-time
-                              (time-subtract after-init-time before-init-time)))
-                     gcs-done)))
+		  (lambda ()
+			(message "Emacs loaded in %s with %d garbage collections."
+					 (format "%.2f seconds"
+							 (float-time
+							  (time-subtract after-init-time before-init-time)))
+					 gcs-done)))
 
 
 (setq inhibit-compacting-font-caches t)
