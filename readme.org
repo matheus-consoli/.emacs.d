@@ -1228,6 +1228,7 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
 ***** hide
 #+begin_src emacs-lisp
   (dolist (hook '(special-mode-hook
+                  git-commit-mode-hook
                   aidermacs-comint-mode-hook
                   aidermacs-vterm-mode-hook))
     (add-hook hook #'centaur-tabs-local-mode))
