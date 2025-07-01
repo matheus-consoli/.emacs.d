@@ -142,8 +142,7 @@
 #+begin_src emacs-lisp
   (use-package eglot-booster
     :straight (:host github :repo "jdtsmith/eglot-booster")
-    :after eglot
-    :config (eglot-booster-mode))
+    :hook (eglot-managed . eglot-booster-mode))
 #+end_src
 **** consult eglot
 #+begin_src emacs-lisp
@@ -287,11 +286,21 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
 **** apheleia - format on save
 #+begin_src emacs-lisp
   (use-package apheleia
-    :defer t
+    :hook (prog-mode . apheleia-mode)
     :config
-    ;; Define a formatter named `eglot` that uses apheleia's built-in Eglot integration.
-    (setf (alist-get 'eglot apheleia-formatters) '(eglot))
-    (apheleia-global-mode +1))
+    (require 'cl-lib)
+    (cl-defun apheleia-indent-eglot-managed-buffer
+        (&key buffer scratch callback &allow-other-keys)
+      "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
+      (with-current-buffer scratch
+        (setq-local eglot--cached-server
+                    (with-current-buffer buffer
+                      (eglot-current-server)))
+        (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
+          (eglot-format-buffer))
+        (funcall callback)))
+    (add-to-list 'apheleia-formatters
+                 '(eglot-managed . apheleia-indent-eglot-managed-buffer)))
 #+end_src
 ** dabbrev
    #+begin_src emacs-lisp
@@ -741,8 +750,7 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
        :defer t
        :straight (:host github :repo "copilot-emacs/copilot.el")
        :custom
-       (copilot-idle-delay 7)
-       :hook (prog-mode . copilot-mode)
+       (copilot-idle-delay 30)
        :config
        (add-to-list 'copilot-major-mode-alist '("rust-ts-mode" . "rust"))
        (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
@@ -1043,6 +1051,12 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
 ** tabs
 *** tab bar mode
 #+begin_src emacs-lisp
+  (defun my/tab-bar-project-name ()
+    "Return project name for tab, fallback to buffer name."
+    (if-let ((project (project-current)))
+        (project-name project)
+      (buffer-name)))
+
   (use-package tab-bar
     :hook (after-init . tab-bar-mode)
     :bind
@@ -1053,11 +1067,54 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
     (setq tab-bar-new-tab-choice t
           tab-bar-new-tab-to 'rightmost
           tab-bar-close-button-show nil
-          tab-bar-show 1
+          tab-bar-show 0
           tab-bar-new-button-show nil
+          tab-bar-tab-name-function #'my/tab-bar-project-name
+          tab-bar-tab-name-truncated-max 30
           tab-bar-tab-hints nil
           tab-bar-auto-width t
-          tab-bar-auto-width-max '((130) 10)))
+          tab-bar-auto-width-max '((160) 20)))
+#+end_src
+**** only show when there are projects opened
+#+begin_src emacs-lisp
+  (defun my/buffer-has-project-p ()
+    "Return non-nil if current buffer belongs to a project."
+    (project-current))
+
+  (defun my/advice-tab-bar-new-tab (orig-fun &rest args)
+    "Only create new tab if current buffer has a project."
+    (when (my/buffer-has-project-p)
+      (apply orig-fun args)))
+
+  (defun my/setup-project-only-tabs ()
+    "Configure tabs to only show for projects."
+    ;; Hide tab-bar initially
+    (setq tab-bar-show 0)
+
+    ;; Advice tab creation functions
+    (advice-add 'tab-bar-new-tab :around #'my/advice-tab-bar-new-tab)
+    (advice-add 'tab-bar-new-tab-to :around #'my/advice-tab-bar-new-tab)
+
+    ;; Show tab-bar only when we have project tabs
+    (add-hook 'tab-bar-tab-post-open-functions
+              (lambda (&rest _)
+                (when (> (length (tab-bar-tabs)) 1)
+                  (setq tab-bar-show 0))))
+
+    ;; Close non-project tabs on startup
+    (run-with-idle-timer 0.1 nil
+                         (lambda ()
+                           (let ((tabs (tab-bar-tabs)))
+                             (dolist (tab tabs)
+                               (let ((tab-name (alist-get 'name tab)))
+                                 (unless (and tab-name
+                                              (not (string-match-p "^\\*.*\\*$" tab-name))
+                                              (not (string= tab-name "Default")))
+                                   (when (> (length tabs) 1)
+                                     (tab-bar-close-tab (1+ (cl-position tab tabs)))))))))))
+
+  ;; Add this to your config
+  (add-hook 'after-init-hook #'my/setup-project-only-tabs)
 #+end_src
 *** project tab groups
 #+begin_src emacs-lisp
@@ -1077,6 +1134,7 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
                tabspaces-open-or-create-project-and-workspace)
     :custom
     (tabspaces-use-filtered-buffers-as-default t)
+    (tabspaces-session-project-session-store "~/.emacs.d/tabspaces-sessions/")
     (tabspaces-default-tab "Default")
     (tabspaces-remove-to-default t)
     (tabspaces-initialize-project-with-todo t)
@@ -2133,7 +2191,6 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
     #+end_src
 *** treesitter context
     #+begin_src emacs-lisp
-      ;; (add-to-list 'load-path "~/projects/contrib/treesitter-context.el")
       (use-package treesitter-context
         :defer t
         :straight
@@ -2150,6 +2207,7 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
               ("C-)" . treesitter-context-focus-mode))
         :custom
         (treesitter-context-frame-position 'top-right)
+        (treesitter-context-frame-padding 1)
         (treesitter-context-frame-offset-x -3)
         (treesitter-context-frame-offset-y 50)
         (treesitter-context-show-context-always nil) ;; only show when the outmost parent is invisible
@@ -2182,9 +2240,11 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
   (use-package visual-regexp-steroids
     :defer t
     :bind
+    (:map me/multiple-cursors-map
+          ("C-> r"))
     ("C-r" . vr/isearch-backward)
     ("C-s" . vr/isearch-forward)
-    ("C-M-%" . vr/query-replace))
+    ("C-M-%" . vr/replace))
 #+end_src
 *** better jumper
 #+begin_src emacs-lisp

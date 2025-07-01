@@ -134,8 +134,10 @@
 
    ;; tab-bar-mode
    `(tab-bar ((t (:background ,bg-popup :foreground ,fg-main))))
-   `(tab-bar-tab ((t (:background ,bg-alt :foreground ,fg-bright))))
-   `(tab-bar-tab-inactive ((t (:background ,bg-contrast :foreground ,grey-subtle))))
+   `(tab-bar-tab ((t (:background ,bg-alt :foreground ,grey-docstring :height 95
+                                  :box (:line-width (1 . 5) :color nil :style flat-button)))))
+   `(tab-bar-tab-inactive ((t (:background ,bg-popup :foreground ,grey-subtle :height 95 :weight extra-light
+                                           :box (:line-width (1 . 5) :color nil :style flat-button)))))
    `(tab-bar-tab-ungrouped ((t (:background ,bg-contrast :foreground ,grey-subtle))))
    `(tab-bar-tab-group-current ((t (:background ,bg-alt :foreground ,purple))))
    `(tab-bar-tab-group-inactive ((t (:background ,bg-contrast :foreground ,grey-subtle))))
