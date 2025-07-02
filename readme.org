@@ -28,19 +28,35 @@
 ** Vertico
    #+begin_src emacs-lisp
      (use-package vertico
+       :straight (:files (:defaults "extensions/*"))
        :custom
        (vertico-cycle t)
+       (vertico-count 6)
        :hook
        (after-init . vertico-mode)
        (after-init . vertico-multiform-mode))
+
+     (require 'vertico-quick)
+     (use-package vertico-quick
+       :straight nil
+       :after vertico)
 
      (use-package savehist
        :hook (after-init . savehist-mode))
 
      (use-package emacs
        :custom
+       (read-file-name-completion-ignore-case t)
+       (read-buffer-completion-ignore-case t)
+       (completion-ignore-case t)
+       ;; Enable context menu. `vertico-multiform-mode' adds a menu in the minibuffer
+       ;; to switch display modes.
+       (context-menu-mode t)
+       ;; Do not allow the cursor in the minibuffer prompt
+       (minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
        ;; Support opening new minibuffers from inside existing minibuffers.
-       (enable-recursive-minibuffers t)
+       (enable-recursive-minibuffers nil)
        ;; Hide commands in M-x which do not work in the current mode.  Vertico
        ;; commands are hidden in normal buffers. This setting is useful beyond
        ;; Vertico.
@@ -163,6 +179,17 @@
     (eldoc-box-cleanup-internval 0.3)
     (eldoc-idle-delay 1.5)
     (eldoc-box-position-function #'eldoc-box--default-at-point-position-function)
+    (eldoc-box-frame-parameters
+     ((left . -1) (top . -1) (width . 0) (height . 0) (no-accept-focus . t)
+      (no-focus-on-map . t) (min-width . 0) (min-height . 0)
+      (internal-border-width . 1) (vertical-scroll-bars)
+      (horizontal-scroll-bars) (right-fringe . 1) (left-fringe . 0)
+      (menu-bar-lines . 0) (tool-bar-lines . 0) (line-spacing . 0)
+      (unsplittable . t) (undecorated . t) (visibility) (mouse-wheel-frame)
+      (no-other-frame . t) (cursor-type) (inhibit-double-buffering . t)
+      (drag-internal-border . t) (no-special-glyphs . t)
+      (desktop-dont-save . t) (tab-bar-lines . 0)
+      (tab-bar-lines-keep-state . 1)))
     :config
     (defun my-eldoc-box-bottom-right-position (width height)
       "Position eldoc-box at bottom-right, accounting for box dimensions."
@@ -184,10 +211,10 @@
 **** breadcrumb
 #+begin_src emacs-lisp
   (use-package breadcrumb
-    :after eglot
     :hook (eglot-managed-mode . breadcrumb-mode)
     :custom
     (breadcrumb-project-max-length 0.5)
+    (breadcrumb-imenu-crumb-separator "")
     (breadcrumb-project-crumb-separator "/")
     (breadcrumb-imenu-max-length 0.5))
 #+end_src
@@ -264,6 +291,25 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
           ("C-c l o" . eglot-x-open-external-documentation)
           ("C-c l s" . eglot-x-structural-search-replace))
     :hook (eglot . eglot-x-setup))
+#+end_src
+**** call hierarchy
+#+begin_src emacs-lisp
+  (use-package eglot-cthier
+    :straight (:host codeberg :repo "harald/eglot-supplements" :files ("eglot-cthier.el" "toggletree.el"))
+    :after eglot
+    :bind (:map eglot-mode-map
+               ("C-c l h i" . eglot-cthier-request-incoming-call-hierarchy)
+               ("C-c l h o" . eglot-cthier-request-outgoing-call-hierarchy)
+               ("C-c l h S" . eglot-cthier-request-supertype-call-hierarchy)
+               ("C-c l h s" . eglot-cthier-request-subtype-call-hierarchy)))
+#+end_src
+**** semantic tokens
+#+begin_src emacs-lisp
+  (use-package eglot-semtok
+      :straight (:host codeberg :repo "harald/eglot-supplements" :files ("eglot-semtok.el"))
+      :hook
+      (eglot-connect-hook . eglot-semtok-on-connected)
+      (rust-ts-mode . eglot-semtok-font-lock-init))
 #+end_src
 **** sideline
 #+begin_src emacs-lisp
@@ -469,7 +515,6 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
 *** using treesit with avy
     #+begin_src emacs-lisp
       (use-package treesit-jump
-        :after lsp
         :if (treesit-available-p)
         :straight (:host github :repo "dmille56/treesit-jump" :files ("*.el" "treesit-queries"))
         :init
@@ -477,11 +522,11 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
           "Keymap for treesit-jump commands.")
         :bind-keymap ("C-," . treesit-jump-map)
         :bind (:map treesit-jump-map
-               ("j" . treesit-jump-jump)
-               ("s" . treesit-jump-select)
-               ("d" . treesit-jump-delete)
-               ("p" . treesit-jump-parent-jump)
-               ("t" . treesit-jump-transient)))
+                    ("j" . treesit-jump-jump)
+                    ("s" . treesit-jump-select)
+                    ("d" . treesit-jump-delete)
+                    ("p" . treesit-jump-parent-jump)
+                    ("t" . treesit-jump-transient)))
     #+end_src
 
 ** Embark
@@ -1859,9 +1904,10 @@ https://github.com/joaotavora/breadcrumb/issues/6#issuecomment-2181911984
       org-support-shift-select 'always
       ;; no help message when editing code
       org-edit-src-persistent-message nil
-      line-spacing 0.5
       ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
-      org-export-with-sub-superscripts nil)
+      org-use-sub-superscripts nil)
+
+     (setq-default line-spacing 0.05)
 
      (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
    #+end_src

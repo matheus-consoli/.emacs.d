@@ -74,7 +74,7 @@
    `(shadow ((t (:foreground ,grey-border))))
    `(tooltip ((t (:background ,bg-popup :foreground ,fg-main))))
    `(button ((t (:foreground ,purple :underline t))))
-   `(header-line ((t (:background ,bg-code :foreground ,grey-subtle :box (:line-width -1 :color ,grey-border)))))
+   `(header-line ((t (:background ,bg-alt :foreground ,grey-docstring :weight normal))))
 
    ;; Selection-related faces
    `(lazy-highlight ((t (:background ,visual-selection :foreground ,fg-bright))))
@@ -550,6 +550,14 @@
    `(embark-target-face ((t (:foreground ,purple :weight bold))))
    `(embark-keybinding-face ((t (:foreground ,yellow))))
    `(embark-collect-match-face ((t (:background ,focus-bg))))
+
+   ;; Breadcrumb package faces
+   `(breadcrumb-face ((t (:foreground ,grey-subtle :height 0.9 :weight light))))
+   `(breadcrumb-imenu-crumbs-face ((t (:foreground ,lavender :height 0.9 :weight normal :slant italic))))
+   `(breadcrumb-imenu-leaf-face ((t (:foreground ,purple :height 0.9 :weight semi-bold))))
+   `(breadcrumb-project-crumbs-face ((t (:foreground ,grey-docstring :height 0.9 :weight light))))
+   `(breadcrumb-project-base-face ((t (:foreground ,blue :height 0.9 :weight normal))))
+   `(breadcrumb-project-leaf-face ((t (:foreground ,fg-popup :height 0.9 :weight semi-bold))))
 
    ;; Misc Packages
    `(yas-field-highlight-face ((t (:background ,bg-selection))))
