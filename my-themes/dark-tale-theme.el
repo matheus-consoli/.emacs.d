@@ -133,11 +133,11 @@
    `(whitespace-empty ((t (:background ,warning-muted))))
 
    ;; tab-bar-mode
-   `(tab-bar ((t (:background ,bg-popup :foreground ,fg-main))))
-   `(tab-bar-tab ((t (:background ,bg-alt :foreground ,grey-docstring :height 95
-                                  :box (:line-width (1 . 5) :color nil :style flat-button)))))
-   `(tab-bar-tab-inactive ((t (:background ,bg-popup :foreground ,grey-subtle :height 95 :weight extra-light
-                                           :box (:line-width (1 . 5) :color nil :style flat-button)))))
+   `(tab-bar ((t (:background ,bg-main :foreground ,fg-main))))
+   `(tab-bar-tab ((t (:background ,bg-contrast :foreground ,fg-popup :height 95
+                                  :box (:line-width (1 . 2) :color nil :style flat-button)))))
+   `(tab-bar-tab-inactive ((t (:background ,bg-main :foreground ,grey-subtle :height 95 :weight extra-light
+                                           :box (:line-width (1 . 2) :color nil :style flat-button)))))
    `(tab-bar-tab-ungrouped ((t (:background ,bg-contrast :foreground ,grey-subtle))))
    `(tab-bar-tab-group-current ((t (:background ,bg-alt :foreground ,purple))))
    `(tab-bar-tab-group-inactive ((t (:background ,bg-contrast :foreground ,grey-subtle))))
@@ -554,10 +554,10 @@
    ;; Breadcrumb package faces
    `(breadcrumb-face ((t (:foreground ,grey-subtle :height 0.9 :weight light))))
    `(breadcrumb-imenu-crumbs-face ((t (:foreground ,lavender :height 0.9 :weight normal :slant italic))))
-   `(breadcrumb-imenu-leaf-face ((t (:foreground ,purple :height 0.9 :weight semi-bold))))
+   `(breadcrumb-imenu-leaf-face ((t (:foreground ,purple :height 0.85 :weight semi-bold))))
    `(breadcrumb-project-crumbs-face ((t (:foreground ,grey-docstring :height 0.9 :weight light))))
    `(breadcrumb-project-base-face ((t (:foreground ,blue :height 0.9 :weight normal))))
-   `(breadcrumb-project-leaf-face ((t (:foreground ,fg-popup :height 0.9 :weight semi-bold))))
+   `(breadcrumb-project-leaf-face ((t (:foreground ,fg-popup :height 0.85 :weight semi-bold))))
 
    ;; Misc Packages
    `(yas-field-highlight-face ((t (:background ,bg-selection))))

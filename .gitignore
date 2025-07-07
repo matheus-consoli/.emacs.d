@@ -65,6 +65,7 @@ transient/
 !init.el
 !early-init.el
 !my-themes/*
+!lisp/*
 
 .lsp-session-v1
 elpy

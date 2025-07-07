@@ -42,9 +42,7 @@
 					"-funroll-loops"
 					"-finline-functions"
 					"-fomit-frame-pointer"
-					"-fgraphite-identity"
 					"-floop-nest-optimize"
-					"-fdevirtualize-at-ltrans"
 					"-fipa-pta"
 					"-fno-semantic-interposition"))
 
@@ -62,7 +60,7 @@
 							  (time-subtract after-init-time before-init-time)))
 					 gcs-done)))
 
-
+(setq-default default-text-properties '(line-spacing 0.10 line-height 1.10))
 (setq inhibit-compacting-font-caches t)
 
 (provide 'early-init)
