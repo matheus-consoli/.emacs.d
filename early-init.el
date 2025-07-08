@@ -60,7 +60,7 @@
 							  (time-subtract after-init-time before-init-time)))
 					 gcs-done)))
 
-(setq-default default-text-properties '(line-spacing 0.10 line-height 1.10))
+(setq-default default-text-properties '(line-spacing 0.15 line-height 1.15))
 (setq inhibit-compacting-font-caches t)
 
 (provide 'early-init)

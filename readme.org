@@ -2245,11 +2245,12 @@
   (use-package visual-regexp-steroids
     :defer t
     :bind
+    (("C-c r" . vr/replace)
+     ("C-c q" . vr/query-replace)
+     ("C-r" . vr/isearch-backward)
+     ("C-s" . vr/isearch-forward))
     (:map me/multiple-cursors-map
-          ("C-> r"))
-    ("C-r" . vr/isearch-backward)
-    ("C-s" . vr/isearch-forward)
-    ("C-M-%" . vr/replace))
+          ("r" . vr/mc-mark)))
 #+end_src
 *** better jumper
 #+begin_src emacs-lisp
