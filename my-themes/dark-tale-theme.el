@@ -2,8 +2,7 @@
 
 (deftheme dark-tale "A sophisticated dark theme with modern aesthetics.")
 
-(let* (
-       (bg-main            "#000000")
+(let* ((bg-main            "#000000")
        (bg-alt             "#0C0C0C")
        (bg-popup           "#0f0f0f")
        (bg-contrast        "#141414")
@@ -92,11 +91,12 @@
    `(completions-first-difference ((t (:foreground ,magenta))))
 
    ;; modeline
-   `(mode-line ((t (:background ,bg-alt :foreground ,fg-bright :box (:line-width 1 :color ,grey-border)))))
-   `(mode-line-highlight ((t  (:background ,hover-bg :foreground ,fg-bright :box (:line-width 1 :color ,grey-border)))))
+   `(mode-line ((t (:background ,bg-main :foreground ,fg-bright :box (:line-width (5 . 10) :color ,bg-main)))))
+   `(mode-line-active ((t (:background ,bg-main :foreground ,fg-bright :box (:line-width (5 . 10) :color ,bg-main)))))
+   `(mode-line-inactive ((t (:background ,bg-alt :foreground ,grey-subtle :box (:line-width (5 . 10) :color ,bg-alt)))))
+   `(mode-line-highlight ((t  (:background ,hover-bg :foreground ,fg-bright))))
    `(mode-line-buffer-id ((t (:foreground ,purple :bold t))))
    `(mode-line-emphasis ((t (:foreground ,green))))
-   `(mode-line-inactive ((t (:background ,bg-contrast :foreground ,grey-subtle :box (:line-width 1 :color ,grey-border)))))
 
    ;; FONT LOCK & TREESITTER FACES
    `(font-lock-builtin-face ((t (:foreground ,magenta))))
@@ -201,12 +201,12 @@
    `(ediff-fine-diff-C ((t (:background ,yellow :foreground ,bg-main))))
    `(ediff-even-diff-face ((t (:inherit default))))
    `(ediff-odd-diff-face ((t (:background ,bg-code))))
-   `(git-gutter:added ((t (:foreground ,diff-added-bg))))
-   `(git-gutter:deleted ((t (:foreground ,diff-removed-bg))))
-   `(git-gutter:modified ((t (:foreground ,diff-changed-bg))))
-   `(git-gutter-fr:added ((t (:foreground ,diff-added-bg))))
-   `(git-gutter-fr:deleted ((t (:foreground ,diff-removed-bg))))
-   `(git-gutter-fr:modified ((t (:foreground ,diff-changed-bg))))
+   `(git-gutter:added ((t (:foreground ,diff-added-fg))))
+   `(git-gutter:deleted ((t (:foreground ,diff-removed-fg))))
+   `(git-gutter:modified ((t (:foreground ,diff-changed-fg))))
+   `(git-gutter-fr:added ((t (:foreground ,diff-added-fg))))
+   `(git-gutter-fr:deleted ((t (:foreground ,diff-removed-fg))))
+   `(git-gutter-fr:modified ((t (:foreground ,diff-changed-fg))))
 
    ;; markdown-mode
    `(markdown-header-face ((t (:foreground ,purple))))
@@ -413,7 +413,7 @@
    `(vertico-quick2 ((t (:foreground ,magenta :weight bold))))
    `(vertico-quick3 ((t (:foreground ,yellow :weight bold))))
    `(vertico-posframe ((t (:background ,bg-popup))))
-   `(vertico-posframe-border ((t (:background ,grey-border))))
+   `(vertico-posframe-border ((t (:background ,bg-popup))))
    `(marginalia-key ((t (:foreground ,purple))))
    `(marginalia-type ((t (:foreground ,magenta))))
    `(marginalia-modified ((t (:foreground ,yellow))))
@@ -501,6 +501,20 @@
    `(doom-modeline-repl-warning ((t (:foreground ,yellow))))
    `(doom-modeline-warning ((t (:foreground ,yellow))))
    `(doom-modeline-workspace-number ((t (:foreground ,magenta))))
+
+   ;; mood line
+   `(mood-line-buffer-name ((t (:foreground ,fg-bright :weight bold))))
+   `(mood-line-buffer-status-modified ((t (:foreground ,magenta :weight bold))))
+   `(mood-line-buffer-status-read-only ((t (:foreground ,yellow :weight bold))))
+   `(mood-line-buffer-status-narrowed ((t (:foreground ,purple :weight bold))))
+   `(mood-line-major-mode ((t (:foreground ,purple :weight bold))))
+   `(mood-line-status-neutral ((t (:foreground ,grey-subtle))))
+   `(mood-line-status-info ((t (:foreground ,green))))
+   `(mood-line-status-success ((t (:foreground ,green :weight bold))))
+   `(mood-line-status-warning ((t (:foreground ,yellow :weight bold))))
+   `(mood-line-status-error ((t (:foreground ,magenta :weight bold))))
+   `(mood-line-encoding ((t (:foreground ,grey-subtle))))
+   `(mood-line-unimportant ((t (:foreground ,grey-border))))
 
    ;; Line numbers
    `(line-number ((t (:foreground ,grey-subtle :background ,bg-main :slant normal))))
@@ -647,7 +661,7 @@
                (file-name-as-directory (file-name-directory load-file-name))))
 
 ;;;###autoload
-(defun dark-tale-theme()
+(defun dark-tale-theme ()
   "Apply the dark-tale-theme."
   (interactive)
   (load-theme 'dark-tale t))

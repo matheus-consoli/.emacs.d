@@ -344,6 +344,8 @@
        (after-init . global-corfu-mode)
        (after-init . corfu-history-mode)
        (after-init . corfu-popupinfo-mode)
+       (corfu-popupinfo-mode . (lambda () (set-fringe-mode 0)))
+       (corfu-mode-hook . (lambda () (set-fringe-mode 0)))
 
        :custom
        (corfu-cycle t)
@@ -801,7 +803,7 @@
         "Font for ui faces")
 
       (defconst modeline-font
-        "Caffeine Mono"
+        "Lekton"
         "font used by the modeline")
 
       (defconst org-font
@@ -859,7 +861,7 @@
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
-      '((right-divider-width . 0)
+      '((right-divider-width . 40)
         (internal-border-width . 0)))
    #+end_src
 ** icons
@@ -1040,7 +1042,7 @@
      #+end_src
 **** Format
      #+begin_src emacs-lisp
-       (fringe-mode '(20 . 20))
+       (fringe-mode '(30 . 50))
      #+end_src
 *** fix color display when loading emacs in terminal
     #+begin_src emacs-lisp
@@ -1058,7 +1060,7 @@
 #+begin_src emacs-lisp
   (defun my/tab-bar-project-name ()
     "Return project name for tab, fallback to buffer name."
-    (if-let ((project (project-current)))
+    (if-let* ((project (project-current)))
         (project-name project)
       (buffer-name)))
 
@@ -1208,7 +1210,7 @@
     :hook (after-init . centaur-tabs-mode)
     :config
     (centaur-tabs-headline-match)
-    (centaur-tabs-change-fonts alternative-programming-font 90)
+    (centaur-tabs-change-fonts alternative-programming-font 100)
     :bind
     (:map centaur-tabs-mode-map
           (([remap next-buffer] . centaur-tabs-forward)
@@ -1217,10 +1219,10 @@
            ("C-<prior>" . centaur-tabs-backward)
            ("C-<next>" . centaur-tabs-forward)))
     :custom
-    (centaur-tabs-height 25)
+    (centaur-tabs-height 30)
     (centaur-tabs-style "alternate")
     ;;(centaur-tabs-hide-tab-function 'centaur-tabs-hide-tab)
-    (centaur-tabs-set-bar 'under)
+    (centaur-tabs-set-bar nil)
     (x-underline-at-descent-line t) ;; to correctly display the icon
     (centaur-tabs-cycle-scope 'tabs)
     (centaur-tabs-gray-out-icons 'buffer)
@@ -1309,38 +1311,45 @@
       ;;               ("C-c l g m" . toggle-lsp-treemacs-modes)))
     #+end_src
 ** modeline
-   #+begin_src emacs-lisp
-     (use-package doom-modeline
-       :config
-       (use-package async :defer t)
-       (use-package ghub :defer t)
-       (setq
-        auth-sources '("~/.authinfo.gpg")
-        doom-modeline-height 30
-        doom-modeline-bar-width 8
-        doom-modeline-time-clock-size 0.4
-        doom-modeline-hud t
-        doom-modeline-github nil
-        doom-modeline-github-interval (* 30 60)
-        doom-modeline-enable-word-count t
-        doom-modeline-buffer-encoding t
-        doom-modeline-support-imenu t
-        doom-modeline-irc nil
-        doom-modeline-position-line-format '("L%l")
-        doom-modeline-percent-position '(-3 "%p")
-        doom-modeline-position-column-line-format '("%l:%c")
-        doom-modeline-buffer-file-name-style 'relative-to-project
-        doom-modeline-gnus nil
-        doom-modeline-icon nil ;; remove icons
-        doom-modeline-time-icon nil
-        doom-modeline-buffer-modification-icon nil)
-       :hook (after-init . doom-modeline-mode))
-   #+end_src
+*** COMMENT doom modeline
+#+begin_src emacs-lisp
+  (use-package async :defer t)
+  (use-package ghub :defer t)
+  (use-package doom-modeline
+    :custom
+    (auth-sources '("~/.authinfo.gpg"))
+    (doom-modeline-height 30)
+    (doom-modeline-bar-width nil)
+    (doom-modeline-time-clock-size 0.4)
+    (doom-modeline-hud nil)
+    (doom-modeline-github nil)
+    (doom-modeline-github-interval (* 30 60))
+    (doom-modeline-enable-word-count t)
+    (doom-modeline-buffer-encoding t)
+    (doom-modeline-support-imenu t)
+    (doom-modeline-irc nil)
+    (doom-modeline-position-line-format '("L%l"))
+    (doom-modeline-percent-position '(-3 "%p"))
+    (doom-modeline-position-column-line-format '("%l:%c"))
+    (doom-modeline-buffer-file-name-style 'relative-to-project)
+    (doom-modeline-gnus nil)
+    (doom-modeline-icon nil) ;; remove icons
+    (doom-modeline-time-icon nil)
+    (doom-modeline-buffer-modification-icon nil)
+    :config
+    :hook (after-init . doom-modeline-mode))
+#+end_src
+*** mood line
+#+begin_src emacs-lisp
+  (use-package mood-line
+    :hook (after-init . mood-line-mode)
+    :custom (mood-line-glyph-alist mood-line-glyphs-fira-code))
+#+end_src
 *** Clock
     #+BEGIN_SRC emacs-lisp
-      (setq-default display-time-default-load-average nil)
-      (setq display-time-format " %I:%M\t")
-      (display-time-mode 1)
+      (setq-default display-time-default-load-average 1)
+      (setq-default display-time-format " %I:%M")
+      (display-time-mode t)
     #+END_SRC
 *** toggle modeline when idle for some time
 #+begin_src emacs-lisp
@@ -1386,60 +1395,59 @@
     (setq-local mode-line-format nil))
 
   (dolist (hook '(aidermacs-comint-mode-hook
+                  special-mode-hook
                   aidermacs-vterm-mode-hook))
     (add-hook hook #'my/hide-modeline))
 #+end_src
 ** custom set faces
    #+begin_src emacs-lisp
-          (set-face-attribute 'mode-line nil
-                              :inherit 'default
-                              :family modeline-font
-                              :height 110
-                              :box nil)
+     (set-face-attribute 'mode-line nil
+                         :family modeline-font
+                         :height 110)
 
-          (set-face-attribute 'mode-line-active nil
-                              :inherit 'mode-line
-                              :box nil)
+     (set-face-attribute 'mode-line-active nil
+                         :family modeline-font
+                         :height 110)
 
-          (set-face-attribute 'mode-line-inactive nil
-                              :inherit 'mode-line-active
-                              :box nil)
+     (set-face-attribute 'mode-line-inactive nil
+                         :family modeline-font
+                         :height 110)
 
-          (set-face-attribute 'font-lock-comment-face nil
-                              :font programming-font
-                              :slant 'italic
-                              :height 110)
+     (set-face-attribute 'font-lock-comment-face nil
+                         :font programming-font
+                         :slant 'italic
+                         :height 110)
 
-          (set-face-attribute 'tab-bar nil
-                              :font alternative-programming-font
-                              :height 100)
+     (set-face-attribute 'tab-bar nil
+                         :font alternative-programming-font
+                         :height 100)
 
 
-          (defun set-face-for-tab-bar-tab (_theme)
-            (set-face-attribute 'tab-bar-tab nil
-                                :box `(:line-width (7 . -1)
+     (defun set-face-for-tab-bar-tab (_theme)
+       (set-face-attribute 'tab-bar-tab nil
+                           :box `(:line-width (7 . -1)
                                               :style nil
                                               :color ,(face-attribute 'tab-bar-tab :background)))
-            (set-face-attribute 'tab-bar-tab-inactive nil
-                                :box `(:line-width (7 . -1)
+       (set-face-attribute 'tab-bar-tab-inactive nil
+                           :box `(:line-width (7 . -1)
                                               :style nil
                                               :color ,(face-attribute 'tab-bar-tab-inactive :background))))
 
-          (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
+     (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
 
-          (with-eval-after-load 'blamer
-            (set-face-attribute 'blamer-face nil
-                                :family programming-font
-                                :height 100
-                                :italic t))
+     (with-eval-after-load 'blamer
+       (set-face-attribute 'blamer-face nil
+                           :family programming-font
+                           :height 100
+                           :italic t))
 
-          (dolist (face '(window-divider
-                          window-divider-first-pixel
-                          window-divider-last-pixel))
-            (face-spec-reset-face face)
-            (set-face-foreground face (face-attribute 'default :background))
-            (set-face-background face (face-attribute 'default :background)))
-          (set-face-background 'fringe (face-attribute 'default :background))
+     (dolist (face '(window-divider
+                     window-divider-first-pixel
+                     window-divider-last-pixel))
+       (face-spec-reset-face face)
+       (set-face-foreground face (face-attribute 'default :background))
+       (set-face-background face (face-attribute 'default :background)))
+     (set-face-background 'fringe (face-attribute 'default :background))
    #+end_src
 * Org
 ** install
@@ -1480,8 +1488,8 @@
 
 *** column views
     #+begin_src emacs-lisp
-      (set-face-attribute 'org-column nil :background nil)
-      (set-face-attribute 'org-column-title nil :background nil)
+      (set-face-attribute 'org-column nil :background 'unspecified)
+      (set-face-attribute 'org-column-title nil :background 'unspecified)
     #+end_src
 ** org superstar
    #+begin_src emacs-lisp
@@ -1852,7 +1860,7 @@
      (setq
       ;; adapt indentation of content to match its heading
       org-adapt-indentation nil
-      org-ellipsis " ⌄ "
+      org-ellipsis "   "
       org-hide-emphasis-markers t
       ;; non-nil = utf-8
       org-pretty-entities t
@@ -1867,7 +1875,7 @@
       ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
       org-use-sub-superscripts nil)
 
-     (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
+     (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil :underline nil :weight 'ultra-bold)
    #+end_src
 * Programming
 ** Utils
@@ -1999,15 +2007,17 @@
          :custom
          (git-gutter-fr:side 'right-fringe)
          :config
-
          (define-fringe-bitmap 'git-gutter-fr:added [#b11111000] nil nil '(center repeated))
          (define-fringe-bitmap 'git-gutter-fr:modified [#b11111000] nil nil '(center repeated))
          (define-fringe-bitmap 'git-gutter-fr:deleted
-           [#b11000000
+           [#b10000000
+            #b11000000
             #b11100000
             #b11110000
             #b11111000
-            #b11111100] nil nil 'bottom)
+            #b11111100
+            #b11111110
+            #b11111111] nil nil 'bottom)
 
          ;; Automatically update git-gutter on focus change
          (add-hook 'focus-in-hook #'git-gutter:update-all-windows)
@@ -2807,4 +2817,8 @@ let's make it more visible
 ** copy/paste integration on terminal
 #+begin_src emacs-lisp
   (setq xterm-extra-capabilities '(getSelection setSelection modifyOtherKeys))
+#+end_src
+** focus following mouse
+#+begin_src emacs-lisp
+  (setq focus-follows-mouse t)
 #+end_src
