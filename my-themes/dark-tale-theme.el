@@ -10,6 +10,7 @@
        (bg-dim             "#171717")
        (bg-inactive-sel    "#2B2B2B")
        (bg-selection       "#2d2d2d")
+       (bg-special         "#0a0a0a")
 
        (fg-main            "#EDEDED")
        (fg-bright          "#ffffff")
@@ -65,6 +66,7 @@
    `(region ((t (:background ,visual-selection :foreground ,fg-main :extend t))))
    `(secondary-selection ((t (:background ,secondary-selection :extend t))))
    `(vertical-border ((t (:foreground ,grey-border))))
+   `(window-divider ((t (:foreground ,grey-border))))
    `(success ((t (:foreground ,success-muted :weight bold))))
    `(warning ((t (:foreground ,warning-muted :weight bold))))
    `(error ((t (:foreground ,error-muted :weight bold))))
@@ -134,10 +136,11 @@
 
    ;; tab-bar-mode
    `(tab-bar ((t (:background ,bg-main :foreground ,fg-main))))
+   `(tab-bar-tab-highlight ((t (:background ,bg-alt :foreground ,fg-main))))
    `(tab-bar-tab ((t (:background ,bg-contrast :foreground ,fg-popup :height 95
-                                  :box (:line-width (1 . 2) :color nil :style flat-button)))))
+                                  :box (:line-width (1 . 5) :color nil :style flat-button)))))
    `(tab-bar-tab-inactive ((t (:background ,bg-main :foreground ,grey-subtle :height 95 :weight extra-light
-                                           :box (:line-width (1 . 2) :color nil :style flat-button)))))
+                                           :box (:line-width (1 . 5) :color nil :style flat-button)))))
    `(tab-bar-tab-ungrouped ((t (:background ,bg-contrast :foreground ,grey-subtle))))
    `(tab-bar-tab-group-current ((t (:background ,bg-alt :foreground ,purple))))
    `(tab-bar-tab-group-inactive ((t (:background ,bg-contrast :foreground ,grey-subtle))))
@@ -517,10 +520,10 @@
    `(mood-line-unimportant ((t (:foreground ,grey-border))))
 
    ;; Line numbers
-   `(line-number ((t (:foreground ,grey-subtle :background ,bg-main :slant normal))))
+   `(line-number ((t (:foreground ,grey-subtle :background ,bg-main :slant normal :box (:line-width (1 . 3) :color ,bg-main)))))
    `(line-number-current-line ((t (:foreground ,purple :weight bold))))
    `(line-number-major-tick ((t (:foreground ,yellow :background ,bg-main :weight bold))))
-   `(line-number-minor-tick ((t (:foreground ,grey-subtle :background ,bg-main :weight normal))))
+   `(line-number-minor-tick ((t (:foreground ,grey-subtle :background ,bg-main :weight normal :box (:line-width (-1 . 3))))))
    `(linum ((t (:foreground ,grey-subtle :background ,bg-main :slant normal :height 0.9))))
    `(linum-relative-current-face ((t (:foreground ,purple :background ,bg-contrast :weight bold :height 1.0))))
    `(line-number-current-line-hl ((t (:foreground ,purple :background ,bg-selection :weight bold :height 1.0))))
@@ -566,12 +569,12 @@
    `(embark-collect-match-face ((t (:background ,focus-bg))))
 
    ;; Breadcrumb package faces
-   `(breadcrumb-face ((t (:foreground ,grey-subtle :height 0.9 :weight light))))
-   `(breadcrumb-imenu-crumbs-face ((t (:foreground ,lavender :height 0.9 :weight normal :slant italic))))
-   `(breadcrumb-imenu-leaf-face ((t (:foreground ,purple :height 0.85 :weight semi-bold))))
-   `(breadcrumb-project-crumbs-face ((t (:foreground ,grey-docstring :height 0.9 :weight light))))
-   `(breadcrumb-project-base-face ((t (:foreground ,blue :height 0.9 :weight normal))))
-   `(breadcrumb-project-leaf-face ((t (:foreground ,fg-popup :height 0.85 :weight semi-bold))))
+   `(breadcrumb-face ((t (:foreground ,grey-subtle :height 0.9 :weight light :box (:line-width (2 . 8) :color ,bg-alt)))))
+   `(breadcrumb-imenu-crumbs-face ((t (:foreground ,lavender :height 0.9 :weight normal :slant italic :box (:line-width (2 . 8) :color ,bg-alt)))))
+   `(breadcrumb-imenu-leaf-face ((t (:foreground ,purple :height 0.85 :weight semi-bold :box (:line-width (2 . 8) :color ,bg-alt)))))
+   `(breadcrumb-project-crumbs-face ((t (:foreground ,grey-docstring :height 0.9 :weight light :box (:line-width (2 . 8) :color ,bg-alt)))))
+   `(breadcrumb-project-base-face ((t (:foreground ,blue :height 0.9 :weight normal :box (:line-width (2 . 8) :color ,bg-alt)))))
+   `(breadcrumb-project-leaf-face ((t (:foreground ,fg-popup :height 0.85 :weight semi-bold :box (:line-width (2 . 8) :color ,bg-alt)))))
 
    ;; Misc Packages
    `(yas-field-highlight-face ((t (:background ,bg-selection))))
@@ -657,6 +660,9 @@
 
 ;;;###autoload
 (when load-file-name
+  (add-hook 'special-mode-hook (lambda ()
+                                 (setq buffer-face-mode-face `(:background "#232323" :height 0.9)) ;; "#A0A0A0"
+                                 (buffer-face-mode 1)))
   (add-to-list 'custom-theme-load-path
                (file-name-as-directory (file-name-directory load-file-name))))
 

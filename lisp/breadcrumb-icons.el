@@ -81,7 +81,7 @@ ICON-NAME is the icon identifier, and ARGS are additional arguments."
 (defun breadcrumb-icons--add-icon (icon string)
   "Prepend ICON to STRING with proper spacing."
   (if (and icon (not (string-empty-p icon)))
-      (concat icon "" string)
+      (concat icon " " string)
     string))
 
 (defun breadcrumb-icons--get-ipath-icon (node-name face)

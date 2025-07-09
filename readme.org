@@ -282,6 +282,8 @@
   (use-package sideline
     :defer t
     :hook (eglot-managed-mode . sideline-mode)
+    :custom-face
+    (slideline-default ((t (:height 100))))
     :custom
     (sideline-backends-right '(sideline-eglot sideline-flycheck))
     (sideline-display-backend-name t)
@@ -344,8 +346,8 @@
        (after-init . global-corfu-mode)
        (after-init . corfu-history-mode)
        (after-init . corfu-popupinfo-mode)
-       (corfu-popupinfo-mode . (lambda () (set-fringe-mode 0)))
-       (corfu-mode-hook . (lambda () (set-fringe-mode 0)))
+       (corfu-popupinfo-mode . (lambda () (set-window-fringes (selected-window) 1 1 nil)))
+       (corfu-mode-hook . (lambda () (set-window-fringes (selected-window) 1 1 nil)))
 
        :custom
        (corfu-cycle t)
@@ -861,7 +863,7 @@
 ** add frame borders and window dividers
    #+begin_src emacs-lisp
      (modify-all-frames-parameters
-      '((right-divider-width . 40)
+      '((right-divider-width . 0)
         (internal-border-width . 0)))
    #+end_src
 ** icons
@@ -923,11 +925,13 @@
                spacemacs-theme-org-bold t
                spacemacs-theme-comment-italic t))
      #+end_src
+*** custom theme
+#+begin_src emacs-lisp
+  (setq-default custom-theme-directory
+                "~/.emacs.d/my-themes")
+#+end_src
 *** loading theme
     #+begin_src emacs-lisp
-      (load "~/.emacs.d/my-themes/dark-tale-theme.el")
-      (load "~/.emacs.d/my-themes/bright-tale-theme.el")
-
       ;; Define variables for your themes
       (defvar my-gui-theme 'dark-tale
         "The theme to use for graphical Emacs frames.")
@@ -980,8 +984,10 @@
 *** auto show and hide current line
     #+begin_src emacs-lisp
       (use-package hl-line
-        :ensure nil
         :init
+        (defconst my-hide-hl-line-after-secs 3
+          "Hide the modeline after N seconds")
+
         (defvar my-hl-line-ignored-modes
           '(treemacs-mode dired-mode magit-mode)
           "List of major modes where the idle hl-line behavior should be ignored.")
@@ -989,17 +995,40 @@
         (defvar my-hide-hl-line-timer nil
           "Timer to show the hl-line after a certain idle time.")
 
+        (defun my-sync-blamer-face-with-hl-line ()
+          "Sync blamer-face background with hl-line face background."
+          (when (and (featurep 'blamer) (facep 'blamer-face))
+            (if hl-line-mode
+                ;; hl-line is active, match its background
+                (let ((hl-line-bg (face-attribute 'hl-line :background nil t)))
+                  (when (not (eq hl-line-bg 'unspecified))
+                    (set-face-attribute 'blamer-face nil :background hl-line-bg)
+                    ;; Force blamer to refresh its display
+                    (when (and (bound-and-true-p blamer-mode) (fboundp 'blamer--clear-overlay))
+                      (blamer--clear-overlay)
+                      (when (fboundp 'blamer--try-render)
+                        (blamer--try-render)))))
+              ;; hl-line is inactive, reset to transparent
+              (set-face-attribute 'blamer-face nil :background nil)
+              ;; Force blamer to refresh its display
+              (when (and (bound-and-true-p blamer-mode) (fboundp 'blamer--clear-overlay))
+                (blamer--clear-overlay)
+                (when (fboundp 'blamer--try-render)
+                  (blamer--try-render))))))
+
         (defun my-show-hl-line ()
           "Show the hl-line by enabling `hl-line-mode` if not in ignored modes."
           (unless (or hl-line-mode
                       (member major-mode my-hl-line-ignored-modes))
-            (hl-line-mode 1)))
+            (hl-line-mode 1)
+            (my-sync-blamer-face-with-hl-line)))
 
         (defun my-hide-hl-line ()
           "Hide the hl-line by disabling `hl-line-mode`."
           (when (and hl-line-mode
                      (not (member major-mode my-hl-line-ignored-modes)))
-            (hl-line-mode -1)))
+            (hl-line-mode -1)
+            (my-sync-blamer-face-with-hl-line)))
 
         (defun my-start-idle-timer ()
           "Start the idle timer to show the hl-line after a certain time."
@@ -1007,7 +1036,7 @@
                      (not (member major-mode my-hl-line-ignored-modes)))
             (cancel-timer my-hide-hl-line-timer))  ;; Cancel any existing timer
           (unless (member major-mode my-hl-line-ignored-modes)
-            (setq my-hide-hl-line-timer (run-with-idle-timer 5 nil #'my-show-hl-line))))
+            (setq my-hide-hl-line-timer (run-with-idle-timer my-hide-hl-line-after-secs nil #'my-show-hl-line))))
 
         (defun my-hl-line-reset-on-command ()
           "Hide the hl-line and reset the idle timer when a command is executed."
@@ -1042,7 +1071,7 @@
      #+end_src
 **** Format
      #+begin_src emacs-lisp
-       (fringe-mode '(30 . 50))
+       (setq display-line-numbers-width 5)
      #+end_src
 *** fix color display when loading emacs in terminal
     #+begin_src emacs-lisp
@@ -1236,6 +1265,7 @@
 #+begin_src emacs-lisp
   (dolist (hook '(special-mode-hook
                   git-commit-mode-hook
+                  org-src-mode-hook
                   aidermacs-comint-mode-hook
                   aidermacs-vterm-mode-hook))
     (add-hook hook #'centaur-tabs-local-mode))
@@ -1423,32 +1453,38 @@
                          :height 100)
 
 
-     (defun set-face-for-tab-bar-tab (_theme)
-       (set-face-attribute 'tab-bar-tab nil
-                           :box `(:line-width (7 . -1)
-                                              :style nil
-                                              :color ,(face-attribute 'tab-bar-tab :background)))
-       (set-face-attribute 'tab-bar-tab-inactive nil
-                           :box `(:line-width (7 . -1)
-                                              :style nil
-                                              :color ,(face-attribute 'tab-bar-tab-inactive :background))))
+     ;; (defun set-face-for-tab-bar-tab (_theme)
+     ;;   (set-face-attribute 'tab-bar-tab nil
+     ;;                       :box `(:line-width (7 . -1)
+     ;;                                          :style nil
+     ;;                                          :color ,(face-attribute 'tab-bar-tab :background)))
+     ;;   (set-face-attribute 'tab-bar-tab-inactive nil
+     ;;                       :box `(:line-width (7 . -1)
+     ;;                                          :style nil
+     ;;                                          :color ,(face-attribute 'tab-bar-tab-inactive :background))))
 
-     (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
+     ;; (add-hook 'enable-theme-functions #'set-face-for-tab-bar-tab)
 
-     (with-eval-after-load 'blamer
-       (set-face-attribute 'blamer-face nil
-                           :family programming-font
-                           :height 100
-                           :italic t))
+     ;; (with-eval-after-load 'blamer
+     ;;   (set-face-attribute 'blamer-face nil
+     ;;                       :family programming-font
+     ;;                       :height 100
+     ;;                       :italic t))
 
-     (dolist (face '(window-divider
-                     window-divider-first-pixel
-                     window-divider-last-pixel))
-       (face-spec-reset-face face)
-       (set-face-foreground face (face-attribute 'default :background))
-       (set-face-background face (face-attribute 'default :background)))
-     (set-face-background 'fringe (face-attribute 'default :background))
+     ;; (dolist (face '(window-divider
+     ;;                 window-divider-first-pixel
+     ;;                 window-divider-last-pixel))
+     ;;   (face-spec-reset-face face)
+     ;;   (set-face-foreground face (face-attribute 'default :background))
+     ;;   (set-face-background face (face-attribute 'default :background)))
+     ;; (set-face-background 'fringe (face-attribute 'default :background))
    #+end_src
+** fringes
+#+begin_src emacs-lisp
+  (setq overflow-newline-into-fringe nil)
+  (add-hook 'special-mode-hook (lambda ()
+                                 (set-window-fringes (selected-window) 1 1 nil)))
+#+end_src
 * Org
 ** install
    #+begin_src emacs-lisp
@@ -2041,7 +2077,7 @@
          (blamer-author-formatter " %s") ;; 
          (blamer-commit-formatter "")
          (blamer-idle-time 2)
-         (blamer-smart-background-p t)
+         (blamer-smart-background-p nil)
          (blamer-min-offset 5)
          (blamer-type 'visual) ;; only about one line
          (blamer-prettify-time-p t)
@@ -2821,4 +2857,8 @@ let's make it more visible
 ** focus following mouse
 #+begin_src emacs-lisp
   (setq focus-follows-mouse t)
+#+end_src
+** whitespace-cleanup
+#+begin_src emacs-lisp
+  (global-set-key (kbd "<f9>") 'whitespace-cleanup)
 #+end_src
