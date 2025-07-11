@@ -1,4 +1,4 @@
-;;; -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t; -*-
 ;; tell emacs to use plists for lsp
 (setenv "LSP_USE_PLISTS" "true")
 
@@ -23,20 +23,20 @@
 (setq read-process-output-max (* 8 1024 1024 ))
 
 ;; keep the eln cache clean
-(setq load-prefer-newer t)
+(setq-default load-prefer-newer t)
 
 (setq native-comp-deferred-compilation t)
 (setq native-comp-jit-compilation t)
 (setq native-comp-prune-cache t)
 (setq native-comp-async-jobs-number (- (num-processors) 1))
 (setq native-comp-async-query-on-exit t)
+(setq native-comp-async-report-warnings-errors nil)
 (setq confirm-kill-processes t)
 
 (setq native-comp-always-compile t)
 (setq package-native-compile t)
 
-(defconst options '("-march=znver3"
-					"-mtune=znver3"
+(defconst options '("-march=armv8-a+crc+lse+rcpc+rdma+dotprod+aes+sha3+sm4+fp16fml+rng+sb+ssbs+i8mm+bf16+flagm"
 					"-O3"
 					"-fno-finite-math-only"
 					"-funroll-loops"
@@ -49,7 +49,6 @@
 (setq native-comp-speed 2)
 (setq native-comp-compiler-options options)
 (setq native-comp-driver-options options)
-
 
 ;; Profile emacs startup
 (add-hook 'emacs-startup-hook

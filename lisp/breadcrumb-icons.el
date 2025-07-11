@@ -27,6 +27,16 @@
   :type 'boolean
   :group 'breadcrumb-icons)
 
+(defcustom breadcrumb-icons-icon-spacing 1
+  "The number of `breadcrumb-icons-icon-string` instances to include between the icon and the filename."
+  :type 'integer
+  :group 'breadcrumb-icons)
+
+(defcustom breadcrumb-icons-icon-string " "
+  "The string to use as spacing between the icon and the filename."
+  :type 'string
+  :group 'breadcrumb-icons)
+
 ;;; Icon mappings
 
 (defconst breadcrumb-icons-ipath-alist
@@ -81,7 +91,14 @@ ICON-NAME is the icon identifier, and ARGS are additional arguments."
 (defun breadcrumb-icons--add-icon (icon string)
   "Prepend ICON to STRING with proper spacing."
   (if (and icon (not (string-empty-p icon)))
-      (concat icon " " string)
+      (let* ((spacing-cache-key (format "spacing-%d-%s" breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
+             (spacing (if breadcrumb-icons-enable-caching
+                          (or (gethash spacing-cache-key breadcrumb-icons--cache)
+                              (puthash spacing-cache-key
+                                       (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
+                                       breadcrumb-icons--cache))
+                        (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string)))))
+        (concat icon spacing string))
     string))
 
 (defun breadcrumb-icons--get-ipath-icon (node-name face)
@@ -124,9 +141,16 @@ RETURN-VALUE is the original return value from the function."
            (icon (breadcrumb-icons--get-cached-icon
                   cache-key #'nerd-icons-faicon
                   breadcrumb-icons-project-root-icon
-                  :face 'breadcrumb-project-base-face)))
+                  :face 'breadcrumb-project-base-face))
+           (spacing-cache-key (format "spacing-%d-%s" breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
+           (spacing (if breadcrumb-icons-enable-caching
+                        (or (gethash spacing-cache-key breadcrumb-icons--cache)
+                            (puthash spacing-cache-key
+                                     (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
+                                     breadcrumb-icons--cache))
+                      (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string)))))
       (setf (car return-value)
-            (concat " " (breadcrumb-icons--add-icon icon (car return-value))))))
+            (concat spacing (breadcrumb-icons--add-icon icon (car return-value))))))
   return-value)
 
 (defun breadcrumb-icons--format-ipath-node-advice (original-func p more &rest r)
