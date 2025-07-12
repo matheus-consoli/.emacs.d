@@ -81,19 +81,30 @@
        :config
        (require 'vertico-quick))
    #+end_src
-*** COMMENT posframe
+*** posframe
 #+begin_src emacs-lisp
   (use-package vertico-posframe
+    :after vertico
     :config
-    (defvar my-vertico-disable-posframe-commands
-      '(consult-line consult-todo consult-ripgrep))
+    (defun my/vertico-posframe-window-width-fixed-height (buffer)
+    "Set posframe width to match current window, with fixed height."
+    (let* ((window (selected-window))
+           (window-edges (window-pixel-edges window))
+           (window-width (- (nth 2 window-edges) (nth 0 window-edges)))
+           (char-width (frame-char-width))
+           (width-chars (/ window-width char-width))
+           (fixed-height vertico-count))
+      (list
+       :height fixed-height
+       :width (round width-chars)
+       :min-height fixed-height
+       :min-width (round width-chars))))
 
-    (setq vertico-multiform-commands
-          (append
-           (mapcar (lambda (cmd) `(,cmd (:not posframe)))
-                   my-vertico-disable-posframe-commands)
-           '((t posframe))))
-    (setq vertico-posframe-poshandler #'posframe-poshandler-frame-top-center)
+    (setq vertico-posframe-poshandler 'posframe-poshandler-window-bottom-center
+          vertico-posframe-border-width 5
+          vertico-posframe-truncate-lines t
+          vertico-posframe-size-function #'my/vertico-posframe-window-width-fixed-height)
+
     (vertico-posframe-mode 1))
 #+end_src
 ** LSP - Language Server Protocol
@@ -1518,34 +1529,6 @@
       ;;               ("C-c l g m" . toggle-lsp-treemacs-modes)))
     #+end_src
 ** modeline
-*** COMMENT doom modeline
-#+begin_src emacs-lisp
-  (use-package async :defer t)
-  (use-package ghub :defer t)
-  (use-package doom-modeline
-    :custom
-    (auth-sources '("~/.authinfo.gpg"))
-    (doom-modeline-height 30)
-    (doom-modeline-bar-width nil)
-    (doom-modeline-time-clock-size 0.4)
-    (doom-modeline-hud nil)
-    (doom-modeline-github nil)
-    (doom-modeline-github-interval (* 30 60))
-    (doom-modeline-enable-word-count t)
-    (doom-modeline-buffer-encoding t)
-    (doom-modeline-support-imenu t)
-    (doom-modeline-irc nil)
-    (doom-modeline-position-line-format '("L%l"))
-    (doom-modeline-percent-position '(-3 "%p"))
-    (doom-modeline-position-column-line-format '("%l:%c"))
-    (doom-modeline-buffer-file-name-style 'relative-to-project)
-    (doom-modeline-gnus nil)
-    (doom-modeline-icon nil) ;; remove icons
-    (doom-modeline-time-icon nil)
-    (doom-modeline-buffer-modification-icon nil)
-    :config
-    :hook (after-init . doom-modeline-mode))
-#+end_src
 *** mood-line
 #+begin_src emacs-lisp
   (use-package mood-line
@@ -1705,26 +1688,6 @@
       (set-face-attribute 'org-column nil :background 'unspecified)
       (set-face-attribute 'org-column-title nil :background 'unspecified)
     #+end_src
-** COMMENT org superstar
-   #+begin_src emacs-lisp
-     ;; org-superstar needs this way
-     (setq org-hide-leading-stars nil)
-
-     (use-package org-superstar
-       :after org
-       :init
-       (setq org-superstar-headline-bullets-list '(?● ?○)
-             ;; fancy todo headings
-             org-superstar-special-todo-items t
-             ;; i use my own
-             org-superstar-prettify-item-bullets nil)
-       :hook (org-mode . org-superstar-mode))
-     (setq org-superstar-leading-bullet ?\s)
-     ;; If you use Org Indent you also need to add this, otherwise the
-     ;; above has no effect while Indent is enabled.
-     (setq org-indent-mode-turns-on-hiding-stars nil)
-   #+end_src
-
 ** make invisible parts visible
    #+begin_src emacs-lisp
      (use-package org-appear
