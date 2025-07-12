@@ -17,7 +17,9 @@
      `(region ((t (:background ,.visual-selection :foreground ,.fg-main :extend t))))
      `(secondary-selection ((t (:background ,.secondary-selection :extend t))))
      `(vertical-border ((t (:foreground ,.grey-border))))
-     `(window-divider ((t (:foreground ,.grey-border))))
+     `(window-divider ((t (:foreground ,.bg-main))))
+     `(window-divider-last-pixel ((t (:foreground ,.bg-main))))
+     `(window-divider-first-pixel ((t (:foreground ,.bg-main))))
      `(success ((t (:foreground ,.success-muted :weight bold))))
      `(warning ((t (:foreground ,.warning-muted :weight bold))))
      `(error ((t (:foreground ,.error-muted :weight bold))))
@@ -691,11 +693,14 @@
   "Set up autoload hooks for THEME-NAME with SPECIAL-BG and FRINGE-BG colors."
   (when load-file-name
 
-    (dolist (hook '(special-mode-hook
-                    magit-mode-hook
+    (dolist (hook '(aidermacs-comint-mode-hook
+                    aidermacs-vterm-mode-hook
+                    compilation-mode-hook
                     git-commit-mode-hook
-                    transient-setup-buffer-hook
-                    compilation-mode-hook))
+                    magit-mode-hook
+                    messages-buffer-mode-hook
+                    special-mode-hook
+                    transient-setup-buffer-hook))
       (add-hook hook (lambda () (tale-themes--hooks-function special-bg special-fg fringe-bg))))
 
     (add-to-list 'custom-theme-load-path
