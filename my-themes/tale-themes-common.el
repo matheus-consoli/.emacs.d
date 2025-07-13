@@ -698,6 +698,10 @@
                     compilation-mode-hook
                     git-commit-mode-hook
                     magit-mode-hook
+                    magit-post-refresh-hook
+                    magit-post-stage-hook
+                    magit-post-unstage-hook
+                    magit-post-commit-hook
                     messages-buffer-mode-hook
                     special-mode-hook
                     transient-setup-buffer-hook))

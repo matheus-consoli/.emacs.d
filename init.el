@@ -180,6 +180,42 @@
        :min-height fixed-height
        :min-width (round width-chars))))
 
+  ;; Store original mode-line format per window
+  (defvar consoli-config/original-mode-line-alist nil
+    "Alist storing original mode-line format for each window.")
+
+  (defun consoli-config/hide-mode-line-for-vertico ()
+    "Hide mode-line in the main window when vertico opens."
+    (let ((main-window (minibuffer-selected-window)))
+      (when (and main-window (window-live-p main-window))
+        (with-selected-window main-window
+          (unless (assq main-window consoli-config/original-mode-line-alist)
+            (push (cons main-window mode-line-format) consoli-config/original-mode-line-alist)
+            (setq mode-line-format nil)
+            (force-mode-line-update))))))
+
+  (defun consoli-config/restore-mode-line-for-vertico ()
+    "Restore mode-line in the main window when vertico closes."
+    (let ((main-window (minibuffer-selected-window)))
+      (when (and main-window (window-live-p main-window))
+        (let ((original-format (assq main-window consoli-config/original-mode-line-alist)))
+          (when original-format
+            (with-selected-window main-window
+              (setq mode-line-format (cdr original-format))
+              (force-mode-line-update))
+            (setq consoli-config/original-mode-line-alist
+                  (delq original-format consoli-config/original-mode-line-alist)))))))
+
+  (add-hook 'vertico-posframe-mode-hook
+            (lambda ()
+              (if vertico-posframe-mode
+                  (progn
+                    (add-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
+                    (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico))
+                (progn
+                  (remove-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
+                  (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)))))
+
   (setq vertico-posframe-size-function #'consoli-config/vertico-posframe-size)
   (vertico-posframe-mode 1))
 
@@ -1134,10 +1170,13 @@ targets."
               cursor-in-non-selected-windows '(hbar . 1))
 
 (use-package hl-line
-  :hook (prog-mode . my-setup-idle-hl-line)
+  :ensure nil
+  :commands hl-line-mode
   :config
-  (defconst my-show-hl-line-after-secs 3
-    "Show the hl-line after N seconds of idle time")
+  (defcustom my-show-hl-line-after-secs 3
+    "Show the hl-line after N seconds of idle time."
+    :type 'number
+    :group 'hl-line)
 
   (defvar my-hl-line-ignored-modes
     '(treemacs-mode dired-mode magit-mode)
@@ -1146,46 +1185,52 @@ targets."
   (defvar-local my-hide-hl-line-timer nil
     "Timer to show the hl-line after a certain idle time.")
 
+  (defun consoli-config/setup-idle-hl-line ()
+    "Set up hooks to hide/show the hl-line based on idle time and input."
+    (unless (apply #'derived-mode-p my-hl-line-ignored-modes)
+      (add-hook 'post-command-hook #'my-hl-line-reset-on-command nil t)
+      (add-hook 'kill-buffer-hook #'my-cleanup-hl-line-timer nil t)
+      (add-hook 'change-major-mode-hook #'my-cleanup-hl-line-timer nil t)
+      (my-start-idle-timer)))
+
   (defun my-sync-blamer-face-with-hl-line ()
     "Sync blamer-face background with hl-line face background."
     (when (and (featurep 'blamer) (facep 'blamer-face))
       (condition-case err
           (if hl-line-mode
-              ;; hl-line is active, match its background
               (let ((hl-line-bg (face-attribute 'hl-line :background nil t)))
-                (when (not (eq hl-line-bg 'unspecified))
+                (unless (eq hl-line-bg 'unspecified)
                   (set-face-attribute 'blamer-face nil :background hl-line-bg)
-                  ;; Force blamer to refresh its display
-                  (when (and (bound-and-true-p blamer-mode) (fboundp 'blamer--clear-overlay))
+                  (when (and (bound-and-true-p blamer-mode)
+                             (fboundp 'blamer--clear-overlay))
                     (blamer--clear-overlay)
                     (when (fboundp 'blamer--try-render)
                       (blamer--try-render)))))
-            ;; hl-line is inactive, reset to transparent
             (set-face-attribute 'blamer-face nil :background nil)
-            ;; Force blamer to refresh its display
-            (when (and (bound-and-true-p blamer-mode) (fboundp 'blamer--clear-overlay))
+            (when (and (bound-and-true-p blamer-mode)
+                       (fboundp 'blamer--clear-overlay))
               (blamer--clear-overlay)
               (when (fboundp 'blamer--try-render)
                 (blamer--try-render))))
         (error (message "Error syncing blamer face: %s" err)))))
 
   (defun my-show-hl-line ()
-    "Show the hl-line by enabling `hl-line-mode` if not in ignored modes."
+    "Enable `hl-line-mode` unless in ignored modes."
     (unless (or hl-line-mode
-                (member major-mode my-hl-line-ignored-modes))
+                (apply #'derived-mode-p my-hl-line-ignored-modes))
       (hl-line-mode 1)
       (my-sync-blamer-face-with-hl-line)))
 
   (defun my-hide-hl-line ()
-    "Hide the hl-line by disabling `hl-line-mode`."
+    "Disable `hl-line-mode` unless in ignored modes."
     (when (and hl-line-mode
-               (not (member major-mode my-hl-line-ignored-modes)))
+               (not (apply #'derived-mode-p my-hl-line-ignored-modes)))
       (hl-line-mode -1)
       (my-sync-blamer-face-with-hl-line)))
 
   (defun my-start-idle-timer ()
-    "Start the idle timer to show the hl-line after a certain time."
-    (unless (member major-mode my-hl-line-ignored-modes)
+    "Start idle timer to show `hl-line-mode` after some time."
+    (unless (apply #'derived-mode-p my-hl-line-ignored-modes)
       (when my-hide-hl-line-timer
         (cancel-timer my-hide-hl-line-timer))
       (condition-case err
@@ -1194,34 +1239,30 @@ targets."
         (error (message "Error starting idle timer: %s" err)))))
 
   (defun my-cleanup-hl-line-timer ()
-    "Clean up the idle timer when switching buffers or disabling."
+    "Cancel and clean up idle hl-line timer."
     (when my-hide-hl-line-timer
       (cancel-timer my-hide-hl-line-timer)
       (setq my-hide-hl-line-timer nil)))
 
   (defun my-hl-line-reset-on-command ()
-    "Hide the hl-line and reset the idle timer when a command is executed."
-    (unless (member major-mode my-hl-line-ignored-modes)
+    "Disable hl-line and start the idle timer again."
+    (unless (apply #'derived-mode-p my-hl-line-ignored-modes)
       (my-hide-hl-line)
       (my-start-idle-timer)))
 
-  (defun my-setup-idle-hl-line ()
-    "Set up hooks to hide/show the hl-line based on idle time and input."
-    (unless (member major-mode my-hl-line-ignored-modes)
-      (add-hook 'post-command-hook #'my-hl-line-reset-on-command nil t)
-      (add-hook 'kill-buffer-hook #'my-cleanup-hl-line-timer nil t)
-      (add-hook 'change-major-mode-hook #'my-cleanup-hl-line-timer nil t)
-      (my-start-idle-timer))))
+  :hook (prog-mode . consoli-config/setup-idle-hl-line))
 
 (use-package hl-todo
   :hook (after-init . global-hl-todo-mode))
 
-(define-key prog-mode-map (kbd "C-|") (lambda ()
-                                        (interactive)
-                                        (hl-todo-insert "TODO(matheus-consoli): ")))
+(define-key prog-mode-map (kbd "C-|")
+            (lambda ()
+              (interactive)
+              (hl-todo-insert "TODO(matheus-consoli): ")))
 
 ;; Line numbers for programming modes
 (use-package display-line-numbers
+  :ensure nil
   :hook (prog-mode . display-line-numbers-mode)
   :custom
   (display-line-numbers-width 5))
@@ -1244,6 +1285,7 @@ targets."
     (buffer-name)))
 
 (use-package tab-bar
+  :ensure nil
   :hook (after-init . tab-bar-mode)
   :bind
   (:map tab-bar-map
@@ -1485,56 +1527,21 @@ targets."
   :custom (mood-line-glyph-alist mood-line-glyphs-fira-code))
 
 (setq-default display-time-default-load-average 1)
-(setq-default display-time-format " %I:%M")
+(setq-default display-time-format "%I:%M")
 (display-time-mode t)
 
-;; (use-package hide-mode-line
-;;   :config
-;;   (defvar my-hide-modeline-timer nil
-;;     "Timer to show the modeline after a certain idle time.")
-
-;;   (defun my-show-modeline ()
-;;     "Show the modeline by disabling `hide-mode-line-mode`."
-;;     (when hide-mode-line-mode
-;;       (hide-mode-line-mode -1))
-;;     (force-mode-line-update t))
-
-;;   (defun my-hide-modeline ()
-;;     "Hide the modeline by enabling `hide-mode-line-mode`."
-;;     (unless hide-mode-line-mode
-;;       (hide-mode-line-mode 1))
-;;     (force-mode-line-update t))
-
-;;   (defun my-start-idle-timer ()
-;;     "Start the idle timer to show the modeline after a certain time."
-;;     (when my-hide-modeline-timer
-;;       (cancel-timer my-hide-modeline-timer))  ;; Cancel any existing timer
-;;     (setq my-hide-modeline-timer (run-with-idle-timer 3 nil #'my-show-modeline)))
-
-;;   (defun my-reset-on-command ()
-;;     "Hide the modeline and reset the idle timer when a command is executed."
-;;     (my-hide-modeline)
-;;     (my-start-idle-timer))
-
-;;   (defun my-toggle-modeline ()
-;;     "Set up hooks to hide/show the modeline based on idle time and input."
-;;     (add-hook 'post-command-hook #'my-reset-on-command)
-;;     (my-start-idle-timer))
-
-;;   (my-toggle-modeline))
-
 (defun my/hide-modeline ()
-  "Hide the mode-line in the current buffer"
+  "Hide the mode-line in the current buffer."
   (setq-local mode-line-format nil))
 
 (dolist (hook '(aidermacs-comint-mode-hook
-                special-mode-hook
-                messages-buffer-mode-hook
+                aidermacs-vterm-mode-hook
                 compilation-mode-hook
-                org-src-mode-hook
-                aidermacs-vterm-mode-hook))
+                git-commit-mode-hook
+                messages-buffer-mode-hook
+                special-mode-hook
+                transient-setup-buffer-hook))
   (add-hook hook #'my/hide-modeline))
-
 
 ;; Org prettify symbols helper functions
 (defvar-local rasmus/org-at-src-begin -1
