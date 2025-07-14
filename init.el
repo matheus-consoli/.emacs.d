@@ -39,7 +39,7 @@
       straight-vc-git-default-clone-depth 1)
 
 (straight-use-package 'use-package)
-;; (setq use-package-compute-statistics t)
+(setq use-package-compute-statistics t)
 
 (straight-use-package
  '(org
@@ -77,16 +77,16 @@
 (defconst alternative-programming-font "Dank Mono"
   "Font for alternative faces.")
 
-(defconst my-completion-delay 0.2
+(defconst consoli-config/completion-delay 0.2
   "Default delay for completion systems.")
 
-(defconst my-idle-timer-delay 3
+(defconst consoli-config/idle-timer-delay 3
   "Default idle timer delay in seconds.")
 
-(defconst my-font-height-ui 130
+(defconst consoli-config/font-height-ui 130
   "Default font height for UI elements.")
 
-(defconst my-font-height-programming 130
+(defconst consoli-config/font-height-programming 130
   "Default font height for programming modes.")
 
 ;; Core Emacs configuration
@@ -301,7 +301,7 @@
   (eldoc-box-cleanup-internval 0.3)
   (eldoc-idle-delay 1.5)
   :config
-  (defun my-eldoc-box-bottom-right-position (width height)
+  (defun consoli-config/eldoc-box-bottom-right-position (width height)
     "Position eldoc-box at bottom-right, accounting for box dimensions."
     (let* ((window (selected-window))
            (frame (window-frame window))
@@ -313,7 +313,7 @@
       (cons (- window-right width margin-x)
             (- window-bottom height margin-y))))
 
-  (setq eldoc-box-position-function #'my-eldoc-box-bottom-right-position)
+  (setq eldoc-box-position-function #'consoli-config/eldoc-box-bottom-right-position)
   :bind (:map eglot-mode-map
               ("C-c l d" . eldoc-box-help-at-point))
   :hook (eglot-managed-mode . eldoc-box-hover-mode))
@@ -406,6 +406,13 @@
   (add-to-list 'apheleia-formatters
                '(eglot-managed . apheleia-indent-eglot-managed-buffer)))
 
+(use-package savehist
+  :hook (after-init . savehist-mode)
+  :custom
+  (savehist-additional-variables '(extended-command-history))
+  (history-length 1000)
+  (history-delete-duplicates t))
+
 ;; Orderless - flexible completion matching
 (use-package orderless
   :custom
@@ -433,14 +440,34 @@
      ((string-prefix-p "~" word) `(orderless-flex . ,(substring word 1)))))
 
   (setq orderless-style-dispatchers '(consoli-config/orderless-dispatch
-                                      orderless-affix-dispatch)))
+                                      orderless-affix-dispatch))
+
+  (defun consoli-config/completion-sort-by-history (completions)
+    "Sort COMPLETIONS by putting recently used items first."
+    (let ((hist (symbol-value minibuffer-history-variable)))
+      (sort completions
+            (lambda (a b)
+              (let ((pos-a (cl-position a hist :test #'string=))
+                    (pos-b (cl-position b hist :test #'string=)))
+                (cond
+                 ((and pos-a pos-b) (< pos-a pos-b))
+                 (pos-a t)
+                 (pos-b nil)
+                 (t (string< a b))))))))
+
+  ;; Apply history-based sorting to commands
+  (setq completion-category-overrides
+        (append completion-category-overrides
+                '((command (styles orderless)
+                           (cycle . t)
+                           (sort . consoli-config/completion-sort-by-history))))))
 
 ;; Corfu - completion overlay
 (use-package corfu
   :hook (after-init . consoli-config/setup-corfu)
   :custom
   (corfu-auto t)
-  (corfu-auto-delay my-completion-delay)
+  (corfu-auto-delay consoli-config/completion-delay)
   (corfu-auto-prefix 2)
   (corfu-cycle t)
   (corfu-on-exact-match 'insert)
@@ -470,10 +497,16 @@
       (setq-local corfu-echo-delay nil
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'consoli-config/corfu-enable-in-minibuffer))
 
-  (add-hook 'minibuffer-setup-hook #'consoli-config/corfu-enable-in-minibuffer)
-  (add-hook 'corfu-popupinfo-mode-hook (lambda () (set-window-fringes (selected-window) 3 1 nil)))
-  (add-hook 'corfu-mode-hook (lambda () (set-window-fringes (selected-window) 3 1 nil))))
+(defun consoli-config/set-custom-text-properties ()
+  "Modern line spacing for current buffer."
+  (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15)))
+
+(dolist (hook '(prog-mode-hook
+                text-mode-hook
+                git-commit-mode-hook))
+  (add-hook hook #'consoli-config/set-custom-text-properties))
 
 ;; Nerd icons for Corfu
 (use-package nerd-icons-corfu
@@ -547,18 +580,18 @@
   ;; taken from https://gist.github.com/karthink/9f054dc8fba07fd117738bec31652a90
   ;; (slightly modified)
   :preface
-  (setq --my-which-key-last-timer nil)
-  (defun --my-which-key-reset-last-timer ()
-    ;; `--my-which-key-last-timer' holds the timer returned by `run-with-idle-timer'
+  (setq consoli-config/which-key-last-timer nil)
+  (defun consoli-config/which-key-reset-last-timer ()
+    ;; `consoli-config/which-key-last-timer' holds the timer returned by `run-with-idle-timer'
     ;; it is set on every key pressed while on repeat-mode, and reset to nil on both entry and exit
     ;; of repeat-mode through `repeat-mode-hook'
-    (setq --my-which-key-last-timer nil))
+    (setq consoli-config/which-key-last-timer nil))
 
-  :hook ((repeat-mode . --my-which-key-reset-last-timer))
+  :hook ((repeat-mode . consoli-config/which-key-reset-last-timer))
   :config
-  (defun --my-which-key-repeat ()
-    (unless (null --my-which-key-last-timer)
-      (cancel-timer --my-which-key-last-timer))
+  (defun consoli-config/which-key-repeat ()
+    (unless (null consoli-config/which-key-last-timer)
+      (cancel-timer consoli-config/which-key-last-timer))
     (when-let* ((cmd (or this-command real-this-command))
                 (keymap1 (repeat--command-property 'repeat-mode-map)))
       (run-with-idle-timer
@@ -567,28 +600,28 @@
          (which-key--create-buffer-and-show
           nil (symbol-value keymap1))))))
 
-  (defun --my-which-key-repeat-mode-dispatch ()
+  (defun consoli-config/which-key-repeat-mode-dispatch ()
     (interactive)
     (setq this-command last-command)
     (when-let* (keymap2 (repeat--command-property 'repeat-map))
       (which-key--create-buffer-and-show
        nil (symbol-value keymap2))))
 
-  (defun --my-which-key-repeat-mode-binding ()
+  (defun consoli-config/which-key-repeat-mode-binding ()
     (when repeat-mode
       (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
                   (keymap3 (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
         (set-transient-map
          (make-composed-keymap
           (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-h") #'--my-which-key-repeat-mode-dispatch)
+            (define-key map (kbd "C-h") #'consoli-config/which-key-repeat-mode-dispatch)
             map)
           keymap3)))))
 
   ;; for some odd reason `repeat-post-hook' and `repeat-pre-hook' are functions instead
   ;; of variables so functions on hook must be added through `advice-add'
-  (advice-add 'repeat-post-hook :after #'--my-which-key-repeat)
-  (advice-add 'repeat-post-hook :after #'--my-which-key-repeat-mode-binding)
+  (advice-add 'repeat-post-hook :after #'consoli-config/which-key-repeat)
+  (advice-add 'repeat-post-hook :after #'consoli-config/which-key-repeat-mode-binding)
   :bind ("C-c c w" . which-key-show-major-mode))
 
 (use-package avy
@@ -847,7 +880,7 @@ targets."
   ("C-c n l" . consult-org-roam-forward-links)
   ("C-c n r" . consult-org-roam-search))
 
-(defun my/copilot-tab ()
+(defun consoli-config/copilot-tab ()
   (interactive)
   (or (copilot-accept-completion)
       (indent-for-tab-command)))
@@ -864,7 +897,7 @@ targets."
   (:map prog-mode-map
         ("C-c C-o RET" . global-copilot-mode))
   (:map copilot-mode-map
-        ("<TAB>" . my/copilot-tab)
+        ("<TAB>" . consoli-config/copilot-tab)
         ("C-c C-o n" . copilot-next-completion)
         ("C-c C-o SPC" . copilot-complete)
         ("C-c C-o p" . copilot-previous-completion)
@@ -891,21 +924,18 @@ targets."
 (use-package vterm
   :defer t
   :custom
-  ;; Performance and behavior
   (vterm-max-scrollback 10000)
   (vterm-buffer-name-string "vterm %s")
   (vterm-kill-buffer-on-exit t)
   (vterm-clear-scrollback-when-clearing t)
 
-  ;; Modern shell integration
   (vterm-shell (getenv "SHELL"))
   (vterm-environment '("TERM=xterm-256color"))
 
-  ;; Copy/paste behavior
   (vterm-copy-exclude-prompt t)
   (vterm-use-vterm-prompt-detection-method 'builtin)
 
-  ;; Modern keybindings
+  (vterm-cursor-blink t)
   :bind
   (("C-c t t" . vterm)
    ("C-c t p" . vterm-project)
@@ -922,16 +952,20 @@ targets."
          ("C-y" . vterm-yank)
          ("M-y" . vterm-yank-pop)))
   :config
-  ;; Better prompt detection for modern shells
+  (defun vterm-set-title (title)
+    "Set vterm buffer title."
+    (rename-buffer (format "*vterm: %s*" title) t))
+  (defun vterm-set-path (path)
+    "Set vterm path."
+    (setq default-directory path))
+
   (setq vterm-eval-cmds
         '(("find-file" find-file)
           ("message" message)
+          ("update-pwd" vterm-set-path)
+          ("set-title" vterm-set-title)
           ("vterm-clear-scrollback" vterm-clear-scrollback)))
 
-  ;; Modern cursor behavior
-  (setq vterm-cursor-blink t)
-
-  ;; Integration with project.el for modern workflow
   (defun vterm-project ()
     "Open vterm in project root."
     (interactive)
@@ -941,7 +975,6 @@ targets."
                                 default-directory)))
       (vterm)))
 
-  ;; Toggle vterm in a side window (modern IDE-like behavior)
   (defun vterm-toggle-side ()
     "Toggle vterm in a side window."
     (interactive)
@@ -957,7 +990,6 @@ targets."
               (display-buffer vterm-buffer)
             (vterm))))))
 
-  ;; Modern directory tracking
   (defun vterm-directory-sync ()
     "Sync vterm directory with current buffer's directory."
     (interactive)
@@ -976,18 +1008,6 @@ targets."
          ("C-c t c" . multi-vterm)
          ("C-c t T" . multi-vterm-dedicated-toggle)))
 
-;; Modern shell prompt integration (if using starship, oh-my-zsh, etc.)
-(with-eval-after-load 'vterm
-  ;; Better integration with modern shells
-  (add-to-list 'vterm-eval-cmds '("update-pwd" (lambda (path) (setq default-directory path))))
-
-  ;; Modern terminal title updates
-  (defun vterm-set-title (title)
-    "Set vterm buffer title."
-    (rename-buffer (format "*vterm: %s*" title) t))
-
-  (add-to-list 'vterm-eval-cmds '("set-title" vterm-set-title)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; FONT & FACE CONFIGURATION
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -995,14 +1015,14 @@ targets."
 ;; Default UI font
 (set-face-attribute 'default nil
                     :font ui-font
-                    :height my-font-height-ui)
+                    :height consoli-config/font-height-ui)
 
 ;; Programming mode font
 (add-hook 'prog-mode-hook
           (lambda ()
             (face-remap-add-relative 'default
                                      :family programming-font
-                                     :height my-font-height-programming)))
+                                     :height consoli-config/font-height-programming)))
 
 ;; Smaller font for transient menus
 (add-hook 'transient-setup-buffer-hook
@@ -1173,27 +1193,27 @@ targets."
   :ensure nil
   :commands hl-line-mode
   :config
-  (defcustom my-show-hl-line-after-secs 3
+  (defcustom consoli-config/show-hl-line-after-secs 3
     "Show the hl-line after N seconds of idle time."
     :type 'number
     :group 'hl-line)
 
-  (defvar my-hl-line-ignored-modes
+  (defvar consoli-config/hl-line-ignored-modes
     '(treemacs-mode dired-mode magit-mode)
     "List of major modes where the idle hl-line behavior should be ignored.")
 
-  (defvar-local my-hide-hl-line-timer nil
+  (defvar-local consoli-config/hide-hl-line-timer nil
     "Timer to show the hl-line after a certain idle time.")
 
   (defun consoli-config/setup-idle-hl-line ()
     "Set up hooks to hide/show the hl-line based on idle time and input."
-    (unless (apply #'derived-mode-p my-hl-line-ignored-modes)
-      (add-hook 'post-command-hook #'my-hl-line-reset-on-command nil t)
-      (add-hook 'kill-buffer-hook #'my-cleanup-hl-line-timer nil t)
-      (add-hook 'change-major-mode-hook #'my-cleanup-hl-line-timer nil t)
-      (my-start-idle-timer)))
+    (unless (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)
+      (add-hook 'post-command-hook #'consoli-config/hl-line-reset-on-command nil t)
+      (add-hook 'kill-buffer-hook #'consoli-config/cleanup-hl-line-timer nil t)
+      (add-hook 'change-major-mode-hook #'consoli-config/cleanup-hl-line-timer nil t)
+      (consoli-config/start-idle-timer)))
 
-  (defun my-sync-blamer-face-with-hl-line ()
+  (defun consoli-config/sync-blamer-face-with-hl-line ()
     "Sync blamer-face background with hl-line face background."
     (when (and (featurep 'blamer) (facep 'blamer-face))
       (condition-case err
@@ -1214,41 +1234,41 @@ targets."
                 (blamer--try-render))))
         (error (message "Error syncing blamer face: %s" err)))))
 
-  (defun my-show-hl-line ()
+  (defun consoli-config/show-hl-line ()
     "Enable `hl-line-mode` unless in ignored modes."
     (unless (or hl-line-mode
-                (apply #'derived-mode-p my-hl-line-ignored-modes))
+                (apply #'derived-mode-p consoli-config/hl-line-ignored-modes))
       (hl-line-mode 1)
-      (my-sync-blamer-face-with-hl-line)))
+      (consoli-config/sync-blamer-face-with-hl-line)))
 
-  (defun my-hide-hl-line ()
+  (defun consoli-config/hide-hl-line ()
     "Disable `hl-line-mode` unless in ignored modes."
     (when (and hl-line-mode
-               (not (apply #'derived-mode-p my-hl-line-ignored-modes)))
+               (not (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)))
       (hl-line-mode -1)
-      (my-sync-blamer-face-with-hl-line)))
+      (consoli-config/sync-blamer-face-with-hl-line)))
 
-  (defun my-start-idle-timer ()
+  (defun consoli-config/start-idle-timer ()
     "Start idle timer to show `hl-line-mode` after some time."
-    (unless (apply #'derived-mode-p my-hl-line-ignored-modes)
-      (when my-hide-hl-line-timer
-        (cancel-timer my-hide-hl-line-timer))
+    (unless (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)
+      (when consoli-config/hide-hl-line-timer
+        (cancel-timer consoli-config/hide-hl-line-timer))
       (condition-case err
-          (setq my-hide-hl-line-timer
-                (run-with-idle-timer my-show-hl-line-after-secs nil #'my-show-hl-line))
+          (setq consoli-config/hide-hl-line-timer
+                (run-with-idle-timer consoli-config/show-hl-line-after-secs nil #'consoli-config/show-hl-line))
         (error (message "Error starting idle timer: %s" err)))))
 
-  (defun my-cleanup-hl-line-timer ()
+  (defun consoli-config/cleanup-hl-line-timer ()
     "Cancel and clean up idle hl-line timer."
-    (when my-hide-hl-line-timer
-      (cancel-timer my-hide-hl-line-timer)
-      (setq my-hide-hl-line-timer nil)))
+    (when consoli-config/hide-hl-line-timer
+      (cancel-timer consoli-config/hide-hl-line-timer)
+      (setq consoli-config/hide-hl-line-timer nil)))
 
-  (defun my-hl-line-reset-on-command ()
+  (defun consoli-config/hl-line-reset-on-command ()
     "Disable hl-line and start the idle timer again."
-    (unless (apply #'derived-mode-p my-hl-line-ignored-modes)
-      (my-hide-hl-line)
-      (my-start-idle-timer)))
+    (unless (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)
+      (consoli-config/hide-hl-line)
+      (consoli-config/start-idle-timer)))
 
   :hook (prog-mode . consoli-config/setup-idle-hl-line))
 
@@ -1278,7 +1298,7 @@ targets."
   (when (string-suffix-p "256color" (getenv "TERM"))
     (consoli-config/enable-256color-term)))
 
-(defun my/tab-bar-project-name ()
+(defun consoli-config/tab-bar-project-name ()
   "Return project name for tab, fallback to buffer name."
   (if-let* ((project (project-current)))
       (concat " " (project-name project))
@@ -1297,29 +1317,29 @@ targets."
         tab-bar-close-button-show nil
         tab-bar-show 0
         tab-bar-new-button-show nil
-        tab-bar-tab-name-function #'my/tab-bar-project-name
+        tab-bar-tab-name-function #'consoli-config/tab-bar-project-name
         tab-bar-tab-name-truncated-max 30
         tab-bar-tab-hints nil
         tab-bar-auto-width t
         tab-bar-auto-width-max '((160) 20)))
 
-(defun my/buffer-has-project-p ()
+(defun consoli-config/buffer-has-project-p ()
   "Return non-nil if current buffer belongs to a project."
   (project-current))
 
-(defun my/advice-tab-bar-new-tab (orig-fun &rest args)
+(defun consoli-config/advice-tab-bar-new-tab (orig-fun &rest args)
   "Only create new tab if current buffer has a project."
-  (when (my/buffer-has-project-p)
+  (when (consoli-config/buffer-has-project-p)
     (apply orig-fun args)))
 
-(defun my/setup-project-only-tabs ()
+(defun consoli-config/setup-project-only-tabs ()
   "Configure tabs to only show for projects."
   ;; Hide tab-bar initially
   (setq tab-bar-show 0)
 
   ;; Advice tab creation functions
-  (advice-add 'tab-bar-new-tab :around #'my/advice-tab-bar-new-tab)
-  (advice-add 'tab-bar-new-tab-to :around #'my/advice-tab-bar-new-tab)
+  (advice-add 'tab-bar-new-tab :around #'consoli-config/advice-tab-bar-new-tab)
+  (advice-add 'tab-bar-new-tab-to :around #'consoli-config/advice-tab-bar-new-tab)
 
   ;; Show tab-bar only when we have project tabs
   (add-hook 'tab-bar-tab-post-open-functions
@@ -1339,7 +1359,22 @@ targets."
                                  (when (> (length tabs) 1)
                                    (tab-bar-close-tab (1+ (cl-position tab tabs)))))))))))
 
-(add-hook 'after-init-hook #'my/setup-project-only-tabs)
+(add-hook 'after-init-hook #'consoli-config/setup-project-only-tabs)
+
+(use-package project
+  :ensure nil
+  :config
+  (defun consoli-config/project-switch-to-find-file ()
+    "Switch to a project and immediately run project-find-file."
+    (interactive)
+    (let ((project-current-directory-override
+           (project-prompt-project-dir)))
+      (let ((default-directory project-current-directory-override))
+        (project-find-file))))
+
+  :bind
+  ("C-x p p" . consoli-config/project-switch-to-find-file))
+
 
 (use-package project-tab-groups
   :after project
@@ -1384,6 +1419,7 @@ targets."
       "Set workspace buffer list for consult-buffer.")
     (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
 
+
 (use-package centaur-tabs
   :hook (after-init . centaur-tabs-mode)
   :config
@@ -1401,7 +1437,6 @@ targets."
                   special-mode-hook
                   transient-setup-buffer-hook))
     (add-hook hook #'centaur-tabs-local-mode))
-
   :init
   (defun centaur-tabs-hide-tab (x)
     "Do no to show buffer X in tabs."
@@ -1530,7 +1565,7 @@ targets."
 (setq-default display-time-format "%I:%M")
 (display-time-mode t)
 
-(defun my/hide-modeline ()
+(defun consoli-config/hide-modeline ()
   "Hide the mode-line in the current buffer."
   (setq-local mode-line-format nil))
 
@@ -1541,7 +1576,7 @@ targets."
                 messages-buffer-mode-hook
                 special-mode-hook
                 transient-setup-buffer-hook))
-  (add-hook hook #'my/hide-modeline))
+  (add-hook hook #'consoli-config/hide-modeline))
 
 ;; Org prettify symbols helper functions
 (defvar-local rasmus/org-at-src-begin -1
@@ -1669,7 +1704,7 @@ may not be efficient."
     (let (org-log-done org-log-states)   ; turn off logging
       (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
 
-  (defun my/org-checkbox-todo ()
+  (defun consoli-config/org-checkbox-todo ()
     "Switch header TODO state to DONE when all checkboxes are ticked, to TODO otherwise"
     (let ((todo-state (org-get-todo-state)) beg end)
       (unless (not todo-state)
@@ -1713,7 +1748,8 @@ may not be efficient."
   :after org)
 
 (use-package org-appear
-  :after org)
+  :after org
+  :custom (org-appear-delay 2))
 
 (defface org-checkbox-done-text
   '((t (:foreground "#71696A" :strike-through t)))
@@ -1966,7 +2002,7 @@ may not be efficient."
     (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
 (add-hook 'org-after-todo-statistics-hook #'org-summary-todo)
 
-(defun my/org-checkbox-todo ()
+(defun consoli-config/org-checkbox-todo ()
   "Switch header TODO state to DONE when all checkboxes are ticked, to TODO otherwise"
   (let ((todo-state (org-get-todo-state)) beg end)
     (unless (not todo-state)
@@ -1991,7 +2027,7 @@ may not be efficient."
                 (unless (string-equal todo-state "TODO")
                   (org-todo 'todo)))))))))
 
-(add-hook 'org-checkbox-statistics-hook 'my/org-checkbox-todo)
+(add-hook 'org-checkbox-statistics-hook 'consoli-config/org-checkbox-todo)
 
 (setq
  ;; adapt indentation of content to match its heading
@@ -2086,7 +2122,7 @@ may not be efficient."
   :hook
   (after-save . magit-after-save-refresh-status)
   :init
-  (defun my-setup-magit-hooks ()
+  (defun consoli-config/setup-magit-hooks ()
     (when (magit-git-repo-p default-directory)
       (add-hook 'after-save-hook 'magit-after-save-refresh-status nil t))))
 
@@ -2346,7 +2382,7 @@ may not be efficient."
 (use-package rust-ts-mode
   :defer t)
 
-(defun my/rust-eglot-setup ()
+(defun consoli-config/rust-eglot-setup ()
   "Set up rust-analyzer initialization options for Eglot."
   (setq-local eglot-workspace-configuration
               '((:rust-analyzer
@@ -2380,22 +2416,22 @@ may not be efficient."
                   ;; (:hideClosureInitialization . t)
                   ;; (:hideNamedConstructor . t)
                   )))))
-(add-hook 'rust-ts-mode-hook #'my/rust-eglot-setup)
+(add-hook 'rust-ts-mode-hook #'consoli-config/rust-eglot-setup)
 
-(defface my-rust-unwrap-face
+(defface consoli-config/rust-unwrap-face
   '((t (:inherit error
                  :weight bold
                  :foreground "#AD3E3E")))
   "Face for Rust .unwrap() calls")
 
-(defface my-rust-macro-face
+(defface consoli-config/rust-macro-face
   '((t (:inherit font-lock-function-call-face
                  :slant italic
                  :width expanded
                  :underline t)))
   "Face for Rust todo! macro calls")
 
-(defface my-rust-attribute-face
+(defface consoli-config/rust-attribute-face
   '((t (:inherit font-lock-preprocessor-face
                  :weight light
                  :width expanded
@@ -2403,7 +2439,7 @@ may not be efficient."
                  :foreground "#7e57c2")))
   "Face for Rust attribute items")
 
-(defun my-rust-ts-mode-highlighting ()
+(defun consoli-config/rust-ts-mode-highlighting ()
   "Apply custom tree-sitter highlights for Rust mode."
   (setq-local
    treesit-font-lock-settings
@@ -2434,7 +2470,7 @@ may not be efficient."
      :override t
      '((attribute_item) @my-rust-attribute-face)))))
 
-(add-hook 'rust-ts-mode-hook #'my-rust-ts-mode-highlighting)
+(add-hook 'rust-ts-mode-hook #'consoli-config/rust-ts-mode-highlighting)
 
 (use-package cargo-transient
   :defer t
