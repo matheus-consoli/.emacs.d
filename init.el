@@ -419,7 +419,7 @@
   (completion-styles '(orderless substring basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles partial-completion))))
-  (orderless-component-separator #'orderless-escapable-split-on-space)
+  ;; (orderless-component-separator #'orderless-escapable-split-on-space)
   (orderless-matching-styles
    '(orderless-literal
      orderless-prefixes
@@ -2587,8 +2587,7 @@ may not be efficient."
   ("M-|" . jinx-correct-nearest))
 
 ;; Additional editing settings
-(setq read-extended-command-predicate #'command-completion-default-include-p
-      tab-always-indent 'complete
+(setq tab-always-indent 'complete
       text-mode-ispell-word-completion nil
       pulse-delay 0.03
       pulse-iterations 13)
