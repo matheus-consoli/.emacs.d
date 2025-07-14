@@ -49,13 +49,15 @@
    :files ("lisp/*.el" "contrib/lisp/*.el")))
 
 ;; Compile Elisp files automatically for better performance
-;; (use-package compile-angel
-;;   :demand t
-;;   :custom
-;;   (compile-angel-verbose nil)
-;;   :config
-;;   ;; (add-hook 'emacs-lisp-mode-hook #'compile-angel-on-save-local-mode)
-;;   (compile-angel-on-load-mode))
+(use-package compile-angel
+  :demand t
+  :custom
+  (compile-angel-verbose nil)
+  :config
+  (push "/init.el" compile-angel-excluded-files)
+  (push "/early-init.el" compile-angel-excluded-files)
+
+  (compile-angel-on-load-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; CORE EMACS SETTINGS
@@ -852,6 +854,204 @@ targets."
   :defer t
   :after (yasnippet consult))
 
+(use-package vterm
+  :commands (vterm vterm-other-window)
+  :custom
+  (vterm-max-scrollback 10000)
+  (vterm-buffer-name-string "vterm: %s")
+  (vterm-kill-buffer-on-exit t)
+  (vterm-copy-exclude-prompt t)
+  :config
+  (add-hook 'vterm-mode-hook
+            (lambda ()
+              (face-remap-add-relative 'default
+                                       :family programming-font
+                                       :height consoli-config/font-height-programming))))
+
+(defvar consoli-config/project-terminals (make-hash-table :test 'equal)
+  "Hash table mapping project roots to lists of terminal buffers.")
+
+(defvar consoli-config/terminal-window nil
+  "Window used for displaying terminals.")
+
+(defvar consoli-config/terminal-height 15
+  "Height of terminal window in lines.")
+
+(defun consoli-config/get-project-root ()
+  "Get current project root, compatible with tabspaces."
+  (if-let ((project (project-current)))
+      (project-root project)
+    default-directory))
+
+(defun consoli-config/project-terminal-name (project-root index)
+  "Generate terminal buffer name for PROJECT-ROOT and INDEX."
+  (let ((project-name (if-let* ((project (project-current)))
+                          (project-name project)
+                        (file-name-nondirectory (string-remove-suffix "/" project-root)))))
+    (format "*vterm: %s-%d*" project-name index)))
+
+(defun consoli-config/get-project-terminals (project-root)
+  "Get list of live terminal buffers for PROJECT-ROOT."
+  (seq-filter #'buffer-live-p
+              (gethash project-root consoli-config/project-terminals '())))
+
+(defun consoli-config/add-project-terminal (project-root buffer)
+  "Add BUFFER to PROJECT-ROOT's terminal list."
+  (let ((terminals (consoli-config/get-project-terminals project-root)))
+    (puthash project-root (cons buffer terminals) consoli-config/project-terminals)))
+
+(defun consoli-config/remove-project-terminal (project-root buffer)
+  "Remove BUFFER from PROJECT-ROOT's terminal list."
+  (let ((terminals (consoli-config/get-project-terminals project-root)))
+    (puthash project-root (remove buffer terminals) consoli-config/project-terminals)))
+
+(defun consoli-config/cleanup-dead-terminals ()
+  "Remove dead buffers from project terminals tracking."
+  (maphash (lambda (project-root terminals)
+             (let ((live-terminals (seq-filter #'buffer-live-p terminals)))
+               (if live-terminals
+                   (puthash project-root live-terminals consoli-config/project-terminals)
+                 (remhash project-root consoli-config/project-terminals))))
+           consoli-config/project-terminals))
+
+(defun consoli-config/is-terminal-for-current-project-p (buffer)
+  "Check if BUFFER is a terminal buffer for the current project."
+  (when (and (string-prefix-p "*vterm:" (buffer-name buffer))
+             (buffer-live-p buffer))
+    (let* ((current-project-root (consoli-config/get-project-root))
+           (project-terminals (consoli-config/get-project-terminals current-project-root)))
+      (memq buffer project-terminals))))
+
+;; Terminal Window Management
+(defun consoli-config/create-terminal-window ()
+  "Create a window at the bottom for terminals."
+  (let* ((root-window (frame-root-window))
+         (window (split-window root-window (- consoli-config/terminal-height) 'below)))
+    (setq consoli-config/terminal-window window)
+    ;; Configure window parameters for better integration
+    (set-window-parameter window 'no-other-window t)
+    (set-window-parameter window 'no-delete-other-windows t)
+    window))
+
+(defun consoli-config/get-or-create-terminal-window ()
+  "Get existing terminal window or create new one."
+  (if (and consoli-config/terminal-window
+           (window-live-p consoli-config/terminal-window))
+      consoli-config/terminal-window
+    (consoli-config/create-terminal-window)))
+
+(defun consoli-config/hide-terminal-window ()
+  "Hide the terminal window."
+  (when (and consoli-config/terminal-window
+             (window-live-p consoli-config/terminal-window))
+    (delete-window consoli-config/terminal-window)
+    (setq consoli-config/terminal-window nil)))
+
+(defun consoli-config/terminal-window-visible-p ()
+  "Check if terminal window is currently visible."
+  (and consoli-config/terminal-window
+       (window-live-p consoli-config/terminal-window)))
+
+(defun consoli-config/focus-terminal-window ()
+  "Focus the terminal window if visible."
+  (when (consoli-config/terminal-window-visible-p)
+    (select-window consoli-config/terminal-window)))
+
+(defun consoli-config/new-project-terminal ()
+  "Create a new terminal for the current project."
+  (interactive)
+  (consoli-config/cleanup-dead-terminals)
+  (let* ((project-root (consoli-config/get-project-root))
+         (terminals (consoli-config/get-project-terminals project-root))
+         (index (1+ (length terminals)))
+         (buffer-name (consoli-config/project-terminal-name project-root index))
+         (default-directory project-root))
+
+    (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
+      (with-selected-window terminal-window
+        (let ((buffer (vterm buffer-name)))
+          (consoli-config/add-project-terminal project-root buffer)
+          ;; Refresh centaur-tabs to show the new terminal
+          (when (bound-and-true-p centaur-tabs-mode)
+            (centaur-tabs-display-update))
+          buffer)))))
+
+(defun consoli-config/switch-project-terminal ()
+  "Switch between terminals in the current project."
+  (interactive)
+  (consoli-config/cleanup-dead-terminals)
+  (let* ((project-root (consoli-config/get-project-root))
+         (terminals (consoli-config/get-project-terminals project-root)))
+
+    (cond
+     ((null terminals)
+      (consoli-config/new-project-terminal))
+
+     ((= 1 (length terminals))
+      (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
+        (with-selected-window terminal-window
+          (switch-to-buffer (car terminals)))))
+
+     (t
+      (let* ((terminal-names (mapcar #'buffer-name terminals))
+             (choice (completing-read "Switch to terminal: " terminal-names nil t)))
+        (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
+          (with-selected-window terminal-window
+            (switch-to-buffer choice))))))))
+
+(defun consoli-config/toggle-project-terminal ()
+  "Toggle terminal visibility for current project."
+  (interactive)
+  (if (consoli-config/terminal-window-visible-p)
+      (consoli-config/hide-terminal-window)
+    (progn
+      (consoli-config/switch-project-terminal)
+      (consoli-config/focus-terminal-window))))
+
+(defun consoli-config/kill-project-terminals ()
+  "Kill all terminals for the current project."
+  (interactive)
+  (let* ((project-root (consoli-config/get-project-root))
+         (terminals (consoli-config/get-project-terminals project-root)))
+    (when terminals
+      (dolist (terminal terminals)
+        (when (buffer-live-p terminal)
+          (kill-buffer terminal)))
+      (remhash project-root consoli-config/project-terminals)
+      (when (consoli-config/terminal-window-visible-p)
+        (consoli-config/hide-terminal-window))
+      (message "Killed %d terminal(s) for project" (length terminals)))))
+
+;; Terminal lifecycle management
+(defun consoli-config/cleanup-terminal-on-kill ()
+  "Clean up terminal tracking when buffer is killed."
+  (when (string-match-p "^\\*vterm:" (buffer-name))
+    (let ((project-root (consoli-config/get-project-root)))
+      (consoli-config/remove-project-terminal project-root (current-buffer)))))
+
+(add-hook 'kill-buffer-hook #'consoli-config/cleanup-terminal-on-kill)
+
+;; Hide terminal when switching projects
+(with-eval-after-load 'project
+  (add-hook 'project-switch-hook
+            (lambda ()
+              (consoli-config/hide-terminal-window)
+              (consoli-config/refresh-centaur-tabs))))
+
+;; Integration with your existing mode-line hiding
+(add-hook 'vterm-mode-hook #'consoli-config/hide-modeline)
+
+(defun consoli-config/refresh-centaur-tabs ()
+  "Refresh centaur-tabs display."
+  (when (bound-and-true-p centaur-tabs-mode)
+    (centaur-tabs-display-update)))
+
+;; Refresh tabs when switching terminals
+(advice-add 'consoli-config/switch-project-terminal :after #'consoli-config/refresh-centaur-tabs)
+
+;; Refresh tabs when killing terminals
+(advice-add 'consoli-config/kill-project-terminals :after #'consoli-config/refresh-centaur-tabs)
+
 (use-package consult-org-roam
   :defer t
   :after org-roam
@@ -916,97 +1116,9 @@ targets."
   (aidermacs-watch-files t)
   (aidermacs-backend 'comint)
   (aidermacs-show-diff-after-change t)
-  ;; (aidermacs-default-model "anthropic/claude-opus-4-20250514")
-  (aidermacs-default-model "anthropic/claude-sonnet-4-20250514")
-  ;;(aidermacs-architect-model "anthropic/claude-sonnet-4-20250514"))
+  (aidermacs-default-model "anthropic/claude-opus-4-20250514")
+  ;;(aidermacs-default-model "anthropic/claude-sonnet-4-20250514")
   (aidermacs-architect-model "anthropic/claude-sonnet-4-20250514"))
-
-(use-package vterm
-  :defer t
-  :custom
-  (vterm-max-scrollback 10000)
-  (vterm-buffer-name-string "vterm %s")
-  (vterm-kill-buffer-on-exit t)
-  (vterm-clear-scrollback-when-clearing t)
-
-  (vterm-shell (getenv "SHELL"))
-  (vterm-environment '("TERM=xterm-256color"))
-
-  (vterm-copy-exclude-prompt t)
-  (vterm-use-vterm-prompt-detection-method 'builtin)
-
-  (vterm-cursor-blink t)
-  :bind
-  (("C-c t t" . vterm)
-   ("C-c t p" . vterm-project)
-   ("C-c t s" . vterm-toggle-side)
-   ("C-c t d" . vterm-directory-sync)
-   (:map vterm-mode-map
-         ("C-c C-t" . vterm-copy-mode)
-         ("C-c C-j" . vterm-copy-mode-done)
-         ("C-c C-r" . vterm-reset-cursor-point)
-         ("M-<backspace>" . vterm-send-meta-backspace)
-         ("C-<backspace>" . (lambda () (interactive) (vterm-send-key "<C-backspace>")))
-         ("C-w" . vterm-send-C-w)
-         ("M-w" . kill-ring-save)
-         ("C-y" . vterm-yank)
-         ("M-y" . vterm-yank-pop)))
-  :config
-  (defun vterm-set-title (title)
-    "Set vterm buffer title."
-    (rename-buffer (format "*vterm: %s*" title) t))
-  (defun vterm-set-path (path)
-    "Set vterm path."
-    (setq default-directory path))
-
-  (setq vterm-eval-cmds
-        '(("find-file" find-file)
-          ("message" message)
-          ("update-pwd" vterm-set-path)
-          ("set-title" vterm-set-title)
-          ("vterm-clear-scrollback" vterm-clear-scrollback)))
-
-  (defun vterm-project ()
-    "Open vterm in project root."
-    (interactive)
-    (let* ((project (project-current))
-           (default-directory (if project
-                                  (project-root project)
-                                default-directory)))
-      (vterm)))
-
-  (defun vterm-toggle-side ()
-    "Toggle vterm in a side window."
-    (interactive)
-    (let ((vterm-buffer (get-buffer "*vterm*")))
-      (if (and vterm-buffer (get-buffer-window vterm-buffer))
-          (delete-window (get-buffer-window vterm-buffer))
-        (let ((display-buffer-alist
-               '(("\\*vterm\\*"
-                  (display-buffer-in-side-window)
-                  (side . bottom)
-                  (window-height . 0.3)))))
-          (if vterm-buffer
-              (display-buffer vterm-buffer)
-            (vterm))))))
-
-  (defun vterm-directory-sync ()
-    "Sync vterm directory with current buffer's directory."
-    (interactive)
-    (when (and (derived-mode-p 'vterm-mode)
-               (buffer-file-name))
-      (vterm-send-string (format "cd %s" (file-name-directory (buffer-file-name))))
-      (vterm-send-return))))
-
-(use-package multi-vterm
-  :after vterm
-  :custom
-  (multi-vterm-buffer-name "vterm")
-  (multi-vterm-dedicated-window-height-percent 30)
-  :bind (("C-c t n" . multi-vterm-next)
-         ("C-c t r" . multi-vterm-prev)
-         ("C-c t c" . multi-vterm)
-         ("C-c t T" . multi-vterm-dedicated-toggle)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; FONT & FACE CONFIGURATION
@@ -1361,21 +1473,6 @@ targets."
 
 (add-hook 'after-init-hook #'consoli-config/setup-project-only-tabs)
 
-(use-package project
-  :ensure nil
-  :config
-  (defun consoli-config/project-switch-to-find-file ()
-    "Switch to a project and immediately run project-find-file."
-    (interactive)
-    (let ((project-current-directory-override
-           (project-prompt-project-dir)))
-      (let ((default-directory project-current-directory-override))
-        (project-find-file))))
-
-  :bind
-  ("C-x p p" . consoli-config/project-switch-to-find-file))
-
-
 (use-package project-tab-groups
   :after project
   :config
@@ -1399,6 +1496,11 @@ targets."
   (tabspaces-session t)
   (tabspaces-session-auto-restore nil)
   :config
+  ;; Tabspaces integration for terminals
+  (add-hook 'tabspaces-switch-workspace-finish-hook
+            (lambda ()
+              (consoli-config/hide-terminal-window)
+              (consoli-config/refresh-centaur-tabs)))
   ;; Filter Buffers for Consult-Buffer
   (with-eval-after-load 'consult
     ;; hide full buffer list (still available with "b" prefix)
@@ -1460,13 +1562,25 @@ targets."
        (string-prefix-p " *temp" name)
        (string-prefix-p "*Help" name)
        (string-prefix-p "*mybuf" name)
-       (string-prefix-p "*Warnings" name)
+       (string-prefix-p "*Warnings*" name)
+       (string-prefix-p "*Messages*" name)
+       (string-prefix-p "*Async Native" name)
+       (string-prefix-p "*Native Compile" name)
+       (string-prefix-p "*Compile-Log" name)
        (string-prefix-p "*aidermacs" name)
        (string-prefix-p "*eldoc" name)
+       (string-prefix-p "*scratch*" name)
+       (string-prefix-p "*Backtrace*" name)
+       (string-prefix-p "*Completions*" name)
+       (string-prefix-p "*Embark" name)
 
        ;; Is not magit buffer.
        (and (string-prefix-p "magit" name)
-            (not (file-name-extension name))))))
+            (not (file-name-extension name)))
+
+       ;; Hide non-project terminal buffers (terminals from other projects)
+       (and (string-prefix-p "*vterm:" name)
+            (not (consoli-config/is-terminal-for-current-project-p x))))))
 
   :bind
   (:map centaur-tabs-mode-map
@@ -2705,6 +2819,28 @@ may not be efficient."
 (global-set-key (kbd "ć") (lambda () (interactive) (insert "ç")))
 (global-set-key (kbd "Ć") (lambda () (interactive) (insert "Ç")))
 
+;; Terminal keybindings
+(defvar-keymap consoli-config/terminal-map
+  :doc "Keymap for terminal operations"
+  :repeat t
+  "t" #'consoli-config/toggle-project-terminal
+  "n" #'consoli-config/new-project-terminal
+  "s" #'consoli-config/switch-project-terminal
+  "k" #'consoli-config/kill-project-terminals
+  "f" #'consoli-config/focus-terminal-window)
+
+(global-set-key (kbd "C-`") #'consoli-config/toggle-project-terminal)
+(global-set-key (kbd "C-c t") consoli-config/terminal-map)
+
+;; Which-key integration
+(with-eval-after-load 'which-key
+  (which-key-add-keymap-based-replacements consoli-config/terminal-map
+    "t" "toggle terminal"
+    "n" "new terminal"
+    "s" "switch terminal"
+    "k" "kill terminals"
+    "f" "focus terminal"))
+
 ;; Utility functions
 (global-set-key (kbd "<f9>") 'whitespace-cleanup)
 
@@ -2747,7 +2883,14 @@ may not be efficient."
   "Pulse the sexp that smartparens will operate on."
   (when (bound-and-true-p smartparens-mode)
     (save-excursion
-      (let ((bounds (sp-get-sexp)))
+      ;; Try to get the sexp that will be operated on
+      (let ((bounds (or
+                     ;; First try: get sexp at point
+                     (sp-get-sexp)
+                     ;; Second try: if at beginning of sexp, get the sexp we're in front of
+                     (progn (sp-forward-sexp) (sp-backward-sexp) (sp-get-sexp))
+                     ;; Third try: if at end of sexp, get the sexp we're behind
+                     (progn (sp-backward-sexp) (sp-forward-sexp) (sp-get-sexp)))))
         (when bounds
           (pulse-momentary-highlight-region
            (sp-get bounds :beg)

@@ -687,8 +687,7 @@
   ;; special background
   (setq-local buffer-face-mode-face
               `(:background ,special-bg :foreground ,special-fg :height 0.9))
-  (buffer-face-mode 1)
-  (redraw-frame (selected-frame)))
+  (buffer-face-mode 1))
 
 (defun tale-themes--setup-hooks (special-bg special-fg fringe-bg)
   "Set up autoload hooks for THEME-NAME with SPECIAL-BG and FRINGE-BG colors."
