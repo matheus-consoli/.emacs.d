@@ -191,7 +191,7 @@
      `(eshell-ls-symlink ((t (:foreground ,.yellow))))
 
      ;; Terminal colors
-     `(term-color-black ((t (:foreground ,.bg-main :background ,.bg-main))))
+     `(term-color-black ((t (:foreground ,.fg-main :background ,.bg-main))))
      `(term-color-red ((t (:foreground ,.magenta :background ,.magenta))))
      `(term-color-green ((t (:foreground ,.green :background ,.green))))
      `(term-color-yellow ((t (:foreground ,.yellow :background ,.yellow))))
@@ -219,7 +219,7 @@
      `(ansi-color-bright-white ((t (:foreground ,.fg-popup :background ,.fg-popup))))
 
      ;; Vterm faces
-     `(vterm-color-default ((t (:foreground ,.fg-main :background ,.bg-main))))
+     `(vterm-color-default ((t (:foreground ,.fg-bright :background ,.bg-special))))
      `(vterm-color-black ((t (:foreground ,.bg-contrast :background ,.bg-contrast))))
      `(vterm-color-red ((t (:foreground ,.magenta :background ,.magenta))))
      `(vterm-color-green ((t (:foreground ,.green :background ,.green))))
@@ -655,9 +655,9 @@
      `(eglot-diagnostic-tag-unnecessary-face ((t (:foreground ,.grey-subtle :slant italic))))
 
      ;; Eglot inlay hints (similar to lsp inlay hints)
-     `(eglot-inlay-hint-face ((t (:foreground ,.hint-fg :slant italic :height 0.9))))
-     `(eglot-type-hint-face ((t (:foreground ,.grey-subtle :slant italic :height 0.9))))
-     `(eglot-parameter-hint-face ((t (:foreground ,.hint-fg :slant italic :height 0.9))))
+     `(eglot-inlay-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
+     `(eglot-type-hint-face ((t (:foreground ,.grey-subtle :background unspecified :slant italic :height 0.9))))
+     `(eglot-parameter-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
 
      ;; Eglot code actions (appears in modeline and overlays)
      `(eglot-code-action-face ((t (:foreground ,.yellow)))))))
@@ -675,24 +675,24 @@
                (cons "NOTE"  (list :foreground .blue :weight 'bold))
                (cons "DONE"  (list :foreground .green :weight 'bold)))))))
 
-(defun tale-themes--hooks-function (special-bg special-fg fringe-bg)
-  ;; special fringes
-  (setq-local left-fringe-width 30)
-  (setq-local right-fringe-width 30)
-  (setq-local default-text-properties '(line-spacing 0 line-height 1))
-  (setq-local truncate-lines t)
-  ;;(set-window-fringes (selected-window) 50 50)
-  (face-remap-add-relative 'fringe :background fringe-bg)
+(defun tale-themes--hooks-function (palette)
+  "Apply special face properties using PALETTE."
+  (let-alist palette
+    ;; special fringes
+    (setq-local left-fringe-width 30
+                right-fringe-width 30
+                default-text-properties '(line-spacing 0 line-height 1)
+                truncate-lines t)
+    (face-remap-add-relative 'fringe :background .bg-special)
 
-  ;; special background
-  (setq-local buffer-face-mode-face
-              `(:background ,special-bg :foreground ,special-fg :height 0.9))
-  (buffer-face-mode 1))
+    ;; special background
+    (setq-local buffer-face-mode-face
+                `(:background ,.bg-special :foreground ,.fg-bright :height 0.9))
+    (buffer-face-mode 1)))
 
-(defun tale-themes--setup-hooks (special-bg special-fg fringe-bg)
-  "Set up autoload hooks for THEME-NAME with SPECIAL-BG and FRINGE-BG colors."
+(defun tale-themes--setup-hooks (palette)
+  "Set up autoload hooks with PALETTE colors."
   (when load-file-name
-
     (dolist (hook '(aidermacs-comint-mode-hook
                     aidermacs-vterm-mode-hook
                     compilation-mode-hook
@@ -703,9 +703,10 @@
                     magit-post-unstage-hook
                     magit-post-commit-hook
                     messages-buffer-mode-hook
+                    message-mode-hook
                     special-mode-hook
                     transient-setup-buffer-hook))
-      (add-hook hook (lambda () (tale-themes--hooks-function special-bg special-fg fringe-bg))))
+      (add-hook hook (lambda () (tale-themes--hooks-function palette))))
 
     (add-to-list 'custom-theme-load-path
                  (file-name-as-directory (file-name-directory load-file-name)))))

@@ -59,6 +59,11 @@
 (setq native-comp-compiler-options options)
 (setq native-comp-driver-options options)
 
+
+;; DEBUG
+;; (setq debug-on-error t
+;;       debug-on-message "")
+
 ;; Profile emacs startup
 (add-hook 'emacs-startup-hook
           (lambda ()

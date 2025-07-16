@@ -49,10 +49,8 @@
          (completion-bg . "#F0F0F0"))))
 
   (tale-themes--create-theme 'bright-tale bright-palette)
-  (tale-themes--set-variables 'bright-tale bright-palette))
-
-;;;###autoload
-(tale-themes--setup-hooks "#DFDFE0" "#1A1A1A" "#DFDFE0")
+  (tale-themes--set-variables 'bright-tale bright-palette)
+  (tale-themes--setup-hooks bright-palette))
 
 ;;;###autoload
 (defun bright-tale-theme ()

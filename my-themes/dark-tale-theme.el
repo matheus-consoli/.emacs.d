@@ -8,7 +8,7 @@
        '((bg-main . "#000000")
          (bg-alt . "#0C0C0C")
          (bg-popup . "#0f0f0f")
-         (bg-contrast . "#141414")
+         (bg-contrast . "#121212")
          (bg-code . "#161616")
          (bg-dim . "#171717")
          (bg-inactive-sel . "#2B2B2B")
@@ -56,10 +56,8 @@
          (completion-bg . "#1A1A1A"))))
 
   (tale-themes--create-theme 'dark-tale dark-palette)
-  (tale-themes--set-variables 'dark-tale dark-palette))
-
-;;;###autoload
-(tale-themes--setup-hooks "#080808" "#fcfcfc" "#080808")
+  (tale-themes--set-variables 'dark-tale dark-palette)
+  (tale-themes--setup-hooks dark-palette))
 
 ;;;###autoload
 (defun dark-tale-theme ()

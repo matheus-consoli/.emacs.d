@@ -225,6 +225,13 @@
 ;;;; DEVELOPMENT TOOLS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun consoli-config/eglot-mode-if-available ()
+  "Start eglot if a server is available for this mode."
+  (require 'eglot)
+  (when-let* ((lookup-result (eglot--lookup-mode major-mode)))
+    (when (cdr lookup-result)
+      (eglot-ensure))))
+
 ;; Eglot - LSP client
 (use-package eglot
   :defer t
@@ -280,7 +287,7 @@
               ("C-c l v" . consult-eglot-symbols)
               ("<f4>" . eglot-inlay-hints-mode))
 
-  :hook ((prog-mode . eglot-ensure)
+  :hook ((prog-mode . consoli-config/eglot-mode-if-available)
          (eglot-managed-mode . consoli-config/eglot-setup-completion)
          (eglot-managed-mode . eglot-inlay-hints-mode)))
 
@@ -879,7 +886,7 @@ targets."
 
 (defun consoli-config/get-project-root ()
   "Get current project root, compatible with tabspaces."
-  (if-let ((project (project-current)))
+  (if-let* ((project (project-current)))
       (project-root project)
     default-directory))
 
@@ -1113,12 +1120,16 @@ targets."
   :custom
   (aidermacs-auto-commits nil)
   (aidermacs-default-chat-mode 'architect)
+  (aidermacs-backend 'vterm)
+  ;; watch for comments ending with `AI` (vterm only)
   (aidermacs-watch-files t)
-  (aidermacs-backend 'comint)
-  (aidermacs-show-diff-after-change t)
+  (aidermacs-vterm-use-theme-colors nil)
+  (aidermacs-show-diff-after-change nil)
   (aidermacs-default-model "anthropic/claude-opus-4-20250514")
-  ;;(aidermacs-default-model "anthropic/claude-sonnet-4-20250514")
-  (aidermacs-architect-model "anthropic/claude-sonnet-4-20250514"))
+  (aidermacs-architect-model "anthropic/claude-sonnet-4-20250514")
+  ;; (aidermacs-extra-args '("--reasoning-effort high"))
+  (aidermacs-global-read-only-files '("~/Projects/templates/rust-conventions.md"))
+  (aidermacs-project-read-only-files '("CONVENTIONS.md" "README.md")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; FONT & FACE CONFIGURATION
@@ -1208,49 +1219,47 @@ targets."
 (use-package nerd-icons
   :defer t)
 (use-package nerd-icons-completion
-  :defer t
   :after marginalia
-  :config
-  (nerd-icons-completion-mode)
-  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+  :hook (marginalia-mode . nerd-icons-completion-marginalia-setup)
+  :init
+  (nerd-icons-completion-mode))
 
 (use-package all-the-icons-nerd-fonts
   :defer t
-  :straight
-  (all-the-icons-nerd-fonts :host github :repo "mohkale/all-the-icons-nerd-fonts")
+  :straight (:host github :repo "mohkale/all-the-icons-nerd-fonts")
   :after all-the-icons
-  :demand t
-  :config
+  :init
   (all-the-icons-nerd-fonts-prefer))
 
 (use-package doom-themes
   :defer t
-  :config
-  (setq doom-themes-enable-bold t
-        ;; doom-themes-treemacs-theme "doom-colors"
-        doom-themes-enable-italic t)
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-treemacs-theme "doom-colors")
+  (doom-themes-enable-italic t)
+  :init
   (doom-themes-treemacs-config)
   (doom-themes-org-config))
 
 (use-package kaolin-themes
-  :init
-  (setq kaolin-themes-bold t
-        kaolin-themes-italic t
-        kaolin-themes-italic-comments t
-        kaolin-themes-distinct-parentheses t
-        kaolin-themes-distinct-fringe nil
-        kaolin-themes-comments-style 'alt
-        kaolin-themes-hl-line-colored t
-        kaolin-themes-underline t)
+  :custom
+  (kaolin-themes-bold t)
+  (kaolin-themes-italic t)
+  (kaolin-themes-italic-comments t)
+  (kaolin-themes-distinct-parentheses t)
+  (kaolin-themes-distinct-fringe nil)
+  (kaolin-themes-comments-style 'alt)
+  (kaolin-themes-hl-line-colored t)
+  (kaolin-themes-underline t)
   :defer t)
 
 (use-package spacemacs-theme
   :defer t
-  :config
-  (setq spacemacs-theme-comment-bg nil
-        spacemacs-theme-keyword-italic t
-        spacemacs-theme-org-bold t
-        spacemacs-theme-comment-italic t))
+  :custom
+  (spacemacs-theme-comment-bg nil)
+  (spacemacs-theme-keyword-italic t)
+  (spacemacs-theme-org-bold t)
+  (spacemacs-theme-comment-italic t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; THEME CONFIGURATION
@@ -1338,7 +1347,7 @@ targets."
                     (blamer--clear-overlay)
                     (when (fboundp 'blamer--try-render)
                       (blamer--try-render)))))
-            (set-face-attribute 'blamer-face nil :background nil)
+            (set-face-attribute 'blamer-face nil :background 'unspecified)
             (when (and (bound-and-true-p blamer-mode)
                        (fboundp 'blamer--clear-overlay))
               (blamer--clear-overlay)
@@ -1527,18 +1536,6 @@ targets."
   :config
   (centaur-tabs-headline-match)
   (centaur-tabs-change-fonts alternative-programming-font 100)
-
-  ;; hide tabs for some modes
-  (dolist (hook '(aidermacs-comint-mode-hook
-                  aidermacs-vterm-mode-hook
-                  compilation-mode-hook
-                  git-commit-mode-hook
-                  magit-mode-hook
-                  messages-buffer-mode-hook
-                  org-src-mode-hook
-                  special-mode-hook
-                  transient-setup-buffer-hook))
-    (add-hook hook #'centaur-tabs-local-mode))
   :init
   (defun centaur-tabs-hide-tab (x)
     "Do no to show buffer X in tabs."
@@ -1582,6 +1579,18 @@ targets."
        (and (string-prefix-p "*vterm:" name)
             (not (consoli-config/is-terminal-for-current-project-p x))))))
 
+  ;; hide tabs for some modes
+  (dolist (hook '(aidermacs-comint-mode-hook
+                  aidermacs-vterm-mode-hook
+                  compilation-mode-hook
+                  git-commit-mode-hook
+                  magit-mode-hook
+                  message-mode-hook
+                  messages-buffer-mode-hook
+                  org-src-mode-hook
+                  special-mode-hook
+                  transient-setup-buffer-hook))
+    (add-hook hook #'centaur-tabs-local-mode))
   :bind
   (:map centaur-tabs-mode-map
         (([remap next-buffer] . centaur-tabs-forward)
@@ -1686,6 +1695,7 @@ targets."
 (dolist (hook '(aidermacs-comint-mode-hook
                 aidermacs-vterm-mode-hook
                 compilation-mode-hook
+                vterm-mode-hook
                 git-commit-mode-hook
                 messages-buffer-mode-hook
                 special-mode-hook
@@ -2780,11 +2790,11 @@ may not be efficient."
       ibuffer-expert t)
 
 (use-package clipetty
-  :hook (after-init . load-clippety-only-in-term))
+  :hook (after-init . load-clipetty-only-in-term))
 
-(defun load-clippety-only-in-term ()
+(defun load-clipetty-only-in-term ()
   (when (not (display-graphic-p))
-    (global-clippety-mode t)))
+    (global-clipetty-mode t)))
 
 (setq focus-follows-mouse t)
 
