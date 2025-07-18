@@ -2554,20 +2554,20 @@ may not be efficient."
                   )))))
 (add-hook 'rust-ts-mode-hook #'consoli-config/rust-eglot-setup)
 
-(defface consoli-config/rust-unwrap-face
+(defface consoli-config-rust-unwrap-face
   '((t (:inherit error
                  :weight bold
                  :foreground "#AD3E3E")))
   "Face for Rust .unwrap() calls")
 
-(defface consoli-config/rust-macro-face
+(defface consoli-config-rust-macro-face
   '((t (:inherit font-lock-function-call-face
                  :slant italic
                  :width expanded
                  :underline t)))
   "Face for Rust todo! macro calls")
 
-(defface consoli-config/rust-attribute-face
+(defface consoli-config-rust-attribute-face
   '((t (:inherit font-lock-preprocessor-face
                  :weight light
                  :width expanded
@@ -2587,8 +2587,8 @@ may not be efficient."
      :feature 'unwrap-call
      :override t
      '(((field_expression
-         field: (field_identifier) @consoli-config/rust-unwrap-face)
-        (:match "^unwrap$" @consoli-config/rust-unwrap-face))))
+         field: (field_identifier) @consoli-config-rust-unwrap-face)
+        (:match "^unwrap$" @consoli-config-rust-unwrap-face))))
 
     ;; Highlight todo!() macro
     (treesit-font-lock-rules
@@ -2596,15 +2596,15 @@ may not be efficient."
      :feature 'todo-macro
      :override t
      '(((macro_invocation
-         (identifier) @consoli-config/rust-macro-face)
-        (:match "^todo$" @consoli-config/rust-macro-face))))
+         (identifier) @consoli-config-rust-macro-face)
+        (:match "^todo$" @consoli-config-rust-macro-face))))
 
     ;; Highlight #[attribute] items
     (treesit-font-lock-rules
      :language 'rust
      :feature 'attribute-items
      :override t
-     '((attribute_item) @consoli-config/rust-attribute-face)))))
+     '((attribute_item) @consoli-config-rust-attribute-face)))))
 
 (add-hook 'rust-ts-mode-hook #'consoli-config/rust-ts-mode-highlighting)
 
