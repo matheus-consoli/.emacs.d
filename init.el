@@ -39,7 +39,7 @@
       straight-vc-git-default-clone-depth 1)
 
 (straight-use-package 'use-package)
-(setq use-package-compute-statistics t)
+;; (setq use-package-compute-statistics t)
 
 (straight-use-package
  '(org
@@ -54,9 +54,14 @@
   :custom
   (compile-angel-verbose nil)
   :config
-  (push "/init.el" compile-angel-excluded-files)
-  (push "/early-init.el" compile-angel-excluded-files)
-
+  (setq compile-angel-excluded-files
+        (append '("/init.el"
+                  "/early-init.el"
+                  "/.mc-lists.el" ;; multiple-cursors
+                  "/my-themes/tale-themes-common.el"
+                  "/my-themes/dark-tale-themes.el"
+                  "/my-themes/bright-tale-themes.el")
+                compile-angel-excluded-files))
   (compile-angel-on-load-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -140,6 +145,13 @@
   :config
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
+
+(use-package helpful
+  :bind
+  ((("C-h f" . helpful-callable)
+    ("C-h v" . helpful-variable)
+    ("C-h k" . helpful-key)
+    ("C-h x" . helpful-command))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; COMPLETION FRAMEWORK
@@ -304,7 +316,7 @@
 
 (use-package eldoc-box
   :custom
-  (eldoc-box-max-pixel-width 600)
+  (eldoc-box-max-pixel-width 900)
   (eldoc-box-max-pixel-height 400)
   (eldoc-box-clear-with-C-g t)
   (eldoc-box-cleanup-internval 0.3)
@@ -317,8 +329,8 @@
            (window-edges (window-pixel-edges window))
            (window-right (nth 2 window-edges))
            (window-bottom (nth 3 window-edges))
-           (margin-x 20)  ; Pixels from right edge
-           (margin-y 40)) ; Pixels from bottom
+           (margin-x 60)  ; Pixels from right edge
+           (margin-y 55)) ; Pixels from bottom
       (cons (- window-right width margin-x)
             (- window-bottom height margin-y))))
 
@@ -1120,7 +1132,7 @@ targets."
   :custom
   (aidermacs-auto-commits nil)
   (aidermacs-default-chat-mode 'architect)
-  (aidermacs-backend 'vterm)
+  (aidermacs-backend 'comint)
   ;; watch for comments ending with `AI` (vterm only)
   (aidermacs-watch-files t)
   (aidermacs-vterm-use-theme-colors nil)
@@ -1267,8 +1279,8 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . dark-tale)
-    (cli . dark-tale))
+  '((gui . witch-tale)
+    (cli . bright-tale))
   "Theme configuration for different display types.")
 
 (defun consoli-config/apply-theme ()
@@ -2459,7 +2471,7 @@ may not be efficient."
   (treesitter-context-frame-position 'top-right)
   (treesitter-context-frame-padding 1)
   (treesitter-context-frame-offset-x -3)
-  (treesitter-context-frame-offset-y 50)
+  (treesitter-context-frame-offset-y 70)
   (treesitter-context-show-context-always nil) ;; only show when the outmost parent is invisible
   (treesitter-context-frame-autohide-timeout 8)
   (treesitter-context-show-line-number nil)
@@ -2575,8 +2587,8 @@ may not be efficient."
      :feature 'unwrap-call
      :override t
      '(((field_expression
-         field: (field_identifier) @my-rust-unwrap-face)
-        (:match "^unwrap$" @my-rust-unwrap-face))))
+         field: (field_identifier) @consoli-config/rust-unwrap-face)
+        (:match "^unwrap$" @consoli-config/rust-unwrap-face))))
 
     ;; Highlight todo!() macro
     (treesit-font-lock-rules
@@ -2584,15 +2596,15 @@ may not be efficient."
      :feature 'todo-macro
      :override t
      '(((macro_invocation
-         (identifier) @my-rust-macro-face)
-        (:match "^todo$" @my-rust-macro-face))))
+         (identifier) @consoli-config/rust-macro-face)
+        (:match "^todo$" @consoli-config/rust-macro-face))))
 
     ;; Highlight #[attribute] items
     (treesit-font-lock-rules
      :language 'rust
      :feature 'attribute-items
      :override t
-     '((attribute_item) @my-rust-attribute-face)))))
+     '((attribute_item) @consoli-config/rust-attribute-face)))))
 
 (add-hook 'rust-ts-mode-hook #'consoli-config/rust-ts-mode-highlighting)
 

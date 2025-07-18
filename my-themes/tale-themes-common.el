@@ -29,6 +29,7 @@
      `(tooltip ((t (:background ,.bg-popup :foreground ,.fg-main))))
      `(button ((t (:foreground ,.purple :underline t))))
      `(header-line ((t (:background ,.bg-alt :foreground ,.grey-docstring :weight normal))))
+     `(widget-field ((t (:background ,.bg-contrast :foreground ,.fg-main :box (:line-width 1 :color ,.grey-border)))))
 
      ;; Selection-related faces
      `(lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
@@ -40,6 +41,7 @@
      `(match-overlay ((t (:background ,.bg-selection :foreground ,.green))))
      `(rectangle-preview ((t (:background ,.primary-selection))))
      `(region-inactive ((t (:background ,.inactive-selection))))
+     `(evil-ex-lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
 
      ;; Specific minibuffer-related faces
      `(completions-common-part ((t (:foreground ,.purple))))
@@ -75,19 +77,16 @@
      `(font-lock-type-face ((t (:foreground ,.blue))))
      `(font-lock-variable-name-face ((t (:foreground ,.lavender :slant italic))))
      `(font-lock-warning-face ((t (:foreground ,.warning-muted :bold t))))
-     `(treesit-font-lock-face-function-call     ((t (:foreground ,.purple))))
-     `(treesit-font-lock-face-function-name     ((t (:foreground ,.purple))))
-     `(treesit-font-lock-face-type              ((t (:foreground ,.blue))))
-     `(treesit-font-lock-face-variable-name     ((t (:foreground ,.lavender :slant italic))))
-     `(treesit-font-lock-face-constant          ((t (:foreground ,.purple :weight bold))))
-     `(treesit-font-lock-face-keyword           ((t (:foreground ,.magenta :slant italic))))
-     `(treesit-font-lock-face-string            ((t (:foreground ,.yellow))))
-     `(treesit-font-lock-face-comment           ((t (:foreground ,.grey-comment-blue :slant italic))))
-     `(treesit-font-lock-face-preprocessor      ((t (:foreground ,.yellow :weight bold))))
-     `(treesit-font-lock-face-property-name     ((t (:foreground ,.blue))))
-     `(treesit-font-lock-face-tag               ((t (:foreground ,.magenta))))
-     `(treesit-font-lock-face-attribute         ((t (:foreground ,.lavender :slant italic))))
-     `(treesit-font-lock-face-punctuation       ((t (:foreground ,.grey-border))))
+
+     ;; Tree-sitter faces (standard naming)
+     `(treesit-font-lock-function-call-face ((t (:foreground ,.purple))))
+     `(treesit-font-lock-variable-use-face ((t (:foreground ,.lavender :slant italic))))
+     `(treesit-font-lock-property-use-face ((t (:foreground ,.blue))))
+     `(treesit-font-lock-number-face ((t (:foreground ,.purple :weight bold))))
+     `(treesit-font-lock-operator-face ((t (:foreground ,.magenta))))
+     `(treesit-font-lock-bracket-face ((t (:foreground ,.grey-border))))
+     `(treesit-font-lock-delimiter-face ((t (:foreground ,.grey-border))))
+     `(treesit-font-lock-escape-face ((t (:foreground ,.yellow :weight bold))))
 
      ;; Whitespace
      `(whitespace-space ((t (:foreground ,.grey-border))))
@@ -136,9 +135,13 @@
      `(org-block-begin-line ((t (:foreground ,.grey-comment-blue :extend t))))
      `(org-quote ((t (:background ,.bg-contrast :slant italic :extend t))))
      `(org-checkbox-done-text ((t (:foreground ,.grey-border :strike-through t))))
+     `(org-table ((t (:foreground ,.fg-main :background ,.bg-code :box (:line-width 1 :color ,.grey-border)))))
+
      `(org-superstar-leading-bullet-face ((t (:foreground ,.grey-subtle))))
      `(org-superstar-item-bullet-face ((t (:foreground ,.purple))))
+
      `(org-roam-node-highlight-face ((t (:background ,.focus-bg))))
+
      `(org-modern-tag-face ((t (:foreground ,.blue :background ,.bg-contrast :box (:line-width -1 :color ,.bg-contrast :style released-button) :height 0.9))))
 
      ;; magit, diffs, and VC
@@ -152,6 +155,7 @@
      `(magit-blame-name ((t (:foreground ,.purple))))
      `(magit-blame-date ((t (:foreground ,.yellow))))
      `(magit-blame-summary ((t (:foreground ,.fg-bright))))
+
      `(diff-added ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg))))
      `(diff-removed ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg))))
      `(diff-changed ((t (:background ,.diff-changed-bg :foreground ,.diff-changed-fg))))
@@ -166,12 +170,18 @@
      `(ediff-fine-diff-C ((t (:background ,.yellow :foreground ,.bg-main))))
      `(ediff-even-diff-face ((t (:inherit default))))
      `(ediff-odd-diff-face ((t (:background ,.bg-code))))
+
      `(git-gutter:added ((t (:foreground ,.diff-added-fg))))
      `(git-gutter:deleted ((t (:foreground ,.diff-removed-fg))))
      `(git-gutter:modified ((t (:foreground ,.diff-changed-fg))))
+
      `(git-gutter-fr:added ((t (:foreground ,.diff-added-fg))))
      `(git-gutter-fr:deleted ((t (:foreground ,.diff-removed-fg))))
      `(git-gutter-fr:modified ((t (:foreground ,.diff-changed-fg))))
+     `(transient-argument ((t (:foreground ,.yellow :weight bold))))
+
+     ;; olivetti
+     `(olivetti-fringe ((t (:background ,.bg-main))))
 
      ;; markdown-mode
      `(markdown-header-face ((t (:foreground ,.purple))))
@@ -189,6 +199,7 @@
      `(eshell-ls-directory ((t (:foreground ,.purple))))
      `(eshell-ls-executable ((t (:foreground ,.green))))
      `(eshell-ls-symlink ((t (:foreground ,.yellow))))
+     `(ielm-prompt ((t (:foreground ,.teal :weight bold))))
 
      ;; Terminal colors
      `(term-color-black ((t (:foreground ,.fg-main :background ,.bg-main))))
@@ -333,6 +344,8 @@
      `(avy-overlay-background-face ((t (:background ,.bg-code))))
      `(pulse-highlight-face ((t (:background ,.secondary-selection))))
      `(pulse-highlight-start-face ((t (:background ,.visual-selection))))
+     `(multiple-cursors-cursor ((t (:background ,.magenta :foreground ,.bg-main))))
+     `(highlight-symbol-face ((t (:background ,.focus-bg :foreground ,.lavender))))
 
      ;; blamer-mode
      `(blamer-face ((t (:foreground ,.grey-subtle :italic t :height 0.9 :weight light))))
@@ -408,6 +421,7 @@
      `(corfu-quick1 ((t (:foreground ,.purple :weight bold))))
      `(corfu-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
+
      `(vertico-current ((t (:background ,.bg-selection :foreground ,.fg-bright))))
      `(vertico-group-title ((t (:foreground ,.purple :weight bold))))
      `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t))))
@@ -417,6 +431,7 @@
      `(vertico-quick3 ((t (:foreground ,.yellow :weight bold))))
      `(vertico-posframe ((t (:background ,.bg-main))))
      `(vertico-posframe-border ((t (:background ,.bg-main))))
+
      `(marginalia-key ((t (:foreground ,.purple))))
      `(marginalia-type ((t (:foreground ,.magenta))))
      `(marginalia-modified ((t (:foreground ,.yellow))))
@@ -437,6 +452,7 @@
      `(marginalia-mode ((t (:foreground ,.magenta))))
      `(marginalia-variable ((t (:foreground ,.purple))))
      `(marginalia-version ((t (:foreground ,.green))))
+
      `(orderless-match-face-0 ((t (:foreground ,.purple :weight bold))))
      `(orderless-match-face-1 ((t (:foreground ,.magenta :weight bold))))
      `(orderless-match-face-2 ((t (:foreground ,.green :weight bold))))
@@ -535,8 +551,8 @@
      `(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
      `(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
      `(linum-relative-current-face ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
-     `(line-number-current-line-hl ((t (:foreground ,.purple :background ,.bg-selection :weight bold :height 1.0))))
-     `(line-number-relative ((t (:foreground ,.grey-subtle :background ,.bg-main :height 0.9))))
+     ;;`(line-number-current-line-hl ((t (:foreground ,.purple :background ,.bg-selection :weight bold :height 1.0))))
+     ;;`(line-number-relative ((t (:foreground ,.grey-subtle :background ,.bg-main :height 0.9))))
      `(line-number-relative-current ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
 
      ;; Parentheses
@@ -587,6 +603,8 @@
 
      ;; Misc Packages
      `(yas-field-highlight-face ((t (:background ,.bg-selection))))
+     `(yas-snippet-field ((t (:background ,.focus-bg :foreground ,.purple :box (:line-width -1 :color ,.purple)))))
+
      `(consult-preview-line ((t (:background ,.bg-contrast))))
      `(consult-highlight-match-face ((t (:foreground ,.purple :weight bold))))
      `(consult-file ((t (:foreground ,.fg-main))))
@@ -605,22 +623,28 @@
      `(aidermacs-chat-response-face ((t (:foreground ,.fg-main))))
      `(aidermacs-chat-model-face ((t (:foreground ,.yellow :slant italic))))
      `(aidermacs-architect-mode-line-face ((t (:foreground ,.teal :weight bold))))
+
      `(hl-todo ((t (:foreground ,.yellow :weight bold))))
      `(hl-fixme ((t (:foreground ,.magenta :weight bold))))
      `(hl-note ((t (:foreground ,.blue :weight bold))))
      `(hl-done ((t (:foreground ,.green :weight bold))))
+
      `(deft-current-line-face ((t (:background ,.bg-contrast))))
      `(deft-file-face ((t (:foreground ,.purple))))
      `(deft-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(deft-summary-face ((t (:foreground ,.grey-subtle :slant italic))))
+
      `(conventional-commit-type-face ((t (:foreground ,.magenta :weight bold))))
      `(conventional-commit-scope-face ((t (:foreground ,.yellow :slant italic))))
      `(conventional-commit-breaking-change-face ((t (:foreground ,.error-muted :weight bold))))
+
      `(forge-topic-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(forge-pr-author-face ((t (:foreground ,.purple))))
      `(forge-label-face ((t (:background ,.bg-selection :foreground ,.fg-main :box (:line-width -1 :color ,.bg-selection :style released-button) :height 0.9))))
+
      `(github-review-comment-face ((t (:background ,.bg-contrast))))
      `(github-review-suggestion-face ((t (:background ,.diff-changed-bg :foreground ,.diff-changed-fg))))
+
      `(expand-region ((t (:background ,.visual-selection))))
      `(er--highlight-face ((t (:background ,.visual-selection))))
      `(symbol-overlay-default-face ((t (:background ,.focus-bg))))
@@ -630,13 +654,14 @@
      `(cognitive-complexity-highlight-face ((t (:background ,.warning-muted :foreground ,.bg-main))))
      `(vr/match-face ((t (:background ,.purple :foreground ,.bg-main))))
      `(better-jumper-marker-face ((t (:foreground ,.rose :underline t))))
-     `(my-rust-macro-face ((t (:inherit font-lock-function-call-face :foreground ,.magenta :slant italic :weight bold :underline (:style line :color ,.magenta)))))
-     `(my-rust-attribute-face ((t (:inherit font-lock-preprocessor-face :foreground ,.lavender :slant italic))))
+     `(consoli-config/rust-macro-face ((t (:inherit font-lock-function-call-face :foreground ,.magenta :slant italic :weight bold :underline (:style line :color ,.magenta)))))
+     `(consoli-config/rust-attribute-face ((t (:inherit font-lock-preprocessor-face :foreground ,.lavender :slant italic))))
      `(jinx-correcting-face ((t (:underline (:style wave :color ,.yellow)))))
      `(jinx-suggestion-face ((t (:foreground ,.green :weight bold))))
      `(undo-tree-visualizer-current-face ((t (:foreground ,.green :weight bold))))
      `(undo-tree-visualizer-active-branch-face ((t (:foreground ,.purple))))
      `(undo-tree-visualizer-register-face ((t (:foreground ,.yellow))))
+     `(undo-fu-session ((t (:foreground ,.green :background ,.bg-contrast :slant italic))))
      `(annotate-highlight-face ((t (:underline (:style line :color ,.purple)))))
      `(annotate-annotation-text-face ((t (:foreground ,.grey-subtle :slant italic :height 0.9))))
      `(ibuffer-current-buffer-face ((t (:background ,.bg-contrast :weight bold))))
@@ -653,14 +678,20 @@
      `(eglot-mode-line ((t (:foreground ,.purple :weight bold))))
      `(eglot-diagnostic-tag-deprecated-face ((t (:strike-through t :foreground ,.grey-subtle))))
      `(eglot-diagnostic-tag-unnecessary-face ((t (:foreground ,.grey-subtle :slant italic))))
-
      ;; Eglot inlay hints (similar to lsp inlay hints)
      `(eglot-inlay-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
      `(eglot-type-hint-face ((t (:foreground ,.grey-subtle :background unspecified :slant italic :height 0.9))))
      `(eglot-parameter-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
-
      ;; Eglot code actions (appears in modeline and overlays)
-     `(eglot-code-action-face ((t (:foreground ,.yellow)))))))
+     `(eglot-code-action-indicator-face ((t (:foreground ,.yellow :background ,.bg-main))))
+
+     ;; Calendar faces
+     `(calendar-today ((t (:foreground ,.yellow :weight bold :underline t))))
+     `(diary ((t (:foreground ,.rose :slant italic))))
+
+     ;; Multimedia faces
+     `(pdf-view-link ((t (:foreground ,.blue :underline t))))
+     `(emms-playlist-selected-face ((t (:background ,.bg-selection :foreground ,.fg-bright :weight bold)))))))
 
 (defun tale-themes--set-variables (theme-name palette)
   "Set theme variables for THEME-NAME using PALETTE."
@@ -695,6 +726,7 @@
   (when load-file-name
     (dolist (hook '(aidermacs-comint-mode-hook
                     aidermacs-vterm-mode-hook
+                    vterm-mode-hook
                     compilation-mode-hook
                     git-commit-mode-hook
                     magit-mode-hook
