@@ -93,7 +93,7 @@
 (defconst consoli-config/font-height-ui 130
   "Default font height for UI elements.")
 
-(defconst consoli-config/font-height-programming 130
+(defconst consoli-config/font-height-programming 120
   "Default font height for programming modes.")
 
 ;; Core Emacs configuration
@@ -1132,7 +1132,7 @@ targets."
   :custom
   (aidermacs-auto-commits nil)
   (aidermacs-default-chat-mode 'architect)
-  (aidermacs-backend 'comint)
+  (aidermacs-backend 'vterm)
   ;; watch for comments ending with `AI` (vterm only)
   (aidermacs-watch-files t)
   (aidermacs-vterm-use-theme-colors nil)
@@ -1140,7 +1140,7 @@ targets."
   (aidermacs-default-model "anthropic/claude-opus-4-20250514")
   (aidermacs-architect-model "anthropic/claude-sonnet-4-20250514")
   ;; (aidermacs-extra-args '("--reasoning-effort high"))
-  (aidermacs-global-read-only-files '("~/Projects/templates/rust-conventions.md"))
+  ;; (aidermacs-global-read-only-files '("~/Projects/templates/rust-conventions.md" "~/Projects/templates/logging-conventions.md"))
   (aidermacs-project-read-only-files '("CONVENTIONS.md" "README.md")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1279,7 +1279,7 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . witch-tale)
+  '((gui . dark-tale)
     (cli . bright-tale))
   "Theme configuration for different display types.")
 
@@ -1317,7 +1317,7 @@ targets."
 (tool-bar-mode -1)
 
 ;; Cursor configuration
-(setq-default cursor-type '(bar . 1)
+(setq-default cursor-type '(bar . 2)
               blink-cursor-delay 5
               blink-cursor-interval 0.75
               cursor-in-non-selected-windows '(hbar . 1))

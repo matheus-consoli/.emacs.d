@@ -57,7 +57,7 @@
 
   (tale-themes--create-theme 'witch-tale witch-palette)
   (tale-themes--set-variables 'witch-tale witch-palette)
-  (tale-themes--setup-hooks witch-palette))
+  (tale-themes--setup-hooks 'witch-tale witch-palette))
 
 ;;;###autoload
 (defun witch-tale-theme ()

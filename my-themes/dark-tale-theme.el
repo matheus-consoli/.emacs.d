@@ -57,7 +57,7 @@
 
   (tale-themes--create-theme 'dark-tale dark-palette)
   (tale-themes--set-variables 'dark-tale dark-palette)
-  (tale-themes--setup-hooks dark-palette))
+  (tale-themes--setup-hooks 'dark-tale dark-palette))
 
 ;;;###autoload
 (defun dark-tale-theme ()

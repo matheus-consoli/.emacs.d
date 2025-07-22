@@ -50,7 +50,7 @@
 
   (tale-themes--create-theme 'bright-tale bright-palette)
   (tale-themes--set-variables 'bright-tale bright-palette)
-  (tale-themes--setup-hooks bright-palette))
+  (tale-themes--setup-hooks 'bright-tale bright-palette))
 
 ;;;###autoload
 (defun bright-tale-theme ()

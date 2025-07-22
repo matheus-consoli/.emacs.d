@@ -1,12 +1,12 @@
 ;;; tale-themes-common.el --- Common theme generator for Tale themes -*- lexical-binding: t; -*-
 
 (defun tale-themes--create-theme (theme-name palette)
-  "Create a theme with THEME-NAME, THEME-DESCRIPTION using PALETTE."
+  "Create a theme with THEME-NAME using PALETTE."
   (let-alist palette
     (custom-theme-set-faces
      theme-name
      ;; BASIC FACES
-     `(cursor ((t (:background ,.fg-bright))))
+     `(cursor ((t (:background ,.lavender))))
      `(default ((t (:background ,.bg-main :foreground ,.fg-main))))
      `(fill-column-indicator ((t (:background ,.bg-dim))))
      `(fringe ((t (:background ,.bg-main))))
@@ -365,6 +365,7 @@
      `(centaur-tabs-unselected ((t (:background ,.bg-contrast :foreground ,.grey-subtle))))
      `(centaur-tabs-unselected-modified ((t (:background ,.bg-contrast :foreground ,.yellow))))
      `(centaur-tabs-bar ((t (:background ,.bg-main))))
+     `(tab-line ((t (:background ,.bg-dim))))
 
      ;; LSP mode
      `(lsp-face-highlight-read ((t (:background ,.focus-bg))))
@@ -698,7 +699,7 @@
   (let-alist palette
     (custom-theme-set-variables
      theme-name
-     '(linum-format " %3i ")
+     `(linum-format " %3i ")
      `(hl-todo-keyword-faces
        ',(list (cons "TODO"  (list :foreground .yellow :weight 'bold))
                (cons "FIXME" (list :foreground .magenta :weight 'bold))
@@ -721,27 +722,42 @@
                 `(:background ,.bg-special :foreground ,.fg-bright :height 0.9))
     (buffer-face-mode 1)))
 
-(defun tale-themes--setup-hooks (palette)
-  "Set up autoload hooks with PALETTE colors."
-  (when load-file-name
-    (dolist (hook '(aidermacs-comint-mode-hook
-                    aidermacs-vterm-mode-hook
-                    vterm-mode-hook
-                    compilation-mode-hook
-                    git-commit-mode-hook
-                    magit-mode-hook
-                    magit-post-refresh-hook
-                    magit-post-stage-hook
-                    magit-post-unstage-hook
-                    magit-post-commit-hook
-                    messages-buffer-mode-hook
-                    message-mode-hook
-                    special-mode-hook
-                    transient-setup-buffer-hook))
-      (add-hook hook (lambda () (tale-themes--hooks-function palette))))
+(defgroup tale-themes-group nil
+  "Customization for the Tale Themes.")
 
-    (add-to-list 'custom-theme-load-path
-                 (file-name-as-directory (file-name-directory load-file-name)))))
+(defcustom tale-themes-special-modes
+  '(aidermacs-comint-mode-hook
+    aidermacs-vterm-mode-hook
+    vterm-mode-hook
+    compilation-mode-hook
+    git-commit-mode-hook
+    magit-mode-hook
+    magit-post-refresh-hook
+    magit-post-stage-hook
+    magit-post-unstage-hook
+    magit-post-commit-hook
+    messages-buffer-mode-hook
+    message-mode-hook
+    special-mode-hook
+    transient-setup-buffer-hook)
+  "Modes to setup special customization."
+  :type '(hook)
+  :group 'tale-themes-group)
+
+(defun tale-themes--setup-hooks (theme-name palette)
+  "Set up autoload hooks with PALETTE colors.
+THEME-NAME is used to store cleanup functions in the appropriate variable."
+  (when load-file-name
+    (let ((hooks-function (lambda () (tale-themes--hooks-function palette))))
+      (dolist (hook tale-themes-special-modes)
+        (add-hook hook hooks-function)
+        ;; Store cleanup function
+        (when (boundp (intern (concat (symbol-name theme-name) "-theme--cleanup-functions")))
+          (push (lambda () (remove-hook hook hooks-function))
+                (symbol-value (intern (concat (symbol-name theme-name) "-theme--cleanup-functions"))))))
+
+      (add-to-list 'custom-theme-load-path
+                   (file-name-as-directory (file-name-directory load-file-name))))))
 
 (provide 'tale-themes-common)
 ;;; tale-themes-common.el ends here
