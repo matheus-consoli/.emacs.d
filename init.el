@@ -96,6 +96,13 @@
 (defconst consoli-config/font-height-programming 120
   "Default font height for programming modes.")
 
+
+(defun shut-up--advice (fn &rest args)
+  "Inhibit message from the provided FN."
+  (let ((inhibit-message t)
+        (message-log-max))
+    (apply fn args)))
+
 ;; Core Emacs configuration
 (use-package emacs
   :hook (after-init . consoli-config/setup-core-modes)
@@ -143,6 +150,7 @@
           (cdr args)))
 
   :config
+  (advice-add #'repeat-mode :around #'shut-up--advice)
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
 
@@ -742,6 +750,7 @@ targets."
   :defer t
   :hook (prog-mode . yas-minor-mode)
   :config
+  (advice-add #'yas-reload-all :around #'shut-up--advice)
   (yas-reload-all))
 
 (use-package yasnippet-snippets
@@ -2258,6 +2267,7 @@ may not be efficient."
   :hook
   (after-save . magit-after-save-refresh-status)
   :init
+  (advice-add #'magit-auto-revert-mode :around #'shut-up--advice)
   (defun consoli-config/setup-magit-hooks ()
     (when (magit-git-repo-p default-directory)
       (add-hook 'after-save-hook 'magit-after-save-refresh-status nil t))))
