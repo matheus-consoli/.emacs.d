@@ -195,7 +195,7 @@
            (window-width (- (nth 2 window-edges) (nth 0 window-edges)))
            (char-width (frame-char-width))
            (width-chars (/ window-width char-width))
-           (fixed-height vertico-count))
+           (fixed-height (+ 1 vertico-count)))
       (list
        :height fixed-height
        :width (round width-chars)
@@ -890,11 +890,12 @@ targets."
   (vterm-kill-buffer-on-exit t)
   (vterm-copy-exclude-prompt t)
   :config
+  (add-hook 'vterm-mode-hook '(lambda () (hl-line-mode nil)))
   (add-hook 'vterm-mode-hook
-            (lambda ()
-              (face-remap-add-relative 'default
-                                       :family programming-font
-                                       :height consoli-config/font-height-programming))))
+            '(lambda ()
+               (face-remap-add-relative 'default
+                                        :family programming-font
+                                        :height consoli-config/font-height-programming))))
 
 (defvar consoli-config/project-terminals (make-hash-table :test 'equal)
   "Hash table mapping project roots to lists of terminal buffers.")
@@ -1144,7 +1145,7 @@ targets."
   (aidermacs-backend 'vterm)
   ;; watch for comments ending with `AI` (vterm only)
   (aidermacs-watch-files t)
-  (aidermacs-vterm-use-theme-colors nil)
+  (aidermacs-vterm-use-theme-colors t)
   (aidermacs-show-diff-after-change nil)
   (aidermacs-default-model "anthropic/claude-opus-4-20250514")
   (aidermacs-architect-model "anthropic/claude-sonnet-4-20250514")
@@ -1289,7 +1290,7 @@ targets."
 ;; Theme configuration
 (defvar consoli-themes
   '((gui . dark-tale)
-    (cli . bright-tale))
+    (cli . witch-tale))
   "Theme configuration for different display types.")
 
 (defun consoli-config/apply-theme ()
@@ -1669,37 +1670,6 @@ targets."
   :defer t
   :after (treemacs)
   :config (treemacs-set-scope-type 'Tabs))
-
-;; (use-package lsp-treemacs
-;;   :defer t
-;;   :after (treemacs lsp)
-;;   :commands (lsp-treemacs-symbols lsp-treemacs-errors-list toggle-lsp-treemacs-modes)
-;;   :init
-;;   (defun toggle-lsp-treemacs-modes ()
-;;     "Toggle both `lsp-treemacs-symbols` and `lsp-treemacs-error-list` modes."
-;;     (interactive)
-;;     ;; Toggle lsp-treemacs-symbols
-;;     (if (get-buffer lsp-treemacs-symbols-buffer-name)
-;;         (kill-buffer lsp-treemacs-symbols-buffer-name) ; this closes it if open
-;;       (lsp-treemacs-symbols)) ; this opens it if closed
-;;     ;; Toggle lsp-treemacs-error-list
-;;     (if (get-buffer lsp-treemacs-errors-buffer-name)
-;;         (kill-buffer lsp-treemacs-errors-buffer-name) ; this closes it if open
-;;       (lsp-treemacs-errors-list))) ; this opens it if closed
-;;   :config
-;;   (setq
-;;    lsp-treemacs-error-list-expand-depth 1
-;;    lsp-treemacs-call-hierarchy-expand-depth 1
-;;    lsp-treemacs-error-list-current-project-only t
-;;    lsp-treemacs-symbols-position-params '((side . right)
-;;                                           (slot . 1)
-;;                                           (window-width . 40))
-;;    lsp-treemacs-errors-position-params '((side . right)
-;;                                          (slot . 2)
-;;                                          (window-width . 40)))
-;;   (lsp-treemacs-sync-mode 1)
-;;   :bind (:map lsp-mode-map
-;;               ("C-c l g m" . toggle-lsp-treemacs-modes)))
 
 (use-package mood-line
   :hook (after-init . mood-line-mode)
