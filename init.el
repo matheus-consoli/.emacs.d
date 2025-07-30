@@ -5,7 +5,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Performance optimization during startup
-(setq garbage-collection-messages t)
+(setq garbage-collection-messages nil)
 
 ;; UTF-8 encoding setup
 (prefer-coding-system       'utf-8)
@@ -72,7 +72,7 @@
 (defconst ui-font "Atkinson Hyperlegible Mono"
   "Font for UI faces.")
 
-(defconst modeline-font "Lekton"
+(defconst modeline-font "Reddit Mono"
   "Font used by the modeline.")
 
 (defconst org-font "Margem Rounded Test"
@@ -95,7 +95,6 @@
 
 (defconst consoli-config/font-height-programming 120
   "Default font height for programming modes.")
-
 
 (defun shut-up--advice (fn &rest args)
   "Inhibit message from the provided FN."
@@ -150,6 +149,8 @@
           (cdr args)))
 
   :config
+  (when (daemonp)
+    (global-set-key (kbd "C-x C-c") #'delete-frame))
   (advice-add #'repeat-mode :around #'shut-up--advice)
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
@@ -1147,11 +1148,90 @@ targets."
   (aidermacs-watch-files t)
   (aidermacs-vterm-use-theme-colors t)
   (aidermacs-show-diff-after-change nil)
-  (aidermacs-default-model "anthropic/claude-opus-4-20250514")
-  (aidermacs-architect-model "anthropic/claude-sonnet-4-20250514")
+  (aidermacs-default-model "anthropic/claude-sonnet-4-20250514")
+  (aidermacs-architect-model "anthropic/claude-opus-4-20250514")
   ;; (aidermacs-extra-args '("--reasoning-effort high"))
-  ;; (aidermacs-global-read-only-files '("~/Projects/templates/rust-conventions.md" "~/Projects/templates/logging-conventions.md"))
+  (aidermacs-global-read-only-files '("~/Projects/templates/agents/rust-pro.md" "~/Projects/templates/agents/backend-architect.md"))
   (aidermacs-project-read-only-files '("CONVENTIONS.md" "README.md")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; THEME CONFIGURATION
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package all-the-icons
+  :defer t)
+
+(use-package nerd-icons
+  :defer t)
+
+(use-package nerd-icons-completion
+  :after marginalia
+  :hook (marginalia-mode . nerd-icons-completion-marginalia-setup)
+  :init
+  (nerd-icons-completion-mode))
+
+(use-package all-the-icons-nerd-fonts
+  :defer t
+  :straight (:host github :repo "mohkale/all-the-icons-nerd-fonts")
+  :after all-the-icons
+  :init
+  (all-the-icons-nerd-fonts-prefer))
+
+(use-package doom-themes
+  :defer t
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-treemacs-theme "doom-colors")
+  (doom-themes-enable-italic t)
+  :init
+  (doom-themes-treemacs-config)
+  (doom-themes-org-config))
+
+(use-package kaolin-themes
+  :custom
+  (kaolin-themes-bold t)
+  (kaolin-themes-italic t)
+  (kaolin-themes-italic-comments t)
+  (kaolin-themes-distinct-parentheses t)
+  (kaolin-themes-distinct-fringe nil)
+  (kaolin-themes-comments-style 'alt)
+  (kaolin-themes-hl-line-colored t)
+  (kaolin-themes-underline t)
+  :defer t)
+
+(use-package spacemacs-theme
+  :defer t
+  :custom
+  (spacemacs-theme-comment-bg nil)
+  (spacemacs-theme-keyword-italic t)
+  (spacemacs-theme-org-bold t)
+  (spacemacs-theme-comment-italic t))
+
+
+;; Theme configuration
+(defvar consoli-themes
+  '((gui . dark-tale)
+    (cli . witch-tale))
+  "Theme configuration for different display types.")
+
+(defun consoli-config/apply-theme ()
+  "Apply appropriate theme based on display type."
+  (condition-case err
+      (if (display-graphic-p)
+          (load-theme (alist-get 'gui consoli-themes) t)
+        (load-theme (alist-get 'cli consoli-themes) t))
+    (error (message "Failed to load theme: %s" err))))
+
+;; Initialize theme system
+(setq-default custom-theme-directory (expand-file-name "my-themes" user-emacs-directory))
+(add-to-list 'custom-theme-load-path custom-theme-directory)
+
+;; Apply theme on startup and new frames
+(consoli-config/apply-theme)
+(add-hook 'after-make-frame-functions
+          (lambda (frame)
+            (select-frame frame)
+            (consoli-config/apply-theme)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; FONT & FACE CONFIGURATION
@@ -1174,20 +1254,20 @@ targets."
           (lambda ()
             (face-remap-add-relative 'default
                                      :family ui-font
-                                     :height 110)))
+                                     :height 90)))
 
 ;; Mode line fonts
 (set-face-attribute 'mode-line nil
                     :family modeline-font
-                    :height 110)
+                    :height 120)
 
 (set-face-attribute 'mode-line-active nil
                     :family modeline-font
-                    :height 110)
+                    :height 120)
 
 (set-face-attribute 'mode-line-inactive nil
                     :family modeline-font
-                    :height 110)
+                    :height 120)
 
 ;; Programming-specific face customizations
 (set-face-attribute 'font-lock-comment-face nil
@@ -1236,82 +1316,6 @@ targets."
  '((right-divider-width . 0)
    (internal-border-width . 0)))
 
-(use-package all-the-icons
-  :defer t)
-(use-package nerd-icons
-  :defer t)
-(use-package nerd-icons-completion
-  :after marginalia
-  :hook (marginalia-mode . nerd-icons-completion-marginalia-setup)
-  :init
-  (nerd-icons-completion-mode))
-
-(use-package all-the-icons-nerd-fonts
-  :defer t
-  :straight (:host github :repo "mohkale/all-the-icons-nerd-fonts")
-  :after all-the-icons
-  :init
-  (all-the-icons-nerd-fonts-prefer))
-
-(use-package doom-themes
-  :defer t
-  :custom
-  (doom-themes-enable-bold t)
-  (doom-themes-treemacs-theme "doom-colors")
-  (doom-themes-enable-italic t)
-  :init
-  (doom-themes-treemacs-config)
-  (doom-themes-org-config))
-
-(use-package kaolin-themes
-  :custom
-  (kaolin-themes-bold t)
-  (kaolin-themes-italic t)
-  (kaolin-themes-italic-comments t)
-  (kaolin-themes-distinct-parentheses t)
-  (kaolin-themes-distinct-fringe nil)
-  (kaolin-themes-comments-style 'alt)
-  (kaolin-themes-hl-line-colored t)
-  (kaolin-themes-underline t)
-  :defer t)
-
-(use-package spacemacs-theme
-  :defer t
-  :custom
-  (spacemacs-theme-comment-bg nil)
-  (spacemacs-theme-keyword-italic t)
-  (spacemacs-theme-org-bold t)
-  (spacemacs-theme-comment-italic t))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; THEME CONFIGURATION
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Theme configuration
-(defvar consoli-themes
-  '((gui . dark-tale)
-    (cli . witch-tale))
-  "Theme configuration for different display types.")
-
-(defun consoli-config/apply-theme ()
-  "Apply appropriate theme based on display type."
-  (condition-case err
-      (if (display-graphic-p)
-          (load-theme (alist-get 'gui consoli-themes) t)
-        (load-theme (alist-get 'cli consoli-themes) t))
-    (error (message "Failed to load theme: %s" err))))
-
-;; Initialize theme system
-(setq-default custom-theme-directory (expand-file-name "my-themes" user-emacs-directory))
-(add-to-list 'custom-theme-load-path custom-theme-directory)
-
-;; Apply theme on startup and new frames
-(consoli-config/apply-theme)
-(add-hook 'after-make-frame-functions
-          (lambda (frame)
-            (select-frame frame)
-            (consoli-config/apply-theme)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; USER INTERFACE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1327,14 +1331,15 @@ targets."
 (tool-bar-mode -1)
 
 ;; Cursor configuration
-(setq-default cursor-type '(bar . 2)
+(setq-default cursor-type '(bar . 1)
               blink-cursor-delay 5
               blink-cursor-interval 0.75
-              cursor-in-non-selected-windows '(hbar . 1))
+              cursor-in-non-selected-windows '(hbar . 2))
 
 (use-package hl-line
   :ensure nil
-  :commands hl-line-mode
+  :custom
+  (hl-line-overlay-priority 999999)
   :config
   (defcustom consoli-config/show-hl-line-after-secs 3
     "Show the hl-line after N seconds of idle time."
@@ -1356,40 +1361,17 @@ targets."
       (add-hook 'change-major-mode-hook #'consoli-config/cleanup-hl-line-timer nil t)
       (consoli-config/start-idle-timer)))
 
-  (defun consoli-config/sync-blamer-face-with-hl-line ()
-    "Sync blamer-face background with hl-line face background."
-    (when (and (featurep 'blamer) (facep 'blamer-face))
-      (condition-case err
-          (if hl-line-mode
-              (let ((hl-line-bg (face-attribute 'hl-line :background nil t)))
-                (unless (eq hl-line-bg 'unspecified)
-                  (set-face-attribute 'blamer-face nil :background hl-line-bg)
-                  (when (and (bound-and-true-p blamer-mode)
-                             (fboundp 'blamer--clear-overlay))
-                    (blamer--clear-overlay)
-                    (when (fboundp 'blamer--try-render)
-                      (blamer--try-render)))))
-            (set-face-attribute 'blamer-face nil :background 'unspecified)
-            (when (and (bound-and-true-p blamer-mode)
-                       (fboundp 'blamer--clear-overlay))
-              (blamer--clear-overlay)
-              (when (fboundp 'blamer--try-render)
-                (blamer--try-render))))
-        (error (message "Error syncing blamer face: %s" err)))))
-
   (defun consoli-config/show-hl-line ()
     "Enable `hl-line-mode` unless in ignored modes."
     (unless (or hl-line-mode
                 (apply #'derived-mode-p consoli-config/hl-line-ignored-modes))
-      (hl-line-mode 1)
-      (consoli-config/sync-blamer-face-with-hl-line)))
+      (hl-line-mode 1)))
 
   (defun consoli-config/hide-hl-line ()
     "Disable `hl-line-mode` unless in ignored modes."
     (when (and hl-line-mode
                (not (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)))
-      (hl-line-mode -1)
-      (consoli-config/sync-blamer-face-with-hl-line)))
+      (hl-line-mode -1)))
 
   (defun consoli-config/start-idle-timer ()
     "Start idle timer to show `hl-line-mode` after some time."
@@ -1411,9 +1393,8 @@ targets."
     "Disable hl-line and start the idle timer again."
     (unless (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)
       (consoli-config/hide-hl-line)
-      (consoli-config/start-idle-timer)))
-
-  :hook (prog-mode . consoli-config/setup-idle-hl-line))
+      (consoli-config/start-idle-timer))))
+;;:hook (prog-mode . consoli-config/setup-idle-hl-line))
 
 (use-package hl-todo
   :hook (after-init . global-hl-todo-mode))
@@ -1464,7 +1445,8 @@ targets."
         tab-bar-tab-name-truncated-max 30
         tab-bar-tab-hints nil
         tab-bar-auto-width t
-        tab-bar-auto-width-max '((160) 20)))
+        tab-bar-auto-width-max '((100) 20)
+        tab-bar-auto-width-min '((15) 2)))
 
 (defun consoli-config/buffer-has-project-p ()
   "Return non-nil if current buffer belongs to a project."
@@ -1622,6 +1604,7 @@ targets."
          ("C-<next>" . centaur-tabs-forward)))
   :custom
   (centaur-tabs-height 30)
+  (centaur-tabs-set-close-button nil)
   (centaur-tabs-style "alternate")
   ;;(centaur-tabs-hide-tab-function 'centaur-tabs-hide-tab)
   (centaur-tabs-set-bar nil)
@@ -1673,9 +1656,53 @@ targets."
 
 (use-package mood-line
   :hook (after-init . mood-line-mode)
+  :config
+  (defun consoli-config/custom-segment-cursor-position ()
+    (format-mode-line "line: %l column: %c"))
+
+  (defun consoli-config/custom-segment-scroll ()
+    (let* ((scroll (mood-line-segment-scroll)))
+      (if (member scroll '("All" "Top" "Bottom"))
+          ""
+        scroll)))
+
+  (defun consoli-config/buffer-status-segment ()
+    (or (mood-line-segment-buffer-status)
+        (propertize "●" 'face '(:inherit success :weight normal))))
+
+  (setq mood-line-format
+        (mood-line-defformat
+         :left
+         (((mood-line-segment-major-mode) . " ")
+          ((consoli-config/buffer-status-segment) . " ")
+          ((consoli-config/custom-segment-cursor-position) . " ")
+          ((consoli-config/custom-segment-scroll) . " ")
+          ((mood-line-segment-region) . " ")
+          (mood-line-segment-multiple-cursors))
+         :right
+         (((mood-line-segment-misc-info) . " ")
+          ((mood-line-segment-checker) . " ")
+          (mood-line-segment-vc))
+         :padding " "))
   :custom (mood-line-glyph-alist mood-line-glyphs-fira-code))
 
-(setq-default display-time-default-load-average 1)
+(defun consoli-config/setup-echo-area ()
+  "Ensure echo area buffers are created."
+  (dolist (fn '(save-buffer
+                write-file
+                set-mark-command
+                keyboard-quit))
+    (advice-add fn :around #'shut-up--advice))
+  (put 'quit 'error-message "")
+
+  (get-buffer-create " *Echo Area 0*")
+  (with-current-buffer " *Echo Area 0*" (face-remap-add-relative 'default '(:inherit mode-line :height 0.8 :box nil)))
+  (get-buffer-create " *Echo Area 1*")
+  (with-current-buffer " *Echo Area 1*" (face-remap-add-relative 'default '(:inherit mode-line :height 0.8 :box nil))))
+
+(add-hook 'after-init-hook #'consoli-config/setup-echo-area)
+
+(setq-default display-time-default-load-average nil)
 (setq-default display-time-format "%I:%M")
 (display-time-mode t)
 
@@ -2228,7 +2255,6 @@ may not be efficient."
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package magit
-  :defer t
   :commands (magit-status magit-get-current-branch)
   :bind (("C-x g" . magit-status))
   :custom
@@ -2236,7 +2262,7 @@ may not be efficient."
   (magit-format-file-function #'magit-format-file-nerd-icons)
   :hook
   (after-save . magit-after-save-refresh-status)
-  :init
+  :config
   (advice-add #'magit-auto-revert-mode :around #'shut-up--advice)
   (defun consoli-config/setup-magit-hooks ()
     (when (magit-git-repo-p default-directory)
@@ -2604,6 +2630,26 @@ may not be efficient."
 ;;  lsp-rust-analyzer-cargo-run-build-scripts t
 ;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
 ;;  lsp-rust-analyzer-proc-macro-enable t)
+
+(add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+
+(defun consoli-config/python-eglot-setup ()
+  (setq-local eglot-workspace-configuration
+              '((:pylsp . (:configurationSources ["flake8"]
+                                                 :plugins (:pycodestyle (:enabled :json-false)
+                                                                        :mccabe (:enabled :json-false)
+                                                                        :pyflakes (:enabled :json-false)
+                                                                        :flake8 (:enabled :json-false
+                                                                                          :maxLineLength 88)
+                                                                        :ruff (:enabled t
+                                                                                        :lineLength 88)
+                                                                        :pydocstyle (:enabled t
+                                                                                              :convention "numpy")
+                                                                        :yapf (:enabled :json-false)
+                                                                        :autopep8 (:enabled :json-false)
+                                                                        :black (:enabled t
+                                                                                         :line_length 88
+                                                                                         :cache_config t)))))))
 
 (use-package hyprlang-ts-mode
   :defer t

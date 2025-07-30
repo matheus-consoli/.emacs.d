@@ -11,10 +11,11 @@
      `(fill-column-indicator ((t (:background ,.bg-dim))))
      `(fringe ((t (:background ,.bg-main))))
      `(highlight ((t (:background ,.hover-bg))))
-     `(hl-line ((t (:background ,.bg-contrast))))
+     ;; `(hl-line ((t (:background ,.bg-contrast))))
+     ;; `(hl-line ((t (:box (:line-width (-1 . -1) :color ,.bg-contrast :style nil)))))
      `(link ((t (:foreground ,.purple :underline t))))
      `(minibuffer-prompt ((t (:background ,.bg-main :foreground ,.purple :bold t))))
-     `(region ((t (:background ,.visual-selection :foreground ,.fg-main :extend t))))
+     `(region ((t (:background ,.visual-selection :foreground unspecified :extend t))))
      `(secondary-selection ((t (:background ,.secondary-selection :extend t))))
      `(vertical-border ((t (:foreground ,.grey-border))))
      `(window-divider ((t (:foreground ,.bg-main))))
@@ -57,10 +58,13 @@
      `(trailing-whitespace ((t (:background ,.error-muted :foreground ,.fg-bright))))
 
      ;; modeline
-     `(mode-line ((t (:background ,.bg-main :foreground ,.fg-bright :box (:line-width (5 . 10) :color ,.bg-main)))))
-     `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-bright :box (:line-width (5 . 10) :color ,.bg-main)))))
-     `(mode-line-inactive ((t (:background ,.bg-alt :foreground ,.grey-subtle :box (:line-width (5 . 10) :color ,.bg-alt)))))
-     `(mode-line-highlight ((t  (:background ,.hover-bg :foreground ,.fg-bright))))
+     `(mode-line ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
+                                  :box (:line-width (8 . 10) :color ,.bg-main) :extend nil))))
+     `(mode-line-active ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
+                                         :box (:line-width (8 . 10) :color ,.bg-main) :extend nil))))
+     `(mode-line-inactive ((t (:background ,.bg-special :foreground ,.grey-subtle :weight light
+                                           :box (:line-width (8 . 10) :color ,.bg-special) :extend nil))))
+     `(mode-line-highlight ((t  (:background ,.hover-bg :foreground ,.grey-docstring))))
      `(mode-line-buffer-id ((t (:foreground ,.purple :bold t))))
      `(mode-line-emphasis ((t (:foreground ,.green))))
 
@@ -348,7 +352,7 @@
      `(highlight-symbol-face ((t (:background ,.focus-bg :foreground ,.lavender))))
 
      ;; blamer-mode
-     `(blamer-face ((t (:foreground ,.grey-subtle :italic t :height 0.9 :weight light))))
+     `(blamer-face ((t (:foreground ,.grey-subtle :background unspecified :italic t :height 0.8 :weight light))))
 
      ;; centaur-tabs
      `(centaur-tabs-active-bar-face ((t (:background ,.purple))))
@@ -423,14 +427,13 @@
      `(corfu-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
-     `(vertico-current ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+     `(vertico-current ((t (:background ,.bg-contrast :foreground ,.fg-bright))))
      `(vertico-group-title ((t (:foreground ,.purple :weight bold))))
      `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t))))
      `(vertico-multiline ((t (:foreground ,.grey-subtle))))
      `(vertico-quick1 ((t (:foreground ,.purple :weight bold))))
      `(vertico-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(vertico-quick3 ((t (:foreground ,.yellow :weight bold))))
-     `(vertico-posframe ((t (:background ,.bg-main))))
      `(vertico-posframe-border ((t (:background ,.bg-main))))
 
      `(marginalia-key ((t (:foreground ,.purple))))
@@ -523,12 +526,11 @@
      `(doom-modeline-workspace-number ((t (:foreground ,.magenta))))
 
      ;; mood line
-     ;; mood line
-     `(mood-line-buffer-name ((t (:foreground ,.fg-bright :weight bold :height 1.0))))
-     `(mood-line-buffer-status-modified ((t (:foreground ,.rose :weight bold :slant italic))))
-     `(mood-line-buffer-status-read-only ((t (:foreground ,.yellow :weight bold :box (:line-width -1 :color ,.yellow :style released-button)))))
-     `(mood-line-buffer-status-narrowed ((t (:foreground ,.purple :weight bold :box (:line-width -1 :color ,.purple :style pressed-button)))))
-     `(mood-line-major-mode ((t (:foreground ,.lavender :weight semi-bold :slant italic))))
+     `(mood-line-buffer-name ((t (:foreground ,.fg-bright :weight light))))
+     `(mood-line-buffer-status-modified ((t (:foreground ,.rose))))
+     `(mood-line-buffer-status-read-only ((t (:foreground ,.yellow))))
+     `(mood-line-buffer-status-narrowed ((t (:foreground ,.purple))))
+     `(mood-line-major-mode ((t (:foreground ,.lavender :weight light))))
      `(mood-line-minor-mode ((t (:foreground ,.grey-subtle))))
      `(mood-line-process ((t (:foreground ,.teal :slant italic))))
      `(mood-line-client ((t (:foreground ,.blue :weight bold))))
@@ -538,12 +540,12 @@
      `(mood-line-status-success ((t (:foreground ,.green :weight bold))))
      `(mood-line-status-warning ((t (:foreground ,.yellow :weight bold))))
      `(mood-line-status-error ((t (:foreground ,.magenta :weight bold))))
-     `(mood-line-encoding ((t (:foreground ,.grey-subtle))))
-     `(mood-line-unimportant ((t (:foreground ,.grey-border))))
-     `(mood-line-segment-modal ((t (:foreground ,.purple :weight bold :box (:line-width (2 . 4) :color ,.bg-contrast :style flat-button)))))
+     `(mood-line-encoding ((t (:foreground ,.grey-subtle :weight light))))
+     `(mood-line-unimportant ((t (:foreground ,.grey-subtle :weight light))))
+     `(mood-line-segment-modal ((t (:foreground ,.purple :weight light))))
      `(mood-line-segment-buffer ((t (:foreground ,.fg-bright))))
      `(mood-line-segment-position ((t (:foreground ,.blue))))
-     `(mood-line-segment-misc ((t (:foreground ,.grey-docstring))))
+     `(mood-line-segment-misc ((t (:foreground ,.grey-docstring :weight light))))
 
      ;; Line numbers
      `(line-number ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :box (:line-width (1 . 3) :color ,.bg-main)))))
@@ -557,7 +559,7 @@
      `(line-number-relative-current ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
 
      ;; Parentheses
-     `(show-paren-match ((t (:foreground ,.magenta :background ,.bg-selection :bold t))))
+     `(show-paren-match ((t (:foreground ,.green :weight bold))))
      `(show-paren-match-expression ((t (:background ,.bg-contrast))))
      `(show-paren-mismatch ((t (:background ,.error-muted :foreground ,.fg-popup :weight bold :strike-through t))))
      `(sp-pair-overlay-face ((t (:background ,.bg-contrast))))
@@ -679,9 +681,9 @@
      `(eglot-mode-line ((t (:foreground ,.purple :weight bold))))
      `(eglot-diagnostic-tag-deprecated-face ((t (:strike-through t :foreground ,.grey-subtle))))
      `(eglot-diagnostic-tag-unnecessary-face ((t (:foreground ,.grey-subtle :slant italic))))
-     ;; Eglot inlay hints (similar to lsp inlay hints)
+     ;; Eglot inlay hints
      `(eglot-inlay-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
-     `(eglot-type-hint-face ((t (:foreground ,.grey-subtle :background unspecified :slant italic :height 0.9))))
+     `(eglot-type-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
      `(eglot-parameter-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
      ;; Eglot code actions (appears in modeline and overlays)
      `(eglot-code-action-indicator-face ((t (:foreground ,.yellow :background ,.bg-main))))
