@@ -9,7 +9,7 @@
 (set-frame-parameter nil 'ns-appearance 'dark)
 (set-frame-parameter nil 'ns-transparent-titlebar nil)
 
-(make-directory (concat user-emacs-directory "backup" "auto-save") t)
+(make-directory (concat user-emacs-directory "backup/auto-saves") t)
 
 ;; Disable package.el in favor of straight.el
 (setq package-enable-at-startup nil)
