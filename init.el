@@ -121,7 +121,7 @@
 
   ;; Window divider settings
   (window-divider-default-places t)
-  (window-divider-default-bottom-width 10)
+  (window-divider-default-bottom-width 0)
   (window-divider-default-right-width 20)
 
   :init
@@ -186,14 +186,14 @@
   :after vertico
   :custom
   (vertico-posframe-poshandler 'posframe-poshandler-window-bottom-center)
-  (vertico-posframe-border-width 5)
+  (vertico-posframe-border-width 10)
   (vertico-posframe-truncate-lines t)
   :config
   (defun consoli-config/vertico-posframe-size (buffer)
     "Set posframe width to match current window, with fixed height."
     (let* ((window (selected-window))
            (window-edges (window-pixel-edges window))
-           (window-width (- (nth 2 window-edges) (nth 0 window-edges)))
+           (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
            (char-width (frame-char-width))
            (width-chars (/ window-width char-width))
            (fixed-height (+ 1 vertico-count)))
@@ -344,6 +344,9 @@
             (- window-bottom height margin-y))))
 
   (setq eldoc-box-position-function #'consoli-config/eldoc-box-bottom-right-position)
+
+  ;; some margin for the docs
+  (setf (alist-get 'internal-border-width eldoc-box-frame-parameters) 10)
   :bind (:map eglot-mode-map
               ("C-c l d" . eldoc-box-help-at-point))
   :hook (eglot-managed-mode . eldoc-box-hover-mode))
@@ -1534,12 +1537,26 @@ targets."
       "Set workspace buffer list for consult-buffer.")
     (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
 
+(defun consoli-config/setup-centaur-hooks ()
+  "Hide centaur tabs for some modes."
+  (dolist (hook '(aidermacs-comint-mode-hook
+                  aidermacs-vterm-mode-hook
+                  compilation-mode-hook
+                  git-commit-mode-hook
+                  magit-mode-hook
+                  message-mode-hook
+                  messages-buffer-mode-hook
+                  org-src-mode-hook
+                  special-mode-hook
+                  transient-setup-buffer-hook))
+    (add-hook hook #'centaur-tabs-local-mode)))
 
 (use-package centaur-tabs
   :hook (after-init . centaur-tabs-mode)
   :config
   (centaur-tabs-headline-match)
   (centaur-tabs-change-fonts alternative-programming-font 100)
+  (consoli-config/setup-centaur-hooks)
   :init
   (defun centaur-tabs-hide-tab (x)
     "Do no to show buffer X in tabs."
@@ -1584,17 +1601,7 @@ targets."
             (not (consoli-config/is-terminal-for-current-project-p x))))))
 
   ;; hide tabs for some modes
-  (dolist (hook '(aidermacs-comint-mode-hook
-                  aidermacs-vterm-mode-hook
-                  compilation-mode-hook
-                  git-commit-mode-hook
-                  magit-mode-hook
-                  message-mode-hook
-                  messages-buffer-mode-hook
-                  org-src-mode-hook
-                  special-mode-hook
-                  transient-setup-buffer-hook))
-    (add-hook hook #'centaur-tabs-local-mode))
+
   :bind
   (:map centaur-tabs-mode-map
         (([remap next-buffer] . centaur-tabs-forward)
@@ -1682,8 +1689,7 @@ targets."
          :right
          (((mood-line-segment-misc-info) . " ")
           ((mood-line-segment-checker) . " ")
-          (mood-line-segment-vc))
-         :padding " "))
+          (mood-line-segment-vc))))
   :custom (mood-line-glyph-alist mood-line-glyphs-fira-code))
 
 (defun consoli-config/setup-echo-area ()
@@ -2679,7 +2685,7 @@ may not be efficient."
               tab-width 4)
 
 ;; Scrolling behavior
-(setq scroll-preserve-screen-position t
+(setq scroll-preserve-screen-position 'always
       scroll-conservatively 101
       fast-but-imprecise-scrolling t
       redisplay-dont-pause 1
@@ -2702,12 +2708,13 @@ may not be efficient."
   (when (not (display-graphic-p))
     (suspend-emacs)))
 
-(use-package ultra-scroll
-  :straight (:host github :repo "jdtsmith/ultra-scroll" :files ("*.el"))
+(use-package good-scroll
+  :hook (after-init . good-scroll-mode)
+  :bind
+  (([remap next] . good-scroll-up-full-screen)
+   ([remap prior] . good-scroll-down-full-screen))
   :custom
-  (scroll-conservatively 101) ; important!
-  (scroll-margin 0)
-  :hook (after-init . ultra-scroll-mode))
+  (good-scroll-duration 0.2))
 
 (setq backup-directory-alist '(("." . "~/.emacs.d/backup/per-save"))
       auto-save-file-name-transforms '((".*" "~/.emacs.d/backup/auto-saves")))

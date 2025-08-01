@@ -30,7 +30,7 @@
      `(tooltip ((t (:background ,.bg-popup :foreground ,.fg-main))))
      `(button ((t (:foreground ,.purple :underline t))))
      `(header-line ((t (:background ,.bg-alt :foreground ,.grey-docstring :weight normal))))
-     `(widget-field ((t (:background ,.bg-contrast :foreground ,.fg-main :box (:line-width 1 :color ,.grey-border)))))
+     `(widget-field ((t (:background ,.bg-contrast :foreground ,.fg-main))))
 
      ;; Selection-related faces
      `(lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
@@ -59,11 +59,11 @@
 
      ;; modeline
      `(mode-line ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
-                                  :box (:line-width (8 . 10) :color ,.bg-main) :extend nil))))
+                                  :box (:line-width (8 . 10) :color ,.bg-main) :inherit nil))))
      `(mode-line-active ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
-                                         :box (:line-width (8 . 10) :color ,.bg-main) :extend nil))))
+                                         :box (:line-width (8 . 10) :color ,.bg-main) :inherit nil))))
      `(mode-line-inactive ((t (:background ,.bg-special :foreground ,.grey-subtle :weight light
-                                           :box (:line-width (8 . 10) :color ,.bg-special) :extend nil))))
+                                           :box (:line-width (8 . 10) :color ,.bg-special) :inherit nil))))
      `(mode-line-highlight ((t  (:background ,.hover-bg :foreground ,.grey-docstring))))
      `(mode-line-buffer-id ((t (:foreground ,.purple :bold t))))
      `(mode-line-emphasis ((t (:foreground ,.green))))
@@ -189,8 +189,8 @@
 
      ;; markdown-mode
      `(markdown-header-face ((t (:foreground ,.purple))))
-     `(markdown-code-face ((t (:background ,.bg-code))))
-     `(markdown-inline-code-face ((t (:foreground ,.yellow))))
+     `(markdown-code-face ((t (:background ,.bg-popup :height 0.9 :weight light))))
+     `(markdown-inline-code-face ((t (:height 0.9))))
      `(markdown-link-face ((t (:foreground ,.purple))))
 
      ;; dired
@@ -332,8 +332,8 @@
      `(overlay ((t (:background ,.bg-contrast))))
      `(pos-tip-overlay ((t (:background ,.bg-popup :foreground ,.fg-main))))
      `(eldoc-highlight-function-argument-overlay ((t (:foreground ,.purple :weight bold))))
-     `(eldoc-box-border ((t (:background ,.grey-border))))
-     `(eldoc-box-body ((t (:background ,.bg-popup :foreground ,.fg-main))))
+     `(eldoc-box-border ((t (:background ,.bg-popup))))
+     `(eldoc-box-body ((t (:background ,.bg-popup :foreground ,.fg-main :height 0.9))))
      `(eldoc-highlight-function-argument ((t (:foreground ,.purple :weight bold))))
      `(mc/cursor-overlay ((t (:background ,.purple :foreground ,.bg-main))))
      `(mc/cursor-bar-overlay ((t (:background ,.purple :height 1))))
@@ -427,7 +427,7 @@
      `(corfu-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
-     `(vertico-current ((t (:background ,.bg-contrast :foreground ,.fg-bright))))
+     `(vertico-current ((t (:box (:line-width (-1 . -1) :color ,.bg-contrast)))))
      `(vertico-group-title ((t (:foreground ,.purple :weight bold))))
      `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t))))
      `(vertico-multiline ((t (:foreground ,.grey-subtle))))
@@ -435,6 +435,7 @@
      `(vertico-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(vertico-quick3 ((t (:foreground ,.yellow :weight bold))))
      `(vertico-posframe-border ((t (:background ,.bg-main))))
+     `(vertico-posframe ((t (:background ,.bg-main))))
 
      `(marginalia-key ((t (:foreground ,.purple))))
      `(marginalia-type ((t (:foreground ,.magenta))))
