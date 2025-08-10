@@ -14,7 +14,7 @@
      ;; `(hl-line ((t (:background ,.bg-contrast))))
      ;; `(hl-line ((t (:box (:line-width (-1 . -1) :color ,.bg-contrast :style nil)))))
      `(link ((t (:foreground ,.purple :underline t))))
-     `(minibuffer-prompt ((t (:background ,.bg-main :foreground ,.purple :bold t))))
+     `(minibuffer-prompt ((t (:background unspecified :foreground ,.purple :bold t))))
      `(region ((t (:background ,.visual-selection :foreground unspecified :extend t))))
      `(secondary-selection ((t (:background ,.secondary-selection :extend t))))
      `(vertical-border ((t (:foreground ,.grey-border))))
@@ -31,6 +31,9 @@
      `(button ((t (:foreground ,.purple :underline t))))
      `(header-line ((t (:background ,.bg-alt :foreground ,.grey-docstring :weight normal))))
      `(widget-field ((t (:background ,.bg-contrast :foreground ,.fg-main))))
+     `(help-key-binding ((t (:background ,.bg-special  :foreground ,.hint-fg :box (:line-width (2 . 2) :color ,.bg-special)))))
+
+     `(colorful-base ((t (:box nil))))
 
      ;; Selection-related faces
      `(lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
@@ -92,6 +95,19 @@
      `(treesit-font-lock-delimiter-face ((t (:foreground ,.grey-border))))
      `(treesit-font-lock-escape-face ((t (:foreground ,.yellow :weight bold))))
 
+     ;; Enhanced Tree-sitter Semantic Tokens
+     `(treesit-font-lock-class-face ((t (:foreground ,.blue :weight bold))))
+     `(treesit-font-lock-interface-face ((t (:foreground ,.teal :slant italic))))
+     `(treesit-font-lock-enum-face ((t (:foreground ,.magenta :weight bold))))
+     `(treesit-font-lock-struct-face ((t (:foreground ,.blue :weight normal))))
+     `(treesit-font-lock-namespace-face ((t (:foreground ,.lavender :weight bold))))
+     `(treesit-font-lock-module-face ((t (:foreground ,.purple :underline t))))
+     `(treesit-font-lock-macro-face ((t (:foreground ,.yellow :weight bold :slant italic))))
+     `(treesit-font-lock-attribute-face ((t (:foreground ,.grey-docstring :slant italic))))
+     `(treesit-font-lock-parameter-face ((t (:foreground ,.rose :slant italic))))
+     `(treesit-font-lock-field-face ((t (:foreground ,.teal))))
+     `(treesit-font-lock-method-face ((t (:foreground ,.purple :slant italic))))
+
      ;; Whitespace
      `(whitespace-space ((t (:foreground ,.grey-border))))
      `(whitespace-tab ((t (:foreground ,.grey-border))))
@@ -128,37 +144,111 @@
      `(company-scrollbar-fg ((t (:background ,.grey-border))))
      `(company-scrollbar-bg ((t (:background ,.bg-popup))))
 
-     ;; org-mode
-     `(org-level-1 ((t (:foreground ,.lavender :height 1.3))))
-     `(org-level-2 ((t (:foreground ,.rose :height 1.2))))
-     `(org-level-3 ((t (:foreground ,.teal :height 1.1))))
-     `(org-level-4 ((t (:foreground ,.blue))))
-     `(org-todo ((t (:foreground ,.magenta :bold t))))
-     `(org-done ((t (:foreground ,.green :bold t))))
-     `(org-block ((t (:background ,.bg-code :extend t))))
-     `(org-block-begin-line ((t (:foreground ,.grey-comment-blue :extend t))))
-     `(org-quote ((t (:background ,.bg-contrast :slant italic :extend t))))
+     ;; Enhanced Org-mode
+     `(org-level-1 ((t (:foreground ,.lavender :height 1.3 :weight bold))))
+     `(org-level-2 ((t (:foreground ,.rose :height 1.2 :weight bold))))
+     `(org-level-3 ((t (:foreground ,.teal :height 1.1 :weight bold))))
+     `(org-level-4 ((t (:foreground ,.blue :weight bold))))
+     `(org-level-5 ((t (:foreground ,.purple :weight normal))))
+     `(org-level-6 ((t (:foreground ,.magenta :weight normal))))
+     `(org-level-7 ((t (:foreground ,.yellow :weight normal))))
+     `(org-level-8 ((t (:foreground ,.green :weight normal))))
+     `(org-todo ((t (:foreground ,.magenta :weight bold :box (:line-width 1 :color ,.magenta)))))
+     `(org-done ((t (:foreground ,.green :weight bold :box (:line-width 1 :color ,.green)))))
+     `(org-priority ((t (:foreground ,.yellow :weight bold))))
+     `(org-tag ((t (:foreground ,.purple :weight normal :box (:line-width 1 :color ,.purple :style released-button)))))
+     `(org-block ((t (:background ,.bg-code :foreground ,.fg-main :extend t))))
+     `(org-block-begin-line ((t (:foreground ,.grey-comment-blue :background ,.bg-alt :extend t :weight bold))))
+     `(org-block-end-line ((t (:foreground ,.grey-comment-blue :background ,.bg-alt :extend t :weight bold))))
+     `(org-code ((t (:foreground ,.yellow :background ,.bg-contrast))))
+     `(org-verbatim ((t (:foreground ,.green :background ,.bg-contrast))))
+     `(org-quote ((t (:background ,.bg-contrast :foreground ,.fg-main :slant italic :extend t :border-left (:width 3 :color ,.purple)))))
+     `(org-checkbox ((t (:foreground ,.purple :weight bold))))
      `(org-checkbox-done-text ((t (:foreground ,.grey-border :strike-through t))))
-     `(org-table ((t (:foreground ,.fg-main :background ,.bg-code :box (:line-width 1 :color ,.grey-border)))))
+     `(org-table ((t (:foreground ,.fg-main :background ,.bg-code))))
+     `(org-formula ((t (:foreground ,.yellow :slant italic))))
+     `(org-date ((t (:foreground ,.blue :underline t))))
+     `(org-footnote ((t (:foreground ,.magenta :underline t))))
+     `(org-link ((t (:foreground ,.purple :underline t))))
+     `(org-agenda-structure ((t (:foreground ,.purple :weight bold :height 1.1))))
+     `(org-agenda-date ((t (:foreground ,.blue :weight bold))))
+     `(org-agenda-date-today ((t (:foreground ,.yellow :weight bold :height 1.1))))
+     `(org-agenda-date-weekend ((t (:foreground ,.rose :weight normal))))
+     `(org-scheduled ((t (:foreground ,.green))))
+     `(org-scheduled-today ((t (:foreground ,.yellow :weight bold))))
+     `(org-scheduled-previously ((t (:foreground ,.magenta :weight bold))))
+     `(org-upcoming-deadline ((t (:foreground ,.yellow :slant italic))))
+     `(org-deadline-announce ((t (:foreground ,.magenta :weight bold))))
+     `(org-time-grid ((t (:foreground ,.grey-border))))
+     `(org-warning ((t (:foreground ,.error-muted :weight bold))))
 
      `(org-superstar-leading-bullet-face ((t (:foreground ,.grey-subtle))))
      `(org-superstar-item-bullet-face ((t (:foreground ,.purple))))
 
-     `(org-roam-node-highlight-face ((t (:background ,.focus-bg))))
+     ;; Enhanced Org-Roam
+     `(org-roam-node-highlight-face ((t (:background ,.focus-bg :foreground ,.lavender :weight bold))))
+     `(org-roam-link ((t (:foreground ,.purple :underline t :weight bold))))
+     `(org-roam-backlinks-highlight ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+     `(org-roam-title ((t (:foreground ,.lavender :weight bold :height 1.2))))
 
-     `(org-modern-tag-face ((t (:foreground ,.blue :background ,.bg-contrast :box (:line-width -1 :color ,.bg-contrast :style released-button) :height 0.9))))
+     ;; Enhanced Org-Modern
+     `(org-modern-tag ((t (:foreground ,.blue :background ,.bg-contrast :box (:line-width -1 :color ,.bg-contrast :style released-button) :height 0.9))))
+     `(org-modern-priority ((t (:foreground ,.yellow :weight bold :box (:line-width 1 :color ,.yellow)))))
+     `(org-modern-date-active ((t (:foreground ,.green :background ,.bg-contrast :box (:line-width 1 :color ,.green)))))
+     `(org-modern-date-inactive ((t (:foreground ,.grey-subtle :background ,.bg-alt))))
+     `(org-modern-time-active ((t (:foreground ,.blue :background ,.bg-contrast :weight bold))))
+     `(org-modern-time-inactive ((t (:foreground ,.grey-subtle :background ,.bg-alt))))
+     `(org-modern-done ((t (:foreground ,.green :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.green)))))
+     `(org-modern-todo ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
 
-     ;; magit, diffs, and VC
-     `(magit-section-heading ((t (:foreground ,.purple))))
-     `(magit-branch-current ((t (:foreground ,.yellow))))
-     `(magit-diff-added ((t (:foreground ,.green))))
-     `(magit-diff-removed ((t (:foreground ,.magenta))))
+     ;; Enhanced Magit and VC
+     `(magit-section-heading ((t (:foreground ,.purple :weight bold :height 1.1))))
+     `(magit-section-highlight ((t (:background ,.bg-contrast))))
+     `(magit-section-secondary-heading ((t (:foreground ,.blue :weight bold))))
+     `(magit-branch-current ((t (:foreground ,.yellow :weight bold :box (:line-width 1 :color ,.yellow)))))
+     `(magit-branch-local ((t (:foreground ,.green))))
+     `(magit-branch-remote ((t (:foreground ,.purple))))
+     `(magit-branch-upstream ((t (:foreground ,.teal :slant italic))))
+     `(magit-tag ((t (:foreground ,.magenta :weight bold))))
+     `(magit-diff-added ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg))))
+     `(magit-diff-removed ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg))))
      `(magit-diff-context ((t (:foreground ,.grey-subtle))))
+     `(magit-diff-hunk-heading ((t (:background ,.bg-alt :foreground ,.fg-bright :weight bold))))
+     `(magit-diff-hunk-heading-highlight ((t (:background ,.bg-selection :foreground ,.fg-bright :weight bold))))
+     `(magit-diff-added-highlight ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg :weight bold))))
+     `(magit-diff-removed-highlight ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg :weight bold))))
+     `(magit-diff-context-highlight ((t (:background ,.bg-dim :foreground ,.fg-main))))
      `(magit-blame-highlight ((t (:background ,.bg-contrast :foreground ,.fg-bright))))
-     `(magit-blame-heading ((t (:background ,.bg-dim :foreground ,.grey-subtle))))
-     `(magit-blame-name ((t (:foreground ,.purple))))
+     `(magit-blame-heading ((t (:background ,.bg-dim :foreground ,.grey-subtle :weight bold))))
+     `(magit-blame-name ((t (:foreground ,.purple :weight bold))))
      `(magit-blame-date ((t (:foreground ,.yellow))))
      `(magit-blame-summary ((t (:foreground ,.fg-bright))))
+     `(magit-log-author ((t (:foreground ,.blue))))
+     `(magit-log-date ((t (:foreground ,.grey-docstring))))
+     `(magit-log-graph ((t (:foreground ,.grey-border))))
+     `(magit-reflog-commit ((t (:foreground ,.green))))
+     `(magit-reflog-amend ((t (:foreground ,.magenta))))
+     `(magit-reflog-merge ((t (:foreground ,.purple))))
+     `(magit-reflog-checkout ((t (:foreground ,.blue))))
+     `(magit-reflog-reset ((t (:foreground ,.yellow))))
+     `(magit-reflog-rebase ((t (:foreground ,.lavender))))
+     `(magit-reflog-cherry-pick ((t (:foreground ,.rose))))
+     `(magit-reflog-remote ((t (:foreground ,.teal))))
+     `(magit-reflog-other ((t (:foreground ,.grey-docstring))))
+     `(magit-signature-good ((t (:foreground ,.green :weight bold))))
+     `(magit-signature-bad ((t (:foreground ,.magenta :weight bold))))
+     `(magit-signature-untrusted ((t (:foreground ,.yellow))))
+     `(magit-signature-expired ((t (:foreground ,.grey-subtle))))
+     `(magit-signature-revoked ((t (:foreground ,.magenta :strike-through t))))
+
+     ;; Magit Todos Integration
+     `(magit-todos-keyword-face ((t (:foreground ,.yellow :weight bold))))
+     `(magit-todos-item-face ((t (:foreground ,.fg-main))))
+
+     ;; Conventional Commit
+     `(conventional-commit-type-face ((t (:foreground ,.magenta :weight bold))))
+     `(conventional-commit-scope-face ((t (:foreground ,.yellow :slant italic))))
+     `(conventional-commit-breaking-change-face ((t (:foreground ,.error-muted :weight bold :underline t))))
 
      `(diff-added ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg))))
      `(diff-removed ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg))))
@@ -251,6 +341,13 @@
      `(vterm-color-bright-magenta ((t (:foreground ,.purple :background ,.purple))))
      `(vterm-color-bright-cyan ((t (:foreground ,.teal :background ,.teal))))
      `(vterm-color-bright-white ((t (:foreground ,.fg-popup :background ,.fg-popup))))
+
+     ;; Enhanced VTerm Features
+     `(vterm-prompt-face ((t (:foreground ,.purple :weight bold))))
+     `(vterm-directory-face ((t (:foreground ,.blue :weight bold))))
+     `(vterm-command-face ((t (:foreground ,.green))))
+     `(vterm-output-face ((t (:foreground ,.fg-main))))
+     `(vterm-error-face ((t (:foreground ,.magenta :weight bold))))
 
      ;; Which-key
      `(which-key-key-face ((t (:foreground ,.purple))))
@@ -351,14 +448,18 @@
      `(multiple-cursors-cursor ((t (:background ,.magenta :foreground ,.bg-main))))
      `(highlight-symbol-face ((t (:background ,.focus-bg :foreground ,.lavender))))
 
-     ;; blamer-mode
+     ;; Enhanced Blamer
      `(blamer-face ((t (:foreground ,.grey-subtle :background unspecified :italic t :height 0.8 :weight light))))
+     `(blamer-pretty-border-face ((t (:foreground ,.grey-border))))
+     `(blamer-pretty-commit-message-face ((t (:foreground ,.grey-docstring :slant italic))))
+     `(blamer-pretty-meta-keywords-face ((t (:foreground ,.purple :weight bold))))
+     `(blamer-pretty-meta-data-face ((t (:foreground ,.yellow))))
 
      ;; centaur-tabs
      `(centaur-tabs-active-bar-face ((t (:background ,.purple))))
      `(centaur-tabs-close-mouse-face ((t (:foreground ,.magenta))))
      `(centaur-tabs-close-selected ((t (:inherit centaur-tabs-selected :foreground ,.fg-bright))))
-     `(centaur-tabs-close-unselected ((t (:inherit centaur-tab-unselected :foreground ,.grey-subtle))))
+     `(centaur-tabs-close-unselected ((t (:inherit centaur-tabs-unselected :foreground ,.grey-subtle))))
      `(centaur-tabs-default ((t (:background ,.bg-main :foreground ,.fg-main :height 0.9))))
      `(centaur-tabs-group-face ((t (:foreground ,.purple))))
      `(centaur-tabs-modified-marker-selected ((t (:inherit centaur-tabs-selected :foreground ,.magenta :italic t))))
@@ -427,36 +528,44 @@
      `(corfu-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
-     `(vertico-current ((t (:box (:line-width (-1 . -1) :color ,.bg-contrast)))))
-     `(vertico-group-title ((t (:foreground ,.purple :weight bold))))
-     `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t))))
-     `(vertico-multiline ((t (:foreground ,.grey-subtle))))
-     `(vertico-quick1 ((t (:foreground ,.purple :weight bold))))
-     `(vertico-quick2 ((t (:foreground ,.magenta :weight bold))))
-     `(vertico-quick3 ((t (:foreground ,.yellow :weight bold))))
-     `(vertico-posframe-border ((t (:background ,.bg-main))))
-     `(vertico-posframe ((t (:background ,.bg-main))))
+     ;; Enhanced Vertico
+     `(vertico-current ((t (:box (:line-width (-1 . -1) :color ,.bg-selection)))))
+     `(vertico-group-title ((t (:foreground ,.purple :weight bold :height 1.1 :underline t))))
+     `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t :height 0.8))))
+     `(vertico-multiline ((t (:foreground ,.grey-subtle :slant italic))))
+     `(vertico-quick1 ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.purple)))))
+     `(vertico-quick2 ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
+     `(vertico-quick3 ((t (:foreground ,.yellow :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.yellow)))))
+     `(vertico-posframe-border ((t (:background ,.bg-popup :foreground ,.grey-border))))
+     `(vertico-posframe ((t (:background ,.bg-popup))))
 
-     `(marginalia-key ((t (:foreground ,.purple))))
-     `(marginalia-type ((t (:foreground ,.magenta))))
-     `(marginalia-modified ((t (:foreground ,.yellow))))
-     `(marginalia-file-name ((t (:foreground ,.grey-subtle))))
-     `(marginalia-file-owner ((t (:foreground ,.grey-subtle))))
+     ;; Enhanced Marginalia
+     `(marginalia-key ((t (:foreground ,.purple :weight bold))))
+     `(marginalia-type ((t (:foreground ,.magenta :slant italic))))
+     `(marginalia-modified ((t (:foreground ,.yellow :weight bold))))
+     `(marginalia-file-name ((t (:foreground ,.fg-main))))
+     `(marginalia-file-owner ((t (:foreground ,.grey-subtle :slant italic))))
      `(marginalia-file-priv-no ((t (:foreground ,.grey-subtle))))
-     `(marginalia-file-priv-dir ((t (:foreground ,.purple))))
-     `(marginalia-file-priv-exec ((t (:foreground ,.green))))
-     `(marginalia-file-priv-link ((t (:foreground ,.yellow))))
-     `(marginalia-file-priv-read ((t (:foreground ,.magenta))))
+     `(marginalia-file-priv-dir ((t (:foreground ,.purple :weight bold))))
+     `(marginalia-file-priv-exec ((t (:foreground ,.green :weight bold))))
+     `(marginalia-file-priv-link ((t (:foreground ,.yellow :underline t))))
+     `(marginalia-file-priv-read ((t (:foreground ,.blue))))
      `(marginalia-file-priv-write ((t (:foreground ,.magenta))))
-     `(marginalia-size ((t (:foreground ,.grey-subtle))))
-     `(marginalia-number ((t (:foreground ,.grey-subtle))))
-     `(marginalia-char ((t (:foreground ,.purple))))
-     `(marginalia-date ((t (:foreground ,.grey-subtle))))
-     `(marginalia-documentation ((t (:foreground ,.grey-subtle :slant italic))))
-     `(marginalia-function ((t (:foreground ,.purple))))
-     `(marginalia-mode ((t (:foreground ,.magenta))))
-     `(marginalia-variable ((t (:foreground ,.purple))))
-     `(marginalia-version ((t (:foreground ,.green))))
+     `(marginalia-size ((t (:foreground ,.grey-docstring))))
+     `(marginalia-number ((t (:foreground ,.purple :weight bold))))
+     `(marginalia-char ((t (:foreground ,.lavender))))
+     `(marginalia-date ((t (:foreground ,.grey-docstring :slant italic))))
+     `(marginalia-documentation ((t (:foreground ,.grey-subtle :slant italic :height 0.9))))
+     `(marginalia-function ((t (:foreground ,.purple :weight normal))))
+     `(marginalia-mode ((t (:foreground ,.magenta :slant italic))))
+     `(marginalia-variable ((t (:foreground ,.lavender))))
+     `(marginalia-version ((t (:foreground ,.green :weight bold))))
+
+     ;; Nerd Icons Integration
+     `(nerd-icons-completion-dir-face ((t (:foreground ,.purple))))
+     `(nerd-icons-completion-file-face ((t (:foreground ,.fg-main))))
+     `(nerd-icons-corfu-dir-face ((t (:foreground ,.purple))))
+     `(nerd-icons-corfu-file-face ((t (:foreground ,.fg-main))))
 
      `(orderless-match-face-0 ((t (:foreground ,.purple :weight bold))))
      `(orderless-match-face-1 ((t (:foreground ,.magenta :weight bold))))
@@ -549,12 +658,12 @@
      `(mood-line-segment-misc ((t (:foreground ,.grey-docstring :weight light))))
 
      ;; Line numbers
-     `(line-number ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :box (:line-width (1 . 3) :color ,.bg-main)))))
-     `(line-number-current-line ((t (:foreground ,.purple :weight bold))))
+     `(line-number ((t (:foreground ,.bg-inactive-sel :background ,.bg-main :box (:line-width (2 . 3) :color ,.bg-main)))))
+     `(line-number-current-line ((t (:foreground ,.purple :box (:line-width (1 . 3) :color ,.bg-main)))))
      `(line-number-major-tick ((t (:foreground ,.yellow :background ,.bg-main :weight bold))))
      `(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
-     `(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
-     `(linum-relative-current-face ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
+     ;;`(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
+     ;;`(linum-relative-current-face ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
      ;;`(line-number-current-line-hl ((t (:foreground ,.purple :background ,.bg-selection :weight bold :height 1.0))))
      ;;`(line-number-relative ((t (:foreground ,.grey-subtle :background ,.bg-main :height 0.9))))
      `(line-number-relative-current ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
@@ -564,7 +673,7 @@
      `(show-paren-match-expression ((t (:background ,.bg-contrast))))
      `(show-paren-mismatch ((t (:background ,.error-muted :foreground ,.fg-popup :weight bold :strike-through t))))
      `(sp-pair-overlay-face ((t (:background ,.bg-contrast))))
-     `(sp-show-pair-match-face ((t (:foreground ,.green :weight bold))))
+     `(sp-show-pair-match-face ((t (:foreground ,.visual-selection :weight ultra-bold))))
      `(sp-show-pair-mismatch-face ((t (:background ,.magenta :foreground ,.fg-bright :weight bold))))
      `(sp-wrap-overlay-face ((t (:background ,.bg-contrast))))
      `(sp-wrap-tag-overlay-face ((t (:background ,.bg-contrast))))
@@ -605,6 +714,14 @@
      `(breadcrumb-project-base-face ((t (:foreground ,.blue :height 0.9 :weight normal :box (:line-width (2 . 8) :color ,.bg-alt)))))
      `(breadcrumb-project-leaf-face ((t (:foreground ,.fg-popup :height 0.85 :weight semi-bold :box (:line-width (2 . 8) :color ,.bg-alt)))))
 
+     ;; Enhanced Breadcrumb Context
+     `(breadcrumb-separator ((t (:foreground ,.grey-border :height 0.8))))
+     `(breadcrumb-function-face ((t (:foreground ,.purple :weight bold))))
+     `(breadcrumb-class-face ((t (:foreground ,.blue :weight bold))))
+     `(breadcrumb-method-face ((t (:foreground ,.magenta :slant italic))))
+     `(breadcrumb-variable-face ((t (:foreground ,.lavender))))
+     `(breadcrumb-property-face ((t (:foreground ,.teal))))
+
      ;; Misc Packages
      `(yas-field-highlight-face ((t (:background ,.bg-selection))))
      `(yas-snippet-field ((t (:background ,.focus-bg :foreground ,.purple :box (:line-width -1 :color ,.purple)))))
@@ -638,9 +755,6 @@
      `(deft-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(deft-summary-face ((t (:foreground ,.grey-subtle :slant italic))))
 
-     `(conventional-commit-type-face ((t (:foreground ,.magenta :weight bold))))
-     `(conventional-commit-scope-face ((t (:foreground ,.yellow :slant italic))))
-     `(conventional-commit-breaking-change-face ((t (:foreground ,.error-muted :weight bold))))
 
      `(forge-topic-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(forge-pr-author-face ((t (:foreground ,.purple))))
@@ -695,7 +809,71 @@
 
      ;; Multimedia faces
      `(pdf-view-link ((t (:foreground ,.blue :underline t))))
-     `(emms-playlist-selected-face ((t (:background ,.bg-selection :foreground ,.fg-bright :weight bold)))))))
+     `(emms-playlist-selected-face ((t (:background ,.bg-selection :foreground ,.fg-bright :weight bold))))
+
+     ;; Modern Package Enhancements
+     ;; Eglot Booster
+     `(eglot-booster-mode-line ((t (:foreground ,.green :weight bold))))
+
+     ;; Claude Code IDE
+     `(claude-code-ide-header ((t (:foreground ,.purple :weight bold))))
+     `(claude-code-ide-prompt ((t (:foreground ,.yellow :weight bold))))
+     `(claude-code-ide-response ((t (:foreground ,.fg-main))))
+     `(claude-code-ide-error ((t (:foreground ,.magenta :weight bold))))
+
+     ;; Treesit-Auto
+     `(treesit-auto-install-progress ((t (:foreground ,.blue :slant italic))))
+     `(treesit-auto-install-success ((t (:foreground ,.green :weight bold))))
+     `(treesit-auto-install-error ((t (:foreground ,.magenta :weight bold))))
+
+     ;; Tabspaces
+     `(tabspaces-active-tab ((t (:background ,.bg-selection :foreground ,.purple :weight bold))))
+     `(tabspaces-inactive-tab ((t (:background ,.bg-contrast :foreground ,.grey-subtle))))
+     `(tabspaces-workspace-indicator ((t (:foreground ,.yellow :weight bold))))
+
+     ;; Project Tab Groups
+     `(project-tab-group-current ((t (:foreground ,.purple :weight bold))))
+     `(project-tab-group-inactive ((t (:foreground ,.grey-subtle))))
+
+     ;; Clipetty (terminal clipboard)
+     `(clipetty-success ((t (:foreground ,.green :weight bold))))
+     `(clipetty-error ((t (:foreground ,.magenta :weight bold))))
+
+     ;; Exec Path From Shell
+     `(exec-path-from-shell-info ((t (:foreground ,.blue :slant italic))))
+     `(exec-path-from-shell-warn ((t (:foreground ,.yellow :weight bold))))
+
+     ;; Additional Modern Enhancements
+     ;; Drag Stuff
+     `(drag-stuff-preview-face ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+
+     ;; Multiple Cursors Enhanced
+     `(mc/cursor-face ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
+     `(mc/region-face ((t (:background ,.visual-selection))))
+
+     ;; Symbol Overlay Enhanced
+     `(symbol-overlay-default-face ((t (:background ,.focus-bg :box (:line-width 1 :color ,.purple)))))
+     `(symbol-overlay-face-1 ((t (:background ,.purple :foreground ,.bg-main))))
+     `(symbol-overlay-face-2 ((t (:background ,.magenta :foreground ,.bg-main))))
+     `(symbol-overlay-face-3 ((t (:background ,.green :foreground ,.bg-main))))
+     `(symbol-overlay-face-4 ((t (:background ,.yellow :foreground ,.bg-main))))
+     `(symbol-overlay-face-5 ((t (:background ,.blue :foreground ,.bg-main))))
+     `(symbol-overlay-face-6 ((t (:background ,.teal :foreground ,.bg-main))))
+     `(symbol-overlay-face-7 ((t (:background ,.rose :foreground ,.bg-main))))
+     `(symbol-overlay-face-8 ((t (:background ,.lavender :foreground ,.bg-main))))
+
+     ;; Smartparens Enhanced
+     `(sp-pair-overlay-face ((t (:background ,.bg-selection))))
+     `(sp-wrap-overlay-opening-pair ((t (:background ,.purple :foreground ,.bg-main))))
+     `(sp-wrap-overlay-closing-pair ((t (:background ,.purple :foreground ,.bg-main))))
+     `(sp-wrap-overlay-face ((t (:background ,.bg-contrast))))
+
+     ;; Better Jumper
+     `(better-jumper-visited-face ((t (:background ,.focus-bg :foreground ,.purple))))
+
+     ;; Treesit-Fold
+     `(treesit-fold-replacement-face ((t (:foreground ,.grey-border :box (:line-width 1 :color ,.grey-border)))))
+     `(treesit-fold-fringe-face ((t (:foreground ,.purple)))))))
 
 (defun tale-themes--set-variables (theme-name palette)
   "Set theme variables for THEME-NAME using PALETTE."

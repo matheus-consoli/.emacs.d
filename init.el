@@ -185,10 +185,34 @@
 (use-package vertico-posframe
   :after vertico
   :custom
-  (vertico-posframe-poshandler 'posframe-poshandler-window-bottom-center)
+  (vertico-posframe-poshandler 'consoli-config/vertico-posframe-conditional-echo-poshandler)
   (vertico-posframe-border-width 10)
   (vertico-posframe-truncate-lines t)
   :config
+  (defun consoli-config/vertico-posframe-conditional-echo-poshandler (info)
+    "Position posframe over echo area only when echo area is directly below the current window."
+    (let* ((window (plist-get info :parent-window))
+           (frame (window-frame window))
+           (frame-pixel-height  (frame-pixel-height frame))
+           (frame-pixel-width (frame-pixel-width frame))
+           (window-edges (window-pixel-edges window))
+           (window-bottom (nth 3 window-edges))
+           (window-left (nth 0 window-edges))
+           (window-right (nth 2 window-edges))
+           (echo-area-height (window-pixel-height (minibuffer-window frame)))
+           (echo-area-top (- frame-pixel-height echo-area-height))
+           ;; Check if echo area is directly below the window (within a few pixels tolerance)
+           (echo-below-window-p (<= (abs (- window-bottom echo-area-top)) 5))
+           (posframe-width (plist-get info :posframe-width))
+           (posframe-height (plist-get info :posframe-height)))
+
+      (if echo-below-window-p
+          ;; Position over echo area when it's below the window
+          (cons (+ window-left (/ (- (- window-right window-left) posframe-width) 2))
+                (- frame-pixel-height (+ 10 (* echo-area-height (+ 1 vertico-count)))))
+        ;; Fallback to normal bottom-center positioning
+        (posframe-poshandler-window-bottom-center info))))
+
   (defun consoli-config/vertico-posframe-size (buffer)
     "Set posframe width to match current window, with fixed height."
     (let* ((window (selected-window))
@@ -894,7 +918,11 @@ targets."
   (vterm-kill-buffer-on-exit t)
   (vterm-copy-exclude-prompt t)
   :config
-  (add-hook 'vterm-mode-hook '(lambda () (hl-line-mode nil)))
+  (defun disable-vterm-modes ()
+    (toggle-truncate-lines)
+    (hl-line-mode -1))
+  (add-hook 'vterm-mode-hook #'disable-hl-line)
+
   (add-hook 'vterm-mode-hook
             '(lambda ()
                (face-remap-add-relative 'default
@@ -1157,6 +1185,14 @@ targets."
   (aidermacs-global-read-only-files '("~/Projects/templates/agents/rust-pro.md" "~/Projects/templates/agents/backend-architect.md"))
   (aidermacs-project-read-only-files '("CONVENTIONS.md" "README.md")))
 
+(use-package claude-code-ide
+  :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
+  :bind ("C-c C-d" . claude-code-ide-menu)
+  :custom
+  (claude-code-ide-terminal-backend 'eat)
+  :config
+  (claude-code-ide-emacs-tools-setup))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; THEME CONFIGURATION
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1344,6 +1380,7 @@ targets."
   :custom
   (hl-line-overlay-priority 999999)
   :config
+
   (defcustom consoli-config/show-hl-line-after-secs 3
     "Show the hl-line after N seconds of idle time."
     :type 'number
