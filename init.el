@@ -63,7 +63,7 @@
 (defconst programming-font "Dank Mono"
   "Font for programming faces.")
 
-(defconst alternative-programming-font "Dank Mono"
+(defconst alternative-programming-font "Reddit Mono"
   "Font for alternative faces.")
 
 (defconst consoli-config/completion-delay 0.2
@@ -575,8 +575,7 @@ If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
   "Modern line spacing for current buffer."
   (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15)))
 
-(dolist (hook '(prog-mode-hook
-                text-mode-hook
+(dolist (hook '(text-mode-hook
                 git-commit-mode-hook))
   (add-hook hook #'consoli-config/set-custom-text-properties))
 
@@ -613,8 +612,22 @@ If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
                        #'cape-file))
                 cape-dabbrev-min-length 3))
 
-  (add-hook 'prog-mode-hook #'consoli-config/cape-setup-prog)
   (add-hook 'text-mode-hook #'consoli-config/cape-setup-text)
+
+  (defun consoli-config/prog-mode-setup ()
+    "Complete setup for prog-mode."
+    ;; Set custom text properties (line spacing, etc)
+    (consoli-config/set-custom-text-properties)
+    ;; Setup completion at point
+    (consoli-config/cape-setup-prog)
+    ;; Set programming font
+    (face-remap-add-relative 'default
+                             :family programming-font
+                             :height consoli-config/font-height-programming)
+    ;; Infer indentation style
+    (consoli-config/infer-indentation-style))
+
+  (add-hook 'prog-mode-hook #'consoli-config/prog-mode-setup)
 
   :init
   (add-hook 'completion-at-point-functions #'cape-file)
@@ -726,7 +739,6 @@ If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
               ("t" . treesit-jump-transient)))
 
 (use-package embark
-  :ensure t
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
    ;;("C-;" . embark-dwim)        ;; good alternative: M-.
@@ -742,11 +754,7 @@ If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
                  (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
-  :ensure t
   :after (embark consult)
-  :demand t ; only necessary if you have the hook below
-  ;; if you want to have consult previews as you move around an
-  ;; auto-updating embark collect buffer
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 (defun embark-which-key-indicator ()
@@ -933,189 +941,192 @@ targets."
   (vterm-kill-buffer-on-exit t)
   (vterm-copy-exclude-prompt t)
   :config
-  (defun disable-vterm-modes ()
+  (defun consoli-config/vterm-setup ()
+    "Complete setup for vterm mode."
+    ;; Disable some modes that don't work well with vterm
     (toggle-truncate-lines)
-    (hl-line-mode -1))
-  (add-hook 'vterm-mode-hook #'disable-vterm-modes)
+    (hl-line-mode -1)
+    ;; Set font
+    (face-remap-add-relative 'default
+                             :family programming-font
+                             :height consoli-config/font-height-programming)
+    ;; Hide modeline
+    (consoli-config/hide-modeline))
 
-  (add-hook 'vterm-mode-hook
-            '(lambda ()
-               (face-remap-add-relative 'default
-                                        :family programming-font
-                                        :height consoli-config/font-height-programming))))
+  (add-hook 'vterm-mode-hook #'consoli-config/vterm-setup)
 
-(defvar consoli-config/project-terminals (make-hash-table :test 'equal)
-  "Hash table mapping project roots to lists of terminal buffers.")
+  (defvar consoli-config/project-terminals (make-hash-table :test 'equal)
+    "Hash table mapping project roots to lists of terminal buffers.")
 
-(defvar consoli-config/terminal-window nil
-  "Window used for displaying terminals.")
+  (defvar consoli-config/terminal-window nil
+    "Window used for displaying terminals.")
 
-(defvar consoli-config/terminal-height 15
-  "Height of terminal window in lines.")
+  (defvar consoli-config/terminal-height 15
+    "Height of terminal window in lines.")
 
-(defun consoli-config/get-project-root ()
-  "Get current project root, compatible with tabspaces."
-  (if-let* ((project (project-current)))
-      (project-root project)
-    default-directory))
+  (defun consoli-config/get-project-root ()
+    "Get current project root, compatible with tabspaces."
+    (if-let* ((project (project-current)))
+        (project-root project)
+      default-directory))
 
-(defun consoli-config/project-terminal-name (project-root index)
-  "Generate terminal buffer name for PROJECT-ROOT and INDEX."
-  (let ((project-name (if-let* ((project (project-current)))
-                          (project-name project)
-                        (file-name-nondirectory (string-remove-suffix "/" project-root)))))
-    (format "*vterm: %s-%d*" project-name index)))
+  (defun consoli-config/project-terminal-name (project-root index)
+    "Generate terminal buffer name for PROJECT-ROOT and INDEX."
+    (let ((project-name (if-let* ((project (project-current)))
+                            (project-name project)
+                          (file-name-nondirectory (string-remove-suffix "/" project-root)))))
+      (format "*vterm: %s-%d*" project-name index)))
 
-(defun consoli-config/get-project-terminals (project-root)
-  "Get list of live terminal buffers for PROJECT-ROOT."
-  (seq-filter #'buffer-live-p
-              (gethash project-root consoli-config/project-terminals '())))
+  (defun consoli-config/get-project-terminals (project-root)
+    "Get list of live terminal buffers for PROJECT-ROOT."
+    (seq-filter #'buffer-live-p
+                (gethash project-root consoli-config/project-terminals '())))
 
-(defun consoli-config/add-project-terminal (project-root buffer)
-  "Add BUFFER to PROJECT-ROOT's terminal list."
-  (let ((terminals (consoli-config/get-project-terminals project-root)))
-    (puthash project-root (cons buffer terminals) consoli-config/project-terminals)))
+  (defun consoli-config/add-project-terminal (project-root buffer)
+    "Add BUFFER to PROJECT-ROOT's terminal list."
+    (let ((terminals (consoli-config/get-project-terminals project-root)))
+      (puthash project-root (cons buffer terminals) consoli-config/project-terminals)))
 
-(defun consoli-config/remove-project-terminal (project-root buffer)
-  "Remove BUFFER from PROJECT-ROOT's terminal list."
-  (let ((terminals (consoli-config/get-project-terminals project-root)))
-    (puthash project-root (remove buffer terminals) consoli-config/project-terminals)))
+  (defun consoli-config/remove-project-terminal (project-root buffer)
+    "Remove BUFFER from PROJECT-ROOT's terminal list."
+    (let ((terminals (consoli-config/get-project-terminals project-root)))
+      (puthash project-root (remove buffer terminals) consoli-config/project-terminals)))
 
-(defun consoli-config/cleanup-dead-terminals ()
-  "Remove dead buffers from project terminals tracking."
-  (maphash (lambda (project-root terminals)
-             (let ((live-terminals (seq-filter #'buffer-live-p terminals)))
-               (if live-terminals
-                   (puthash project-root live-terminals consoli-config/project-terminals)
-                 (remhash project-root consoli-config/project-terminals))))
-           consoli-config/project-terminals))
+  (defun consoli-config/cleanup-dead-terminals ()
+    "Remove dead buffers from project terminals tracking."
+    (maphash (lambda (project-root terminals)
+               (let ((live-terminals (seq-filter #'buffer-live-p terminals)))
+                 (if live-terminals
+                     (puthash project-root live-terminals consoli-config/project-terminals)
+                   (remhash project-root consoli-config/project-terminals))))
+             consoli-config/project-terminals))
 
-(defun consoli-config/is-terminal-for-current-project-p (buffer)
-  "Check if BUFFER is a terminal buffer for the current project."
-  (when (and (string-prefix-p "*vterm:" (buffer-name buffer))
-             (buffer-live-p buffer))
-    (let* ((current-project-root (consoli-config/get-project-root))
-           (project-terminals (consoli-config/get-project-terminals current-project-root)))
-      (memq buffer project-terminals))))
+  (defun consoli-config/is-terminal-for-current-project-p (buffer)
+    "Check if BUFFER is a terminal buffer for the current project."
+    (when (and (string-prefix-p "*vterm:" (buffer-name buffer))
+               (buffer-live-p buffer))
+      (let* ((current-project-root (consoli-config/get-project-root))
+             (project-terminals (consoli-config/get-project-terminals current-project-root)))
+        (memq buffer project-terminals))))
 
-;; Terminal Window Management
-(defun consoli-config/create-terminal-window ()
-  "Create a window at the bottom for terminals."
-  (let* ((root-window (frame-root-window))
-         (window (split-window root-window (- consoli-config/terminal-height) 'below)))
-    (setq consoli-config/terminal-window window)
-    ;; Configure window parameters for better integration
-    (set-window-parameter window 'no-other-window t)
-    (set-window-parameter window 'no-delete-other-windows t)
-    window))
+  ;; Terminal Window Management
+  (defun consoli-config/create-terminal-window ()
+    "Create a window at the bottom for terminals."
+    (let* ((root-window (frame-root-window))
+           (window (split-window root-window (- consoli-config/terminal-height) 'below)))
+      (setq consoli-config/terminal-window window)
+      ;; Configure window parameters for better integration
+      (set-window-parameter window 'no-other-window t)
+      (set-window-parameter window 'no-delete-other-windows t)
+      window))
 
-(defun consoli-config/get-or-create-terminal-window ()
-  "Get existing terminal window or create new one."
-  (if (and consoli-config/terminal-window
-           (window-live-p consoli-config/terminal-window))
-      consoli-config/terminal-window
-    (consoli-config/create-terminal-window)))
-
-(defun consoli-config/hide-terminal-window ()
-  "Hide the terminal window."
-  (when (and consoli-config/terminal-window
+  (defun consoli-config/get-or-create-terminal-window ()
+    "Get existing terminal window or create new one."
+    (if (and consoli-config/terminal-window
              (window-live-p consoli-config/terminal-window))
-    (delete-window consoli-config/terminal-window)
-    (setq consoli-config/terminal-window nil)))
+        consoli-config/terminal-window
+      (consoli-config/create-terminal-window)))
 
-(defun consoli-config/terminal-window-visible-p ()
-  "Check if terminal window is currently visible."
-  (and consoli-config/terminal-window
-       (window-live-p consoli-config/terminal-window)))
+  (defun consoli-config/hide-terminal-window ()
+    "Hide the terminal window."
+    (when (and consoli-config/terminal-window
+               (window-live-p consoli-config/terminal-window))
+      (delete-window consoli-config/terminal-window)
+      (setq consoli-config/terminal-window nil)))
 
-(defun consoli-config/focus-terminal-window ()
-  "Focus the terminal window if visible."
-  (when (consoli-config/terminal-window-visible-p)
-    (select-window consoli-config/terminal-window)))
+  (defun consoli-config/terminal-window-visible-p ()
+    "Check if terminal window is currently visible."
+    (and consoli-config/terminal-window
+         (window-live-p consoli-config/terminal-window)))
 
-(defun consoli-config/new-project-terminal ()
-  "Create a new terminal for the current project."
-  (interactive)
-  (consoli-config/cleanup-dead-terminals)
-  (let* ((project-root (consoli-config/get-project-root))
-         (terminals (consoli-config/get-project-terminals project-root))
-         (index (1+ (length terminals)))
-         (buffer-name (consoli-config/project-terminal-name project-root index))
-         (default-directory project-root))
+  (defun consoli-config/focus-terminal-window ()
+    "Focus the terminal window if visible."
+    (when (consoli-config/terminal-window-visible-p)
+      (select-window consoli-config/terminal-window)))
 
-    (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
-      (with-selected-window terminal-window
-        (let ((buffer (vterm buffer-name)))
-          (consoli-config/add-project-terminal project-root buffer)
-          ;; Refresh centaur-tabs to show the new terminal
-          (when (bound-and-true-p centaur-tabs-mode)
-            (centaur-tabs-display-update))
-          buffer)))))
+  (defun consoli-config/new-project-terminal ()
+    "Create a new terminal for the current project."
+    (interactive)
+    (consoli-config/cleanup-dead-terminals)
+    (let* ((project-root (consoli-config/get-project-root))
+           (terminals (consoli-config/get-project-terminals project-root))
+           (index (1+ (length terminals)))
+           (buffer-name (consoli-config/project-terminal-name project-root index))
+           (default-directory project-root))
 
-(defun consoli-config/switch-project-terminal ()
-  "Switch between terminals in the current project."
-  (interactive)
-  (consoli-config/cleanup-dead-terminals)
-  (let* ((project-root (consoli-config/get-project-root))
-         (terminals (consoli-config/get-project-terminals project-root)))
-
-    (cond
-     ((null terminals)
-      (consoli-config/new-project-terminal))
-
-     ((= 1 (length terminals))
       (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
         (with-selected-window terminal-window
-          (switch-to-buffer (car terminals)))))
+          (let ((buffer (vterm buffer-name)))
+            (consoli-config/add-project-terminal project-root buffer)
+            ;; Refresh centaur-tabs to show the new terminal
+            (when (bound-and-true-p centaur-tabs-mode)
+              (centaur-tabs-display-update))
+            buffer)))))
 
-     (t
-      (let* ((terminal-names (mapcar #'buffer-name terminals))
-             (choice (completing-read "Switch to terminal: " terminal-names nil t)))
+  (defun consoli-config/switch-project-terminal ()
+    "Switch between terminals in the current project."
+    (interactive)
+    (consoli-config/cleanup-dead-terminals)
+    (let* ((project-root (consoli-config/get-project-root))
+           (terminals (consoli-config/get-project-terminals project-root)))
+
+      (cond
+       ((null terminals)
+        (consoli-config/new-project-terminal))
+
+       ((= 1 (length terminals))
         (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
           (with-selected-window terminal-window
-            (switch-to-buffer choice))))))))
+            (switch-to-buffer (car terminals)))))
 
-(defun consoli-config/toggle-project-terminal ()
-  "Toggle terminal visibility for current project."
-  (interactive)
-  (if (consoli-config/terminal-window-visible-p)
-      (consoli-config/hide-terminal-window)
-    (progn
-      (consoli-config/switch-project-terminal)
-      (consoli-config/focus-terminal-window))))
+       (t
+        (let* ((terminal-names (mapcar #'buffer-name terminals))
+               (choice (completing-read "Switch to terminal: " terminal-names nil t)))
+          (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
+            (with-selected-window terminal-window
+              (switch-to-buffer choice))))))))
 
-(defun consoli-config/kill-project-terminals ()
-  "Kill all terminals for the current project."
-  (interactive)
-  (let* ((project-root (consoli-config/get-project-root))
-         (terminals (consoli-config/get-project-terminals project-root)))
-    (when terminals
-      (dolist (terminal terminals)
-        (when (buffer-live-p terminal)
-          (kill-buffer terminal)))
-      (remhash project-root consoli-config/project-terminals)
-      (when (consoli-config/terminal-window-visible-p)
-        (consoli-config/hide-terminal-window))
-      (message "Killed %d terminal(s) for project" (length terminals)))))
+  (defun consoli-config/toggle-project-terminal ()
+    "Toggle terminal visibility for current project."
+    (interactive)
+    (if (consoli-config/terminal-window-visible-p)
+        (consoli-config/hide-terminal-window)
+      (progn
+        (consoli-config/switch-project-terminal)
+        (consoli-config/focus-terminal-window))))
 
-;; Terminal lifecycle management
-(defun consoli-config/cleanup-terminal-on-kill ()
-  "Clean up terminal tracking when buffer is killed."
-  (when (string-match-p "^\\*vterm:" (buffer-name))
-    (let ((project-root (consoli-config/get-project-root)))
-      (consoli-config/remove-project-terminal project-root (current-buffer)))))
+  (defun consoli-config/kill-project-terminals ()
+    "Kill all terminals for the current project."
+    (interactive)
+    (let* ((project-root (consoli-config/get-project-root))
+           (terminals (consoli-config/get-project-terminals project-root)))
+      (when terminals
+        (dolist (terminal terminals)
+          (when (buffer-live-p terminal)
+            (kill-buffer terminal)))
+        (remhash project-root consoli-config/project-terminals)
+        (when (consoli-config/terminal-window-visible-p)
+          (consoli-config/hide-terminal-window))
+        (message "Killed %d terminal(s) for project" (length terminals)))))
 
-(add-hook 'kill-buffer-hook #'consoli-config/cleanup-terminal-on-kill)
+  ;; Terminal lifecycle management
+  (defun consoli-config/cleanup-terminal-on-kill ()
+    "Clean up terminal tracking when buffer is killed."
+    (when (string-match-p "^\\*vterm:" (buffer-name))
+      (let ((project-root (consoli-config/get-project-root)))
+        (consoli-config/remove-project-terminal project-root (current-buffer)))))
 
-;; Hide terminal when switching projects
-(with-eval-after-load 'project
-  (add-hook 'project-switch-hook
-            (lambda ()
-              (consoli-config/hide-terminal-window)
-              (consoli-config/refresh-centaur-tabs))))
+  (add-hook 'kill-buffer-hook #'consoli-config/cleanup-terminal-on-kill)
+
+  ;; Hide terminal when switching projects
+  (with-eval-after-load 'project
+    (add-hook 'project-switch-hook
+              (lambda ()
+                (consoli-config/hide-terminal-window)
+                (consoli-config/refresh-centaur-tabs)))))
 
 ;; Integration with your existing mode-line hiding
-(add-hook 'vterm-mode-hook #'consoli-config/hide-modeline)
+;; (Note: consoli-config/hide-modeline is already added via the dolist below)
 
 (defun consoli-config/refresh-centaur-tabs ()
   "Refresh centaur-tabs display."
@@ -1242,6 +1253,7 @@ targets."
   (doom-themes-org-config))
 
 (use-package kaolin-themes
+  :defer t
   :custom
   (kaolin-themes-bold t)
   (kaolin-themes-italic t)
@@ -1294,13 +1306,6 @@ targets."
 (set-face-attribute 'default nil
                     :font ui-font
                     :height consoli-config/font-height-ui)
-
-;; Programming mode font
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (face-remap-add-relative 'default
-                                     :family programming-font
-                                     :height consoli-config/font-height-programming)))
 
 ;; Smaller font for transient menus
 (add-hook 'transient-setup-buffer-hook
@@ -1770,7 +1775,6 @@ targets."
 (dolist (hook '(aidermacs-comint-mode-hook
                 aidermacs-vterm-mode-hook
                 compilation-mode-hook
-                vterm-mode-hook
                 git-commit-mode-hook
                 messages-buffer-mode-hook
                 special-mode-hook
@@ -1960,8 +1964,21 @@ may not be efficient."
     1 'org-checkbox-done-text prepend))
  'append)
 
+(defun consoli-config/org-mode-setup ()
+  "Complete setup for org-mode."
+  ;; Beautify Org Checkbox Symbol
+  (push '("[ ]" . "") prettify-symbols-alist)
+  (push '("[X]" . "" ) prettify-symbols-alist)
+  (push '("[-]" . "" ) prettify-symbols-alist)
+  (prettify-symbols-mode)
+  ;; Setup prettify symbols for src blocks
+  (rasmus/org-prettify-symbols)
+  ;; Disable drag-stuff in org buffers
+  (drag-stuff-mode -1))
+
+(add-hook 'org-mode-hook #'consoli-config/org-mode-setup)
+
 (add-hook 'org-mode-hook (lambda ()
-                           "Beautify Org Checkbox Symbol"
                            (push '("[ ]" . "") prettify-symbols-alist)
                            (push '("[X]" . "" ) prettify-symbols-alist)
                            (push '("[-]" . "" ) prettify-symbols-alist)
@@ -2109,59 +2126,6 @@ may not be efficient."
               "\\)"))
 
 (with-eval-after-load 'org
-  (defvar-local rasmus/org-at-src-begin -1
-    "Variable that holds whether last position was a ")
-
-  (defvar rasmus/ob-header-symbol ?☰
-    "Symbol used for babel headers")
-
-  (defun rasmus/org-prettify-src--update ()
-    (let ((case-fold-search t)
-          (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
-          found)
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward re nil t)
-          (goto-char (match-end 0))
-          (let ((args (org-trim
-                       (buffer-substring-no-properties (point)
-                                                       (line-end-position)))))
-            (when (org-string-nw-p args)
-              (let ((new-cell (cons args rasmus/ob-header-symbol)))
-                (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
-                (cl-pushnew new-cell found :test #'equal)))))
-        (setq prettify-symbols-alist
-              (cl-set-difference prettify-symbols-alist
-                                 (cl-set-difference
-                                  (cl-remove-if-not
-                                   (lambda (elm)
-                                     (eq (cdr elm) rasmus/ob-header-symbol))
-                                   prettify-symbols-alist)
-                                  found :test #'equal)))
-        ;; Clean up old font-lock-keywords.
-        (font-lock-remove-keywords nil prettify-symbols--keywords)
-        (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
-        (font-lock-add-keywords nil prettify-symbols--keywords)
-        (while (re-search-forward re nil t)
-          (font-lock-flush (line-beginning-position) (line-end-position))))))
-
-  (defun rasmus/org-prettify-src ()
-    "Hide src options via `prettify-symbols-mode'.
-
-  `prettify-symbols-mode' is used because it has uncollpasing. It's
-  may not be efficient."
-    (let* ((case-fold-search t)
-           (at-src-block (save-excursion
-                           (beginning-of-line)
-                           (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
-      ;; Test if we moved out of a block.
-      (when (or (and rasmus/org-at-src-begin
-                     (not at-src-block))
-                ;; File was just opened.
-                (eq rasmus/org-at-src-begin -1))
-        (rasmus/org-prettify-src--update))
-      (setq rasmus/org-at-src-begin at-src-block)))
-
   (defun rasmus/org-prettify-symbols ()
     (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
           (cl-reduce 'append
@@ -2174,26 +2138,7 @@ may not be efficient."
                                ("#+begin_comment" . ?)
                                ("#+end_comment" . ?)))))
     (turn-on-prettify-symbols-mode)
-    (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
-
-  (defun rasmus/org-prettify-src ()
-    "Hide src options via `prettify-symbols-mode'.
-  `prettify-symbols-mode' is used because it has uncollpasing. It's
-  may not be efficient."
-    (let* ((case-fold-search t)
-           (at-src-block (save-excursion
-                           (beginning-of-line)
-                           (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
-      ;; Test if we moved out of a block.
-      (when (or (and rasmus/org-at-src-begin
-                     (not at-src-block))
-                ;; File was just opened.
-                (eq rasmus/org-at-src-begin -1))
-        (rasmus/org-prettify-src--update))
-      (setq rasmus/org-at-src-begin at-src-block)))
-
-  (add-hook 'org-mode-hook #'rasmus/org-prettify-symbols)
-  )
+    (add-hook 'post-command-hook 'rasmus/org-prettify-src t t)))
 
 (defun org-summary-todo (n-done n-not-done)
   "Switch entry to DONE when all subentries are done, to TODO otherwise."
@@ -2341,8 +2286,7 @@ may not be efficient."
   (git-commit-mode . conventional-commit-setup))
 
 (use-package fringe-helper
-  :defer t
-  :ensure t)
+  :defer t)
 
 (use-package git-gutter
   :hook (after-init . global-git-gutter-mode))
@@ -2503,8 +2447,6 @@ may not be efficient."
 (use-package drag-stuff
   :hook (after-init . drag-stuff-global-mode)
   :config
-  ;; disable it in org buffers
-  (add-hook 'org-mode-hook (lambda () (drag-stuff-mode -1)))
   (drag-stuff-define-keys))
 
 (save-place-mode 1)
@@ -2615,7 +2557,14 @@ may not be efficient."
                   ;; (:hideClosureInitialization . t)
                   ;; (:hideNamedConstructor . t)
                   )))))
-(add-hook 'rust-ts-mode-hook #'consoli-config/rust-eglot-setup)
+(defun consoli-config/rust-ts-mode-setup ()
+  "Complete setup for rust-ts-mode."
+  ;; Setup eglot for Rust
+  (consoli-config/rust-eglot-setup)
+  ;; Setup syntax highlighting
+  (consoli-config/rust-ts-mode-highlighting))
+
+(add-hook 'rust-ts-mode-hook #'consoli-config/rust-ts-mode-setup)
 
 (defface consoli-config-rust-unwrap-face
   '((t (:inherit error
@@ -2668,8 +2617,6 @@ may not be efficient."
      :feature 'attribute-items
      :override t
      '((attribute_item) @consoli-config-rust-attribute-face)))))
-
-(add-hook 'rust-ts-mode-hook #'consoli-config/rust-ts-mode-highlighting)
 
 (use-package cargo-transient
   :defer t
@@ -2750,8 +2697,6 @@ may not be efficient."
     (cond
      ((> space-count tab-count) (setq indent-tabs-mode nil))
      ((> tab-count space-count) (setq indent-tabs-mode t)))))
-
-(add-hook 'prog-mode-hook #'consoli-config/infer-indentation-style)
 
 ;; Terminal suspend function
 (defun consoli-config/suspend-if-in-shell ()
