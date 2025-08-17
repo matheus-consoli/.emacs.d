@@ -5,7 +5,6 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
-(setq inhibit-splash-screen t)
 (set-frame-parameter nil 'ns-appearance 'dark)
 (set-frame-parameter nil 'ns-transparent-titlebar nil)
 
@@ -31,8 +30,6 @@
 ;; keep the eln cache clean
 (setq-default load-prefer-newer t)
 ;; Don't ping things that look like domain names.
-(defconst options '("-march=znver3"
-                    "-mtune=znver3"
 (setq-default ffap-machine-p-known 'reject)
 
 (setq-default native-comp-deferred-compilation t
@@ -44,19 +41,33 @@
               confirm-kill-processes t
               native-comp-always-compile t
               package-native-compile t)
-                    "-O3"
-                    "-fno-finite-math-only"
-                    "-funroll-loops"
-                    "-finline-functions"
-                    "-fomit-frame-pointer"
-                    "-floop-nest-optimize"
-                    "-fipa-pta"
-                    "-fno-semantic-interposition"))
 
-(setq native-comp-speed 2)
-(setq native-comp-compiler-options options)
-(setq native-comp-driver-options options)
+(defconst znver3-march '("-march=znver3" "-mtune=znver3"))
+(defconst arm-march '("-march=armv8-a+crc+lse+rcpc+rdma+dotprod+aes+sha3+sm4+fp16fml+rng+sb+ssbs+i8mm+bf16+flagm"))
 
+(defconst system-arch (shell-command-to-string "uname -m"))
+
+(defconst arch-specific-options
+  (cond
+   ((string-match-p "aarch64\\|arm64" system-arch)
+    arm-march)
+   ((string-match-p "x86_64" system-arch)
+    znver3-march)
+   (t '())))
+
+(defconst options (append '("-O3"
+                            "-fno-finite-math-only"
+                            "-funroll-loops"
+                            "-finline-functions"
+                            "-fomit-frame-pointer"
+                            "-floop-nest-optimize"
+                            "-fipa-pta"
+                            "-fno-semantic-interposition")
+                          arch-specific-options))
+
+(setq-default native-comp-speed 2
+              native-comp-compiler-options options
+              native-comp-driver-options options)
 
 ;; DEBUG
 ;; (setq debug-on-error t)
@@ -88,8 +99,7 @@
 
   ;; Reduce *Message* noise at startup. An empty scratch buffer (or the
   ;; dashboard) is more than enough, and faster to display.
-  (setq inhibit-startup-screen t
-        inhibit-startup-echo-area-message user-login-name)
+  (setq inhibit-startup-screen t)
   (setq initial-buffer-choice nil
         inhibit-startup-buffer-menu t
         inhibit-x-resources t)
