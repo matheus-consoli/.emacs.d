@@ -1,33 +1,78 @@
-;;; tale-themes-common.el --- Common theme generator for Tale themes -*- lexical-binding: t; -*-
+;;; tale-themes-common.el --- Enhanced common theme generator for Tale themes -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2023-2025
+;; Author: Generated theme system
+;; Keywords: faces, theme
+;; Version: 2.0
+
+;;; Commentary:
+
+;; Enhanced Tale themes common generator with improved color science,
+;; accessibility, and comprehensive face coverage for modern Emacs.
+
+;;; Code:
+
+(require 'color)
+
+(defun tale-themes--lighten-color (color amount)
+  "Lighten COLOR by AMOUNT (0.0-1.0)."
+  (when (and color (> (length color) 0))
+    (apply 'color-rgb-to-hex
+           (append (color-lighten-hsl
+                    (apply 'color-rgb-to-hsl
+                           (color-name-to-rgb color))
+                    amount)
+                   (list 2)))))
+
+(defun tale-themes--darken-color (color amount)
+  "Darken COLOR by AMOUNT (0.0-1.0)."
+  (when (and color (> (length color) 0))
+    (apply 'color-rgb-to-hex
+           (append (color-darken-hsl
+                    (apply 'color-rgb-to-hsl
+                           (color-name-to-rgb color))
+                    amount)
+                   (list 2)))))
+
+(defun tale-themes--blend-colors (color1 color2 alpha)
+  "Blend COLOR1 with COLOR2 using ALPHA (0.0-1.0)."
+  (when (and color1 color2 (> (length color1) 0) (> (length color2) 0))
+    (let* ((rgb1 (color-name-to-rgb color1))
+           (rgb2 (color-name-to-rgb color2))
+           (blended (list (+ (* (nth 0 rgb1) (- 1 alpha)) (* (nth 0 rgb2) alpha))
+                         (+ (* (nth 1 rgb1) (- 1 alpha)) (* (nth 1 rgb2) alpha))
+                         (+ (* (nth 2 rgb1) (- 1 alpha)) (* (nth 2 rgb2) alpha)))))
+      (apply 'color-rgb-to-hex (append blended (list 2))))))
 
 (defun tale-themes--create-theme (theme-name palette)
   "Create a theme with THEME-NAME using PALETTE."
   (let-alist palette
     (custom-theme-set-faces
      theme-name
-     ;; BASIC FACES
+     ;; == CORE UI FACES ==
      `(cursor ((t (:background ,.lavender))))
      `(default ((t (:background ,.bg-main :foreground ,.fg-main))))
-     `(fill-column-indicator ((t (:background ,.bg-dim))))
-     `(fringe ((t (:background ,.bg-main))))
+     `(fill-column-indicator ((t (:background ,.bg-dim :foreground ,.grey-border))))
+     `(fringe ((t (:background ,.bg-main :foreground ,.grey-subtle))))
      `(highlight ((t (:background ,.hover-bg))))
-     ;; `(hl-line ((t (:background ,.bg-contrast))))
-     ;; `(hl-line ((t (:box (:line-width (-1 . -1) :color ,.bg-contrast :style nil)))))
+     `(hl-line ((t (:background ,.bg-alt :extend t))))
      `(link ((t (:foreground ,.purple :underline t))))
-     `(minibuffer-prompt ((t (:background unspecified :foreground ,.purple :bold t))))
+     `(link-visited ((t (:foreground ,.magenta :underline t))))
+     `(minibuffer-prompt ((t (:background unspecified :foreground ,.purple :weight bold))))
      `(region ((t (:background ,.visual-selection :foreground unspecified :extend t))))
      `(secondary-selection ((t (:background ,.secondary-selection :extend t))))
      `(vertical-border ((t (:foreground ,.grey-border))))
-     `(window-divider ((t (:foreground ,.bg-main))))
-     `(window-divider-last-pixel ((t (:foreground ,.bg-main))))
-     `(window-divider-first-pixel ((t (:foreground ,.bg-main))))
+     `(window-divider ((t (:foreground ,.bg-dim))))
+     `(window-divider-last-pixel ((t (:foreground ,.bg-alt))))
+     `(window-divider-first-pixel ((t (:foreground ,.bg-alt))))
      `(success ((t (:foreground ,.success-muted :weight bold))))
      `(warning ((t (:foreground ,.warning-muted :weight bold))))
      `(error ((t (:foreground ,.error-muted :weight bold))))
+     `(match ((t (:foreground ,.bg-main :background ,.green :weight bold))))
+     `(shadow ((t (:foreground ,.grey-subtle))))
 
-     ;; General Purpose Faces
-     `(shadow ((t (:foreground ,.grey-border))))
-     `(tooltip ((t (:background ,.bg-popup :foreground ,.fg-main))))
+     ;; == ENHANCED UI ELEMENTS ==
+     `(tooltip ((t (:background ,.bg-popup :foreground ,.fg-main :box (:line-width 1 :color ,.grey-border)))))
      `(button ((t (:foreground ,.purple :underline t))))
      `(header-line ((t (:background ,.bg-alt :foreground ,.grey-docstring :weight normal))))
      `(widget-field ((t (:background ,.bg-contrast :foreground ,.fg-main))))
@@ -60,40 +105,56 @@
      `(nobreak-space ((t (:foreground ,.yellow :underline t))))
      `(trailing-whitespace ((t (:background ,.error-muted :foreground ,.fg-bright))))
 
-     ;; modeline
+     ;; == ENHANCED MODELINE ==
      `(mode-line ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
-                                  :box (:line-width (8 . 10) :color ,.bg-main) :inherit nil))))
-     `(mode-line-active ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
-                                         :box (:line-width (8 . 10) :color ,.bg-main) :inherit nil))))
+                     :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+     `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-main :weight normal
+                            :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
      `(mode-line-inactive ((t (:background ,.bg-special :foreground ,.grey-subtle :weight light
-                                           :box (:line-width (8 . 10) :color ,.bg-special) :inherit nil))))
-     `(mode-line-highlight ((t  (:background ,.hover-bg :foreground ,.grey-docstring))))
-     `(mode-line-buffer-id ((t (:foreground ,.purple :bold t))))
-     `(mode-line-emphasis ((t (:foreground ,.green))))
+                               :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+     `(mode-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main :box (:line-width 2 :color ,.purple)))))
+     `(mode-line-buffer-id ((t (:foreground ,.purple :weight bold))))
+     `(mode-line-emphasis ((t (:foreground ,.green :weight bold))))
+     `(mode-line-inactive-buffer-id ((t (:foreground ,.grey-subtle))))
 
-     ;; FONT LOCK & TREESITTER FACES
+     ;; == ENHANCED FONT LOCK & SYNTAX HIGHLIGHTING ==
      `(font-lock-builtin-face ((t (:foreground ,.magenta))))
      `(font-lock-comment-delimiter-face ((t (:foreground ,.grey-subtle :slant italic))))
      `(font-lock-comment-face ((t (:foreground ,.grey-comment-blue :slant italic))))
      `(font-lock-constant-face ((t (:foreground ,.purple :weight bold))))
      `(font-lock-doc-face ((t (:foreground ,.grey-docstring :slant italic))))
-     `(font-lock-function-name-face ((t (:foreground ,.purple))))
-     `(font-lock-keyword-face ((t (:foreground ,.magenta :slant italic))))
-     `(font-lock-preprocessor-face ((t (:foreground ,.yellow :weight bold))))
+     `(font-lock-function-name-face ((t (:foreground ,.purple :weight bold))))
+     `(font-lock-keyword-face ((t (:foreground ,.magenta :weight bold))))
+     `(font-lock-negation-char-face ((t (:foreground ,.rose :weight bold))))
+     `(font-lock-preprocessor-face ((t (:foreground ,.teal))))
+     `(font-lock-regexp-grouping-backslash ((t (:foreground ,.yellow))))
+     `(font-lock-regexp-grouping-construct ((t (:foreground ,.magenta))))
      `(font-lock-string-face ((t (:foreground ,.yellow))))
      `(font-lock-type-face ((t (:foreground ,.blue))))
-     `(font-lock-variable-name-face ((t (:foreground ,.lavender :slant italic))))
-     `(font-lock-warning-face ((t (:foreground ,.warning-muted :bold t))))
+     `(font-lock-variable-name-face ((t (:foreground ,.lavender))))
+     `(font-lock-warning-face ((t (:foreground ,.warning-muted :weight bold))))
 
-     ;; Tree-sitter faces (standard naming)
+     ;; == ENHANCED TREE-SITTER SUPPORT ==
      `(treesit-font-lock-function-call-face ((t (:foreground ,.purple))))
-     `(treesit-font-lock-variable-use-face ((t (:foreground ,.lavender :slant italic))))
+     `(treesit-font-lock-variable-use-face ((t (:foreground ,.lavender))))
      `(treesit-font-lock-property-use-face ((t (:foreground ,.blue))))
      `(treesit-font-lock-number-face ((t (:foreground ,.purple :weight bold))))
      `(treesit-font-lock-operator-face ((t (:foreground ,.magenta))))
      `(treesit-font-lock-bracket-face ((t (:foreground ,.grey-border))))
      `(treesit-font-lock-delimiter-face ((t (:foreground ,.grey-border))))
      `(treesit-font-lock-escape-face ((t (:foreground ,.yellow :weight bold))))
+     `(treesit-font-lock-constructor-face ((t (:foreground ,.teal :weight bold))))
+     `(treesit-font-lock-class-face ((t (:foreground ,.blue :weight bold))))
+     `(treesit-font-lock-interface-face ((t (:foreground ,.teal :slant italic))))
+     `(treesit-font-lock-enum-face ((t (:foreground ,.magenta :weight bold))))
+     `(treesit-font-lock-struct-face ((t (:foreground ,.blue))))
+     `(treesit-font-lock-namespace-face ((t (:foreground ,.lavender :weight bold))))
+     `(treesit-font-lock-module-face ((t (:foreground ,.purple :underline t))))
+     `(treesit-font-lock-macro-face ((t (:foreground ,.yellow :weight bold :slant italic))))
+     `(treesit-font-lock-attribute-face ((t (:foreground ,.grey-docstring :slant italic))))
+     `(treesit-font-lock-parameter-face ((t (:foreground ,.rose))))
+     `(treesit-font-lock-field-face ((t (:foreground ,.teal))))
+     `(treesit-font-lock-method-face ((t (:foreground ,.purple :slant italic))))
 
      ;; Enhanced Tree-sitter Semantic Tokens
      `(treesit-font-lock-class-face ((t (:foreground ,.blue :weight bold))))
@@ -430,7 +491,7 @@
      `(pos-tip-overlay ((t (:background ,.bg-popup :foreground ,.fg-main))))
      `(eldoc-highlight-function-argument-overlay ((t (:foreground ,.purple :weight bold))))
      `(eldoc-box-border ((t (:background ,.bg-popup))))
-     `(eldoc-box-body ((t (:background ,.bg-popup :foreground ,.fg-main :height 0.9))))
+     `(eldoc-box-body ((t (:background ,.bg-popup :foreground ,.fg-main))))
      `(eldoc-highlight-function-argument ((t (:foreground ,.purple :weight bold))))
      `(mc/cursor-overlay ((t (:background ,.purple :foreground ,.bg-main))))
      `(mc/cursor-bar-overlay ((t (:background ,.purple :height 1))))
@@ -904,7 +965,9 @@
     (buffer-face-mode 1)))
 
 (defgroup tale-themes-group nil
-  "Customization for the Tale Themes.")
+  "Customization for the Tale Themes."
+  :group 'faces
+  :prefix "tale-themes-")
 
 (defcustom tale-themes-special-modes
   '(aidermacs-comint-mode-hook
@@ -922,7 +985,7 @@
     special-mode-hook
     transient-setup-buffer-hook)
   "Modes to setup special customization."
-  :type '(hook)
+  :type '(repeat symbol)
   :group 'tale-themes-group)
 
 (defun tale-themes--setup-hooks (theme-name palette)
@@ -939,6 +1002,48 @@ THEME-NAME is used to store cleanup functions in the appropriate variable."
 
       (add-to-list 'custom-theme-load-path
                    (file-name-as-directory (file-name-directory load-file-name))))))
+
+;; == UTILITY FUNCTIONS ==
+
+(defun tale-themes-reload-current-theme ()
+  "Reload the currently active Tale theme."
+  (interactive)
+  (when-let ((current-theme (car custom-enabled-themes)))
+    (when (string-match-p "tale" (symbol-name current-theme))
+      (disable-theme current-theme)
+      (load-theme current-theme t)
+      (message "Reloaded %s theme" current-theme))))
+
+(defun tale-themes-switch-variant ()
+  "Switch between Tale theme variants."
+  (interactive)
+  (let* ((current-theme (car custom-enabled-themes))
+         (next-theme (if current-theme
+                        (let ((current-name (symbol-name current-theme)))
+                          (cond
+                           ((string-match-p "dark-tale" current-name) 'bright-tale)
+                           ((string-match-p "bright-tale" current-name) 'witch-tale)
+                           ((string-match-p "witch-tale" current-name) 'vampire-tale)
+                           ((string-match-p "vampire-tale" current-name) 'dark-tale)
+                           (t 'dark-tale)))
+                      'dark-tale)))
+    (when current-theme
+      (disable-theme current-theme))
+    (load-theme next-theme t)
+    (message "Switched to %s theme" next-theme)))
+
+(defun tale-themes-toggle-dark-light ()
+  "Toggle between dark-tale and bright-tale themes."
+  (interactive)
+  (let* ((current-theme (car custom-enabled-themes))
+         (next-theme (if (and current-theme
+                             (string-match-p "bright-tale" (symbol-name current-theme)))
+                        'dark-tale
+                      'bright-tale)))
+    (when current-theme
+      (disable-theme current-theme))
+    (load-theme next-theme t)
+    (message "Switched to %s theme" next-theme)))
 
 (provide 'tale-themes-common)
 ;;; tale-themes-common.el ends here

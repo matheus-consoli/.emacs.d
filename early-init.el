@@ -12,11 +12,11 @@
 (make-directory (concat user-emacs-directory "backup/auto-saves") t)
 
 ;; Disable package.el in favor of straight.el
-(setq package-enable-at-startup nil)
+(setq-default package-enable-at-startup nil)
 
 ;; Disable garbage collection during startup
-(setq gc-cons-threshold most-positive-fixnum)
-(setq gc-cons-percentage 0.6)
+(setq-default gc-cons-threshold most-positive-fixnum)
+(setq-default gc-cons-percentage 0.6)
 
 (add-hook 'emacs-startup-hook
           (lambda ()
@@ -26,26 +26,24 @@
 
 ;; Optimizations for improving IO performance. Increase max bytes read from a sub-process in a single op
 ;; default value: 3145728 (3M)
-(setq read-process-output-max (* 8 1024 1024 ))
+(setq-default read-process-output-max (* 8 1024 1024 ))
 
 ;; keep the eln cache clean
-(setq load-prefer-newer t)
+(setq-default load-prefer-newer t)
 ;; Don't ping things that look like domain names.
-(setq ffap-machine-p-known 'reject)
-
-(setq native-comp-deferred-compilation t)
-(setq native-comp-jit-compilation t)
-(setq native-comp-prune-cache t)
-(setq native-comp-async-jobs-number (- (num-processors) 1))
-(setq native-comp-async-query-on-exit t)
-(setq native-comp-async-report-warnings-errors nil)
-(setq confirm-kill-processes t)
-
-(setq native-comp-always-compile t)
-(setq package-native-compile t)
-
 (defconst options '("-march=znver3"
                     "-mtune=znver3"
+(setq-default ffap-machine-p-known 'reject)
+
+(setq-default native-comp-deferred-compilation t
+              native-comp-jit-compilation t
+              native-comp-prune-cache t
+              native-comp-async-jobs-number (- (num-processors) 1)
+              native-comp-async-query-on-exit t
+              native-comp-async-report-warnings-errors nil
+              confirm-kill-processes t
+              native-comp-always-compile t
+              package-native-compile t)
                     "-O3"
                     "-fno-finite-math-only"
                     "-funroll-loops"
@@ -61,7 +59,7 @@
 
 
 ;; DEBUG
-;; (setq debug-on-error t
+;; (setq debug-on-error t)
 ;;       debug-on-message "")
 
 ;; Profile emacs startup
@@ -73,7 +71,7 @@
                               (time-subtract after-init-time before-init-time)))
                      gcs-done)))
 
-(setq inhibit-compacting-font-caches t)
+(setq-default inhibit-compacting-font-caches t)
 
 ;; from minimal-emacs.d
 (when (and (not (daemonp)) (not noninteractive))

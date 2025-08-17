@@ -17,6 +17,8 @@
 ;; Initialize package sources
 (require 'package)
 
+(setq package-enable-at-startup nil)
+
 ;; Bootstrap straight.el
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -194,7 +196,6 @@
     (let* ((window (plist-get info :parent-window))
            (frame (window-frame window))
            (frame-pixel-height  (frame-pixel-height frame))
-           (frame-pixel-width (frame-pixel-width frame))
            (window-edges (window-pixel-edges window))
            (window-bottom (nth 3 window-edges))
            (window-left (nth 0 window-edges))
@@ -203,8 +204,7 @@
            (echo-area-top (- frame-pixel-height echo-area-height))
            ;; Check if echo area is directly below the window (within a few pixels tolerance)
            (echo-below-window-p (<= (abs (- window-bottom echo-area-top)) 5))
-           (posframe-width (plist-get info :posframe-width))
-           (posframe-height (plist-get info :posframe-height)))
+           (posframe-width (plist-get info :posframe-width)))
 
       (if echo-below-window-p
           ;; Position over echo area when it's below the window
@@ -300,6 +300,13 @@
   (add-to-list 'eglot-server-programs
                '(toml-ts-mode . '("taplo" "lsp" "stdio")))
 
+  (defun format-on-eglot ()
+    (when (and (fboundp 'eglot-current-server)
+               (eglot-current-server))
+      (eglot-format-buffer)))
+
+  (add-hook 'before-save-hook #'format-on-eglot nil t)
+
   ;; Completion integration
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
 
@@ -349,28 +356,60 @@
 
 (use-package eldoc-box
   :custom
-  (eldoc-box-max-pixel-width 900)
-  (eldoc-box-max-pixel-height 400)
   (eldoc-box-clear-with-C-g t)
   (eldoc-box-cleanup-internval 0.3)
   (eldoc-idle-delay 1.5)
   :config
+  (defun consoli-config/eldoc-box-dynamic-sizing ()
+    "Dynamically set eldoc-box dimensions and font size based on window size."
+    (let* ((window (selected-window))
+           (window-width (window-pixel-width window))
+           (window-height (window-pixel-height window))
+           (screen-width (display-pixel-width))
+           (screen-height (display-pixel-height))
+           ;; Calculate proportional dimensions (50% width, 30% height max)
+           (box-width (min (truncate (* window-width 0.5)) (truncate (* screen-width 0.5))))
+           (box-height (min (truncate (* window-height 0.3)) (truncate (* screen-height 0.3))))
+           ;; Calculate font size based on window size (scale between 0.4 and programming font size)
+           (max-scale (/ consoli-config/font-height-programming 100.0))
+           (font-scale (+ 0.4 (* (/ (float window-width) (float screen-width)) (- max-scale 0.4)))))
+
+      ;; Set dynamic dimensions
+      (setq-local eldoc-box-max-pixel-width box-width
+                  eldoc-box-max-pixel-height box-height
+                  default-text-properties '(line-spacing 0 line-height 1))
+
+      ;; Apply font parameters to eldoc-box faces
+      (set-face-attribute 'eldoc-box-body nil
+                          :family programming-font
+                          :height font-scale)
+      (set-face-attribute 'eldoc-box-border nil :height font-scale)))
+
   (defun consoli-config/eldoc-box-bottom-right-position (width height)
-    "Position eldoc-box at bottom-right, accounting for box dimensions."
+    "Position eldoc-box at bottom-right, accounting for frame size, fringes, and modeline."
     (let* ((window (selected-window))
            (frame (window-frame window))
            (window-edges (window-pixel-edges window))
            (window-right (nth 2 window-edges))
            (window-bottom (nth 3 window-edges))
-           (margin-x 60)  ; Pixels from right edge
-           (margin-y 55)) ; Pixels from bottom
+           (frame-width (frame-pixel-width frame))
+           (frame-height (frame-pixel-height frame))
+           (right-fringe (or (cadr (window-fringes window)) 0))
+           (modeline-height (window-mode-line-height window))
+           ;; Calculate margins as percentage of frame size with minimums
+           (margin-x (max 20 (+ right-fringe (/ frame-width 40))))
+           (margin-y (max 15 (+ (or modeline-height 0) (/ frame-height 50)))))
       (cons (- window-right width margin-x)
             (- window-bottom height margin-y))))
+
+  ;; Apply dynamic sizing before showing eldoc-box
+  (advice-add 'eldoc-box--display :before
+              (lambda (&rest _) (consoli-config/eldoc-box-dynamic-sizing)))
 
   (setq eldoc-box-position-function #'consoli-config/eldoc-box-bottom-right-position)
 
   ;; some margin for the docs
-  (setf (alist-get 'internal-border-width eldoc-box-frame-parameters) 10)
+  (setf (alist-get 'internal-border-width eldoc-box-frame-parameters) 5)
   :bind (:map eglot-mode-map
               ("C-c l d" . eldoc-box-help-at-point))
   :hook (eglot-managed-mode . eldoc-box-hover-mode))
@@ -445,23 +484,6 @@
   (sideline-display-backend-name t)
   (sideline-delay 0.4)
   (sideline-truncate t))
-
-(use-package apheleia
-  :hook (prog-mode . apheleia-mode)
-  :config
-  (require 'cl-lib)
-  (cl-defun apheleia-indent-eglot-managed-buffer
-      (&key buffer scratch callback &allow-other-keys)
-    "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
-    (with-current-buffer scratch
-      (setq-local eglot--cached-server
-                  (with-current-buffer buffer
-                    (eglot-current-server)))
-      (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
-        (eglot-format-buffer))
-      (funcall callback)))
-  (add-to-list 'apheleia-formatters
-               '(eglot-managed . apheleia-indent-eglot-managed-buffer)))
 
 (use-package savehist
   :hook (after-init . savehist-mode)
@@ -921,7 +943,7 @@ targets."
   (defun disable-vterm-modes ()
     (toggle-truncate-lines)
     (hl-line-mode -1))
-  (add-hook 'vterm-mode-hook #'disable-hl-line)
+  (add-hook 'vterm-mode-hook #'disable-vterm-modes)
 
   (add-hook 'vterm-mode-hook
             '(lambda ()
@@ -1246,11 +1268,10 @@ targets."
   (spacemacs-theme-org-bold t)
   (spacemacs-theme-comment-italic t))
 
-
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . dark-tale)
-    (cli . witch-tale))
+  '((gui . bright-tale)
+    (cli . bright-tale))
   "Theme configuration for different display types.")
 
 (defun consoli-config/apply-theme ()
@@ -2769,6 +2790,13 @@ may not be efficient."
 (setq auto-save-timeout 15 ;; seconds
       auto-save-interval 200)
 
+(use-package super-save
+  :hook (after-init . super-save-mode)
+  :custom
+  (super-save-auto-save-when-idle t)
+  (super-save-idle-duration 5)
+  (super-save-delete-trailing-whitespace 'except-current-line))
+
 (setq create-lockfiles nil)
 
 ;; Enhanced line editing with crux
@@ -2805,7 +2833,8 @@ may not be efficient."
   (advice-add fn :before #'consoli-config/pulse-current-region))
 
 ;; Pulse sexp on sexp-based operations
-(dolist (fn '(sp-kill-sexp sp-transpose-sexp sp-unwrap-sexp sp-backward-unwrap-sexp))
+(dolist (fn '(sp-kill-sexp sp-backward-kill-sexp sp-kill-hybrid-sexp
+                           sp-transpose-sexp sp-unwrap-sexp sp-backward-unwrap-sexp))
   (advice-add fn :before #'consoli-config/pulse-sexp-at-point))
 
 (use-package undo-tree
@@ -2974,19 +3003,31 @@ may not be efficient."
 (defun consoli-config/pulse-sexp-at-point (&rest _)
   "Pulse the sexp that smartparens will operate on."
   (when (bound-and-true-p smartparens-mode)
-    (save-excursion
-      ;; Try to get the sexp that will be operated on
-      (let ((bounds (or
-                     ;; First try: get sexp at point
-                     (sp-get-sexp)
-                     ;; Second try: if at beginning of sexp, get the sexp we're in front of
-                     (progn (sp-forward-sexp) (sp-backward-sexp) (sp-get-sexp))
-                     ;; Third try: if at end of sexp, get the sexp we're behind
-                     (progn (sp-backward-sexp) (sp-forward-sexp) (sp-get-sexp)))))
-        (when bounds
-          (pulse-momentary-highlight-region
-           (sp-get bounds :beg)
-           (sp-get bounds :end)))))))
+    (condition-case nil
+        (let ((bounds (cond
+                       ;; If we're inside a sexp and at the beginning, get the enclosing sexp
+                       ((and (sp-point-in-sexp) (sp-beginning-of-sexp-p))
+                        (save-excursion (sp-backward-up-sexp) (sp-get-sexp)))
+                       ;; If we're at the end of a sexp, get the sexp we're after
+                       ((sp-end-of-sexp-p)
+                        (save-excursion (sp-backward-sexp) (sp-get-sexp)))
+                       ;; Try to get the sexp immediately following point
+                       ((save-excursion (sp-forward-sexp) (sp-get-sexp)))
+                       ;; Try to get the sexp immediately before point
+                       ((save-excursion (sp-backward-sexp) (sp-get-sexp)))
+                       ;; If inside a sexp, get the enclosing one
+                       ((sp-point-in-sexp)
+                        (save-excursion (sp-backward-up-sexp) (sp-get-sexp)))
+                       ;; Last resort: try sp-get-sexp at point
+                       (t (sp-get-sexp)))))
+          (if bounds
+              (pulse-momentary-highlight-region
+               (sp-get bounds :beg)
+               (sp-get bounds :end))
+            ;; Fallback: pulse current line if no sexp found
+            (pulse-momentary-highlight-one-line (point))))
+      ;; If any smartparens function fails, fallback to current line
+      (error (pulse-momentary-highlight-one-line (point))))))
 
 ;; Provide the configuration
 (provide 'init)
