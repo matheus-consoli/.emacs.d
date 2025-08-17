@@ -14,27 +14,7 @@
 (set-keyboard-coding-system 'utf-8)
 (setq default-buffer-file-coding-system 'utf-8)
 
-;; Initialize package sources
-(require 'package)
-
 (setq package-enable-at-startup nil)
-
-;; Bootstrap straight.el
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
 
 (setq straight-cache-autoloads t
       straight-use-package-by-default t
@@ -270,6 +250,18 @@
 ;;;; DEVELOPMENT TOOLS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package apheleia
+  :hook (after-init . apheleia-global-mode))
+
+(defun my/apheleia-prefer-eglot-h ()
+  "Hook to prefer LSP-based formatting when available.
+If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
+‘eglot-managed-mode-hook’."
+  (when (and (null apheleia-formatter)
+             (eglot-managed-p)
+             (eglot-server-capable :documentFormattingProvider))
+    (setq-local apheleia-formatter 'eglot)))
+
 (defun consoli-config/eglot-mode-if-available ()
   "Start eglot if a server is available for this mode."
   (require 'eglot)
@@ -341,6 +333,7 @@
 
   :hook ((prog-mode . consoli-config/eglot-mode-if-available)
          (eglot-managed-mode . consoli-config/eglot-setup-completion)
+         (eglot-managed-mode . my/apheleia-prefer-eglot-h)
          (eglot-managed-mode . eglot-inlay-hints-mode)))
 
 (use-package eglot-booster
