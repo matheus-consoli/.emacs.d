@@ -1,4 +1,4 @@
-;;; tale-themes-common.el --- Enhanced common theme generator for Tale themes -*- lexical-binding: t; -*-
+;;; tale-themes-common.el --- common theme generator for Tale themes -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023-2025
 ;; Author: Generated theme system
@@ -7,7 +7,7 @@
 
 ;;; Commentary:
 
-;; Enhanced Tale themes common generator with improved color science,
+;; Tale themes common generator with improved color science,
 ;; accessibility, and comprehensive face coverage for modern Emacs.
 
 ;;; Code:
@@ -62,7 +62,7 @@
      `(region ((t (:background ,.visual-selection :foreground unspecified :extend t))))
      `(secondary-selection ((t (:background ,.secondary-selection :extend t))))
      `(vertical-border ((t (:foreground ,.grey-border))))
-     `(window-divider ((t (:foreground ,.bg-dim))))
+     `(window-divider ((t (:foreground ,.bg-main))))
      `(window-divider-last-pixel ((t (:foreground ,.bg-alt))))
      `(window-divider-first-pixel ((t (:foreground ,.bg-alt))))
      `(success ((t (:foreground ,.success-muted :weight bold))))
@@ -71,7 +71,7 @@
      `(match ((t (:foreground ,.bg-main :background ,.green :weight bold))))
      `(shadow ((t (:foreground ,.grey-subtle))))
 
-     ;; == ENHANCED UI ELEMENTS ==
+     ;; == UI ELEMENTS ==
      `(tooltip ((t (:background ,.bg-popup :foreground ,.fg-main :box (:line-width 1 :color ,.grey-border)))))
      `(button ((t (:foreground ,.purple :underline t))))
      `(header-line ((t (:background ,.bg-alt :foreground ,.grey-docstring :weight normal))))
@@ -117,7 +117,7 @@
      `(mode-line-emphasis ((t (:foreground ,.green :weight bold))))
      `(mode-line-inactive-buffer-id ((t (:foreground ,.grey-subtle))))
 
-     ;; == ENHANCED FONT LOCK & SYNTAX HIGHLIGHTING ==
+     ;; == FONT LOCK & SYNTAX HIGHLIGHTING ==
      `(font-lock-builtin-face ((t (:foreground ,.magenta))))
      `(font-lock-comment-delimiter-face ((t (:foreground ,.grey-subtle :slant italic))))
      `(font-lock-comment-face ((t (:foreground ,.grey-comment-blue :slant italic))))
@@ -134,7 +134,7 @@
      `(font-lock-variable-name-face ((t (:foreground ,.lavender))))
      `(font-lock-warning-face ((t (:foreground ,.warning-muted :weight bold))))
 
-     ;; == ENHANCED TREE-SITTER SUPPORT ==
+     ;; == TREE-SITTER SUPPORT ==
      `(treesit-font-lock-function-call-face ((t (:foreground ,.purple))))
      `(treesit-font-lock-variable-use-face ((t (:foreground ,.lavender))))
      `(treesit-font-lock-property-use-face ((t (:foreground ,.blue))))
@@ -156,7 +156,7 @@
      `(treesit-font-lock-field-face ((t (:foreground ,.teal))))
      `(treesit-font-lock-method-face ((t (:foreground ,.purple :slant italic))))
 
-     ;; Enhanced Tree-sitter Semantic Tokens
+     ;; Tree-sitter Semantic Tokens
      `(treesit-font-lock-class-face ((t (:foreground ,.blue :weight bold))))
      `(treesit-font-lock-interface-face ((t (:foreground ,.teal :slant italic))))
      `(treesit-font-lock-enum-face ((t (:foreground ,.magenta :weight bold))))
@@ -205,7 +205,7 @@
      `(company-scrollbar-fg ((t (:background ,.grey-border))))
      `(company-scrollbar-bg ((t (:background ,.bg-popup))))
 
-     ;; Enhanced Org-mode
+     ;; Org-mode
      `(org-level-1 ((t (:foreground ,.lavender :height 1.3 :weight bold))))
      `(org-level-2 ((t (:foreground ,.rose :height 1.2 :weight bold))))
      `(org-level-3 ((t (:foreground ,.teal :height 1.1 :weight bold))))
@@ -246,13 +246,13 @@
      `(org-superstar-leading-bullet-face ((t (:foreground ,.grey-subtle))))
      `(org-superstar-item-bullet-face ((t (:foreground ,.purple))))
 
-     ;; Enhanced Org-Roam
+     ;; Org-Roam
      `(org-roam-node-highlight-face ((t (:background ,.focus-bg :foreground ,.lavender :weight bold))))
      `(org-roam-link ((t (:foreground ,.purple :underline t :weight bold))))
      `(org-roam-backlinks-highlight ((t (:background ,.bg-selection :foreground ,.fg-bright))))
      `(org-roam-title ((t (:foreground ,.lavender :weight bold :height 1.2))))
 
-     ;; Enhanced Org-Modern
+     ;; Org-Modern
      `(org-modern-tag ((t (:foreground ,.blue :background ,.bg-contrast :box (:line-width -1 :color ,.bg-contrast :style released-button) :height 0.9))))
      `(org-modern-priority ((t (:foreground ,.yellow :weight bold :box (:line-width 1 :color ,.yellow)))))
      `(org-modern-date-active ((t (:foreground ,.green :background ,.bg-contrast :box (:line-width 1 :color ,.green)))))
@@ -262,7 +262,7 @@
      `(org-modern-done ((t (:foreground ,.green :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.green)))))
      `(org-modern-todo ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
 
-     ;; Enhanced Magit and VC
+     ;; Magit and VC
      `(magit-section-heading ((t (:foreground ,.purple :weight bold :height 1.1))))
      `(magit-section-highlight ((t (:background ,.bg-contrast))))
      `(magit-section-secondary-heading ((t (:foreground ,.blue :weight bold))))
@@ -403,7 +403,7 @@
      `(vterm-color-bright-cyan ((t (:foreground ,.teal :background ,.teal))))
      `(vterm-color-bright-white ((t (:foreground ,.fg-popup :background ,.fg-popup))))
 
-     ;; Enhanced VTerm Features
+     ;; VTerm Features
      `(vterm-prompt-face ((t (:foreground ,.purple :weight bold))))
      `(vterm-directory-face ((t (:foreground ,.blue :weight bold))))
      `(vterm-command-face ((t (:foreground ,.green))))
@@ -509,7 +509,7 @@
      `(multiple-cursors-cursor ((t (:background ,.magenta :foreground ,.bg-main))))
      `(highlight-symbol-face ((t (:background ,.focus-bg :foreground ,.lavender))))
 
-     ;; Enhanced Blamer
+     ;; Blamer
      `(blamer-face ((t (:foreground ,.grey-subtle :background unspecified :italic t :height 0.8 :weight light))))
      `(blamer-pretty-border-face ((t (:foreground ,.grey-border))))
      `(blamer-pretty-commit-message-face ((t (:foreground ,.grey-docstring :slant italic))))
@@ -589,10 +589,10 @@
      `(corfu-quick2 ((t (:foreground ,.magenta :weight bold))))
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
-     ;; Enhanced Vertico
+     ;; Vertico
      `(vertico-current ((t (:box (:line-width (-1 . -1) :color ,.bg-selection)))))
-     `(vertico-group-title ((t (:foreground ,.purple :weight bold :height 1.1 :underline t))))
-     `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t :height 0.8))))
+     `(vertico-group-title ((t (:foreground ,.purple :weight bold :underline t))))
+     `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t))))
      `(vertico-multiline ((t (:foreground ,.grey-subtle :slant italic))))
      `(vertico-quick1 ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.purple)))))
      `(vertico-quick2 ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
@@ -600,7 +600,7 @@
      `(vertico-posframe-border ((t (:background ,.bg-popup :foreground ,.grey-border))))
      `(vertico-posframe ((t (:background ,.bg-popup))))
 
-     ;; Enhanced Marginalia
+     ;; Marginalia
      `(marginalia-key ((t (:foreground ,.purple :weight bold))))
      `(marginalia-type ((t (:foreground ,.magenta :slant italic))))
      `(marginalia-modified ((t (:foreground ,.yellow :weight bold))))
@@ -774,8 +774,6 @@
      `(breadcrumb-project-crumbs-face ((t (:foreground ,.grey-docstring :height 0.9 :weight light :box (:line-width (2 . 8) :color ,.bg-alt)))))
      `(breadcrumb-project-base-face ((t (:foreground ,.blue :height 0.9 :weight normal :box (:line-width (2 . 8) :color ,.bg-alt)))))
      `(breadcrumb-project-leaf-face ((t (:foreground ,.fg-popup :height 0.85 :weight semi-bold :box (:line-width (2 . 8) :color ,.bg-alt)))))
-
-     ;; Enhanced Breadcrumb Context
      `(breadcrumb-separator ((t (:foreground ,.grey-border :height 0.8))))
      `(breadcrumb-function-face ((t (:foreground ,.purple :weight bold))))
      `(breadcrumb-class-face ((t (:foreground ,.blue :weight bold))))

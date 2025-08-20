@@ -251,16 +251,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package apheleia
-  :hook (after-init . apheleia-global-mode))
-
-(defun my/apheleia-prefer-eglot-h ()
-  "Hook to prefer LSP-based formatting when available.
-If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
-‘eglot-managed-mode-hook’."
-  (when (and (null apheleia-formatter)
-             (eglot-managed-p)
-             (eglot-server-capable :documentFormattingProvider))
-    (setq-local apheleia-formatter 'eglot)))
+  :defer t)
 
 (defun consoli-config/eglot-mode-if-available ()
   "Start eglot if a server is available for this mode."
@@ -333,7 +324,6 @@ If ‘apheleia-formatter’ is set explicitly, do nothing. Intended for
 
   :hook ((prog-mode . consoli-config/eglot-mode-if-available)
          (eglot-managed-mode . consoli-config/eglot-setup-completion)
-         (eglot-managed-mode . my/apheleia-prefer-eglot-h)
          (eglot-managed-mode . eglot-inlay-hints-mode)))
 
 (use-package eglot-booster
@@ -1215,7 +1205,7 @@ targets."
   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
   :bind ("C-c C-d" . claude-code-ide-menu)
   :custom
-  (claude-code-ide-terminal-backend 'eat)
+  (claude-code-ide-terminal-backend 'vterm)
   :config
   (claude-code-ide-emacs-tools-setup))
 
@@ -1275,8 +1265,8 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . bright-tale)
-    (cli . bright-tale))
+  '((gui . dark-tale)
+    (cli . dark-tale))
   "Theme configuration for different display types.")
 
 (defun consoli-config/apply-theme ()
@@ -1392,7 +1382,15 @@ targets."
 (setq-default cursor-type '(bar . 1)
               blink-cursor-delay 5
               blink-cursor-interval 0.75
-              cursor-in-non-selected-windows '(hbar . 2))
+              cursor-in-non-selected-windows '(hbar . 1))
+
+(defun consoli-config/childframe-cursor-setup (frame _)
+  "Adjust cursor in childframes."
+  (when (frame-parameter frame 'parent-frame) ;; it’s a childframe
+    (with-selected-frame frame
+      (setq-local cursor-in-non-selected-windows nil))))
+(add-hook 'after-make-frame-functions #'consoli-config/childframe-cursor-setup)
+
 
 (use-package hl-line
   :ensure nil
