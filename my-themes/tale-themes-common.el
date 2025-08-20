@@ -40,8 +40,8 @@
     (let* ((rgb1 (color-name-to-rgb color1))
            (rgb2 (color-name-to-rgb color2))
            (blended (list (+ (* (nth 0 rgb1) (- 1 alpha)) (* (nth 0 rgb2) alpha))
-                         (+ (* (nth 1 rgb1) (- 1 alpha)) (* (nth 1 rgb2) alpha))
-                         (+ (* (nth 2 rgb1) (- 1 alpha)) (* (nth 2 rgb2) alpha)))))
+                          (+ (* (nth 1 rgb1) (- 1 alpha)) (* (nth 1 rgb2) alpha))
+                          (+ (* (nth 2 rgb1) (- 1 alpha)) (* (nth 2 rgb2) alpha)))))
       (apply 'color-rgb-to-hex (append blended (list 2))))))
 
 (defun tale-themes--create-theme (theme-name palette)
@@ -105,13 +105,13 @@
      `(nobreak-space ((t (:foreground ,.yellow :underline t))))
      `(trailing-whitespace ((t (:background ,.error-muted :foreground ,.fg-bright))))
 
-     ;; == ENHANCED MODELINE ==
+     ;; == MODELINE ==
      `(mode-line ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
-                     :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+                                  :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
      `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-main :weight normal
-                            :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+                                         :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
      `(mode-line-inactive ((t (:background ,.bg-special :foreground ,.grey-subtle :weight light
-                               :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+                                           :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
      `(mode-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main :box (:line-width 2 :color ,.purple)))))
      `(mode-line-buffer-id ((t (:foreground ,.purple :weight bold))))
      `(mode-line-emphasis ((t (:foreground ,.green :weight bold))))
@@ -1019,14 +1019,14 @@ THEME-NAME is used to store cleanup functions in the appropriate variable."
   (interactive)
   (let* ((current-theme (car custom-enabled-themes))
          (next-theme (if current-theme
-                        (let ((current-name (symbol-name current-theme)))
-                          (cond
-                           ((string-match-p "dark-tale" current-name) 'bright-tale)
-                           ((string-match-p "bright-tale" current-name) 'witch-tale)
-                           ((string-match-p "witch-tale" current-name) 'vampire-tale)
-                           ((string-match-p "vampire-tale" current-name) 'dark-tale)
-                           (t 'dark-tale)))
-                      'dark-tale)))
+                         (let ((current-name (symbol-name current-theme)))
+                           (cond
+                            ((string-match-p "dark-tale" current-name) 'bright-tale)
+                            ((string-match-p "bright-tale" current-name) 'witch-tale)
+                            ((string-match-p "witch-tale" current-name) 'vampire-tale)
+                            ((string-match-p "vampire-tale" current-name) 'dark-tale)
+                            (t 'dark-tale)))
+                       'dark-tale)))
     (when current-theme
       (disable-theme current-theme))
     (load-theme next-theme t)
@@ -1037,9 +1037,9 @@ THEME-NAME is used to store cleanup functions in the appropriate variable."
   (interactive)
   (let* ((current-theme (car custom-enabled-themes))
          (next-theme (if (and current-theme
-                             (string-match-p "bright-tale" (symbol-name current-theme)))
-                        'dark-tale
-                      'bright-tale)))
+                              (string-match-p "bright-tale" (symbol-name current-theme)))
+                         'dark-tale
+                       'bright-tale)))
     (when current-theme
       (disable-theme current-theme))
     (load-theme next-theme t)
