@@ -1,10 +1,5 @@
 ;;; tale-themes-common.el --- common theme generator for Tale themes -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023-2025
-;; Author: Generated theme system
-;; Keywords: faces, theme
-;; Version: 2.0
-
 ;;; Commentary:
 
 ;; Tale themes common generator with improved color science,
@@ -75,8 +70,20 @@
      `(tooltip ((t (:background ,.bg-popup :foreground ,.fg-main :box (:line-width 1 :color ,.grey-border)))))
      `(button ((t (:foreground ,.purple :underline t))))
      `(header-line ((t (:background ,.bg-alt :foreground ,.grey-docstring :weight normal))))
+     `(header-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main))))
      `(widget-field ((t (:background ,.bg-contrast :foreground ,.fg-main))))
      `(help-key-binding ((t (:background ,.bg-special  :foreground ,.hint-fg :box (:line-width (2 . 2) :color ,.bg-special)))))
+
+     ;; Menu system faces
+     `(menu ((t (:background ,.bg-popup :foreground ,.fg-popup))))
+     `(tty-menu-enabled-face ((t (:background ,.bg-popup :foreground ,.fg-popup))))
+     `(tty-menu-disabled-face ((t (:background ,.bg-popup :foreground ,.grey-subtle))))
+     `(tty-menu-selected-face ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+
+     ;; Interface elements
+     `(scroll-bar ((t (:background ,.bg-contrast :foreground ,.grey-border))))
+     `(tool-bar ((t (:background ,.bg-alt :foreground ,.fg-main :box (:line-width 1 :style released-button)))))
+     `(mouse ((t (:background ,.purple))))
 
      `(colorful-base ((t (:box nil))))
 
@@ -84,6 +91,7 @@
      `(lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
      `(isearch ((t (:background ,.purple :foreground ,.bg-main :bold t))))
      `(isearch-fail ((t (:background ,.error-muted :foreground ,.magenta))))
+     `(query-replace ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
      `(match ((t (:background ,.success-muted :foreground ,.green))))
      `(isearch-overlay ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
      `(lazy-highlight-overlay ((t (:background ,.bg-dim :box (:line-width -1 :color ,.purple)))))
@@ -280,22 +288,13 @@
      `(magit-diff-removed-highlight ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg :weight bold))))
      `(magit-diff-context-highlight ((t (:background ,.bg-dim :foreground ,.fg-main))))
      `(magit-blame-highlight ((t (:background ,.bg-contrast :foreground ,.fg-bright))))
-     `(magit-blame-heading ((t (:background ,.bg-dim :foreground ,.grey-subtle :weight bold))))
+     `(magit-blame-heading ((t (:foreground ,.grey-subtle :weight bold :overline ,.grey-border))))
      `(magit-blame-name ((t (:foreground ,.purple :weight bold))))
      `(magit-blame-date ((t (:foreground ,.yellow))))
      `(magit-blame-summary ((t (:foreground ,.fg-bright))))
      `(magit-log-author ((t (:foreground ,.blue))))
      `(magit-log-date ((t (:foreground ,.grey-docstring))))
      `(magit-log-graph ((t (:foreground ,.grey-border))))
-     `(magit-reflog-commit ((t (:foreground ,.green))))
-     `(magit-reflog-amend ((t (:foreground ,.magenta))))
-     `(magit-reflog-merge ((t (:foreground ,.purple))))
-     `(magit-reflog-checkout ((t (:foreground ,.blue))))
-     `(magit-reflog-reset ((t (:foreground ,.yellow))))
-     `(magit-reflog-rebase ((t (:foreground ,.lavender))))
-     `(magit-reflog-cherry-pick ((t (:foreground ,.rose))))
-     `(magit-reflog-remote ((t (:foreground ,.teal))))
-     `(magit-reflog-other ((t (:foreground ,.grey-docstring))))
      `(magit-signature-good ((t (:foreground ,.green :weight bold))))
      `(magit-signature-bad ((t (:foreground ,.magenta :weight bold))))
      `(magit-signature-untrusted ((t (:foreground ,.yellow))))
@@ -435,6 +434,21 @@
      `(quick-peek-padding-face ((t (:background ,.bg-popup))))
      `(quick-peek-header-face ((t (:background ,.bg-alt :foreground ,.fg-bright :height 1.1))))
 
+     ;; == COMPILATION AND GREP FACES ==
+     `(compilation-error ((t (:foreground ,.magenta :weight bold))))
+     `(compilation-warning ((t (:foreground ,.yellow :weight bold))))
+     `(compilation-info ((t (:foreground ,.green :weight bold))))
+     `(compilation-line-number ((t (:foreground ,.grey-subtle))))
+     `(compilation-column-number ((t (:foreground ,.grey-subtle))))
+     `(compilation-mode-line-exit ((t (:foreground ,.green :weight bold))))
+     `(compilation-mode-line-fail ((t (:foreground ,.magenta :weight bold))))
+     `(compilation-mode-line-run ((t (:foreground ,.yellow :weight bold))))
+
+     `(grep-context-face ((t (:foreground ,.grey-subtle))))
+     `(grep-error-face ((t (:foreground ,.magenta :weight bold))))
+     `(grep-hit-face ((t (:foreground ,.purple :weight bold))))
+     `(grep-match-face ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+
      ;; Flycheck etc.
      `(flycheck-error ((t (:underline (:style wave :color ,.magenta)))))
      `(flycheck-info ((t (:underline (:style wave :color ,.purple)))))
@@ -485,6 +499,14 @@
      `(flycheck-overlay-error ((t :background ,.error-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
      `(flycheck-overlay-warning ((t :background ,.warning-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
      `(flycheck-overlay-info ((t :background ,.info-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
+
+     ;; == FLYMAKE FACES ==
+     `(flymake-error ((t (:underline (:style wave :color ,.magenta)))))
+     `(flymake-warning ((t (:underline (:style wave :color ,.yellow)))))
+     `(flymake-note ((t (:underline (:style wave :color ,.blue)))))
+     `(flymake-error-echo ((t (:foreground ,.magenta :weight bold))))
+     `(flymake-warning-echo ((t (:foreground ,.yellow :weight bold))))
+     `(flymake-note-echo ((t (:foreground ,.blue :weight bold))))
 
      ;; Overlays
      `(overlay ((t (:background ,.bg-contrast))))
@@ -814,7 +836,6 @@
      `(deft-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(deft-summary-face ((t (:foreground ,.grey-subtle :slant italic))))
 
-
      `(forge-topic-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(forge-pr-author-face ((t (:foreground ,.purple))))
      `(forge-label-face ((t (:background ,.bg-selection :foreground ,.fg-main :box (:line-width -1 :color ,.bg-selection :style released-button) :height 0.9))))
@@ -829,7 +850,21 @@
      `(treesitter-context-face ((t (:background ,.bg-code :foreground ,.grey-subtle :height 0.9))))
      `(treesit-fold-face ((t (:foreground ,.grey-border))))
      `(cognitive-complexity-highlight-face ((t (:background ,.warning-muted :foreground ,.bg-main))))
-     `(vr/match-face ((t (:background ,.purple :foreground ,.bg-main))))
+
+     ;; == VISUAL-REGEXP FACES ==
+     `(vr/match-0 ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
+     `(vr/match-1 ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
+     `(vr/match-2 ((t (:background ,.green :foreground ,.bg-main :weight bold))))
+     `(vr/match-3 ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
+     `(vr/match-4 ((t (:background ,.blue :foreground ,.bg-main :weight bold))))
+     `(vr/match-5 ((t (:background ,.teal :foreground ,.bg-main :weight bold))))
+     `(vr/match-6 ((t (:background ,.rose :foreground ,.bg-main :weight bold))))
+     `(vr/match-7 ((t (:background ,.lavender :foreground ,.bg-main :weight bold))))
+     `(vr/match-8 ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
+     `(vr/match-9 ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
+     `(vr/group-0 ((t (:background ,.bg-selection :foreground ,.purple :weight bold :box (:line-width 1 :color ,.purple)))))
+     `(vr/group-1 ((t (:background ,.bg-selection :foreground ,.magenta :weight bold :box (:line-width 1 :color ,.magenta)))))
+     `(vr/group-2 ((t (:background ,.bg-selection :foreground ,.green :weight bold :box (:line-width 1 :color ,.green)))))
      `(better-jumper-marker-face ((t (:foreground ,.rose :underline t))))
      `(consoli-config-rust-macro-face ((t (:inherit font-lock-function-call-face :foreground ,.magenta :slant italic :weight bold :underline (:style line :color ,.magenta)))))
      `(consoli-config-rust-attribute-face ((t (:inherit font-lock-preprocessor-face :foreground ,.lavender :slant italic))))
@@ -843,6 +878,32 @@
      `(annotate-annotation-text-face ((t (:foreground ,.grey-subtle :slant italic :height 0.9))))
      `(ibuffer-current-buffer-face ((t (:background ,.bg-contrast :weight bold))))
      `(ibuffer-marked-face ((t (:foreground ,.magenta :weight bold))))
+     `(ibuffer-deletion-face ((t (:foreground ,.magenta :weight bold :strike-through t))))
+     `(ibuffer-filter-group-name-face ((t (:foreground ,.purple :weight bold))))
+     `(ibuffer-title-face ((t (:foreground ,.yellow :weight bold))))
+
+     ;; == GNUS FACES ==
+     `(gnus-group-mail-1 ((t (:foreground ,.purple :weight bold))))
+     `(gnus-group-mail-2 ((t (:foreground ,.blue :weight bold))))
+     `(gnus-group-mail-3 ((t (:foreground ,.teal :weight bold))))
+     `(gnus-group-mail-low ((t (:foreground ,.grey-subtle))))
+     `(gnus-group-news-1 ((t (:foreground ,.magenta :weight bold))))
+     `(gnus-group-news-2 ((t (:foreground ,.rose :weight bold))))
+     `(gnus-group-news-3 ((t (:foreground ,.yellow :weight bold))))
+     `(gnus-group-news-low ((t (:foreground ,.grey-docstring))))
+     `(gnus-header-content ((t (:foreground ,.fg-main :slant italic))))
+     `(gnus-header-from ((t (:foreground ,.purple :weight bold))))
+     `(gnus-header-subject ((t (:foreground ,.yellow :weight bold))))
+     `(gnus-header-newsgroups ((t (:foreground ,.blue :slant italic))))
+     `(gnus-summary-selected ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+     `(gnus-summary-normal-unread ((t (:foreground ,.fg-bright :weight bold))))
+     `(gnus-summary-normal-read ((t (:foreground ,.grey-subtle))))
+     `(gnus-summary-cancelled ((t (:foreground ,.magenta :strike-through t))))
+     `(message-cited-text ((t (:foreground ,.blue :slant italic))))
+     `(message-header-name ((t (:foreground ,.purple :weight bold))))
+     `(message-header-subject ((t (:foreground ,.yellow :weight bold))))
+     `(message-header-to ((t (:foreground ,.fg-main :weight bold))))
+     `(message-separator ((t (:foreground ,.grey-border))))
 
      ;; Dashboard faces
      `(dashboard-banner ((t (:foreground ,.purple))))
@@ -862,9 +923,21 @@
      ;; Eglot code actions (appears in modeline and overlays)
      `(eglot-code-action-indicator-face ((t (:foreground ,.yellow :background ,.bg-main))))
 
-     ;; Calendar faces
+     ;; == CALENDAR AND DATE FACES ==
      `(calendar-today ((t (:foreground ,.yellow :weight bold :underline t))))
+     `(calendar-month-header ((t (:foreground ,.purple :weight bold))))
+     `(calendar-weekday-header ((t (:foreground ,.blue :weight bold))))
+     `(calendar-weekend-header ((t (:foreground ,.rose :weight bold))))
+     `(holiday ((t (:foreground ,.green :weight bold))))
      `(diary ((t (:foreground ,.rose :slant italic))))
+     `(diary-anniversary ((t (:foreground ,.magenta :weight bold))))
+     `(diary-time ((t (:foreground ,.grey-docstring))))
+
+     ;; == BOOKMARK FACES ==
+     `(bookmark-menu-heading ((t (:foreground ,.purple :weight bold :height 1.1))))
+     `(bookmark-menu-bookmark ((t (:foreground ,.fg-main))))
+     `(bookmark-menu-file-name ((t (:foreground ,.blue))))
+     `(bookmark-menu-annotation ((t (:foreground ,.grey-docstring :slant italic))))
 
      ;; Multimedia faces
      `(pdf-view-link ((t (:foreground ,.blue :underline t))))

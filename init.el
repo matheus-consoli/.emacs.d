@@ -2687,6 +2687,15 @@ may not be efficient."
       redisplay-dont-pause 1
       jit-lock-defer-time 0)
 
+(use-package scroll-restore
+  :hook (after-init . scroll-restore-mode)
+  :custom
+  ((scroll-restore-handle-cursor t)
+   (scroll-restore-restore-jump-back t)
+   (scroll-restore-cursor-type nil))
+  :bind ("<Scroll_Lock>" . scroll-restore-mode))
+
+
 ;; Smart indentation detection
 (defun consoli-config/infer-indentation-style ()
   "Infer indentation style from buffer content."
