@@ -5,20 +5,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Performance optimization during startup
-(setq garbage-collection-messages nil)
+(setq-default garbage-collection-messages nil)
 
 ;; UTF-8 encoding setup
 (prefer-coding-system       'utf-8)
 (set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
-(setq default-buffer-file-coding-system 'utf-8)
+(setq-default default-buffer-file-coding-system 'utf-8)
 
-(setq package-enable-at-startup nil)
+(setq-default package-enable-at-startup nil)
 
-(setq straight-cache-autoloads t
-      straight-use-package-by-default t
-      straight-vc-git-default-clone-depth 1)
+(setq-default straight-cache-autoloads t
+              straight-use-package-by-default t
+              straight-vc-git-default-clone-depth 1)
 
 (straight-use-package 'use-package)
 ;; (setq use-package-compute-statistics t)
@@ -51,32 +51,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Configuration constants
-(defconst ui-font "Atkinson Hyperlegible Mono"
-  "Font for UI faces.")
-
-(defconst modeline-font "Reddit Mono"
-  "Font used by the modeline.")
-
-(defconst org-font "Margem Rounded Test"
-  "Font used on org-mode.")
-
-(defconst programming-font "Dank Mono"
-  "Font for programming faces.")
-
-(defconst alternative-programming-font "Reddit Mono"
-  "Font for alternative faces.")
-
 (defconst consoli-config/completion-delay 0.2
   "Default delay for completion systems.")
 
 (defconst consoli-config/idle-timer-delay 3
   "Default idle timer delay in seconds.")
-
-(defconst consoli-config/font-height-ui 130
-  "Default font height for UI elements.")
-
-(defconst consoli-config/font-height-programming 120
-  "Default font height for programming modes.")
 
 (defun shut-up--advice (fn &rest args)
   "Inhibit message from the provided FN."
@@ -354,7 +333,7 @@
            (box-width (min (truncate (* window-width 0.5)) (truncate (* screen-width 0.5))))
            (box-height (min (truncate (* window-height 0.3)) (truncate (* screen-height 0.3))))
            ;; Calculate font size based on window size (scale between 0.4 and programming font size)
-           (max-scale (/ consoli-config/font-height-programming 100.0))
+           (max-scale (/ (consoli-config/font-height-programming) 100.0))
            (font-scale (+ 0.4 (* (/ (float window-width) (float screen-width)) (- max-scale 0.4)))))
 
       ;; Set dynamic dimensions
@@ -613,7 +592,7 @@
     ;; Set programming font
     (face-remap-add-relative 'default
                              :family programming-font
-                             :height consoli-config/font-height-programming)
+                             :height (consoli-config/font-height-programming))
     ;; Infer indentation style
     (consoli-config/infer-indentation-style))
 
@@ -939,7 +918,7 @@ targets."
     ;; Set font
     (face-remap-add-relative 'default
                              :family programming-font
-                             :height consoli-config/font-height-programming)
+                             :height (consoli-config/font-height-programming))
     ;; Hide modeline
     (consoli-config/hide-modeline))
 
@@ -1278,7 +1257,7 @@ targets."
     (error (message "Failed to load theme: %s" err))))
 
 ;; Initialize theme system
-(setq-default custom-theme-directory (expand-file-name "my-themes" user-emacs-directory))
+(setopt custom-theme-directory (expand-file-name "my-themes" user-emacs-directory))
 (add-to-list 'custom-theme-load-path custom-theme-directory)
 
 ;; Apply theme on startup and new frames
@@ -1295,38 +1274,38 @@ targets."
 ;; Default UI font
 (set-face-attribute 'default nil
                     :font ui-font
-                    :height consoli-config/font-height-ui)
+                    :height (consoli-config/font-height-ui))
 
 ;; Smaller font for transient menus
 (add-hook 'transient-setup-buffer-hook
           (lambda ()
             (face-remap-add-relative 'default
                                      :family ui-font
-                                     :height 90)))
+                                     :height (consoli-config/font-height-small))))
 
 ;; Mode line fonts
 (set-face-attribute 'mode-line nil
                     :family modeline-font
-                    :height 120)
+                    :height (consoli-config/font-height-modeline))
 
 (set-face-attribute 'mode-line-active nil
                     :family modeline-font
-                    :height 120)
+                    :height (consoli-config/font-height-modeline))
 
 (set-face-attribute 'mode-line-inactive nil
                     :family modeline-font
-                    :height 120)
+                    :height (consoli-config/font-height-modeline))
 
 ;; Programming-specific face customizations
 (set-face-attribute 'font-lock-comment-face nil
                     :font programming-font
                     :slant 'italic
-                    :height 110)
+                    :height (- (consoli-config/font-height-programming) 2))
 
 ;; Tab bar font
 (set-face-attribute 'tab-bar nil
                     :font alternative-programming-font
-                    :height 100)
+                    :height (consoli-config/font-height-small))
 
 ;; Region selection
 (set-face-attribute 'region nil :extend nil)
@@ -1369,9 +1348,9 @@ targets."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Startup and UI cleanup
-(setq inhibit-startup-screen t
-      initial-scratch-message nil
-      inhibit-startup-echo-area-message t)
+(setopt inhibit-startup-screen t
+        initial-scratch-message nil)
+(eval '(setq inhibit-startup-echo-area-message "consoli"))
 
 ;; Disable UI elements
 (scroll-bar-mode -1)
@@ -1873,6 +1852,7 @@ may not be efficient."
   (org-support-shift-select 'always)
   (org-edit-src-persistent-message nil)
   (org-use-sub-superscripts nil)
+
   :custom-face
   ;; Fixed-pitch faces for code blocks and technical elements
   (org-block ((t (:inherit fixed-pitch))))
@@ -1895,6 +1875,17 @@ may not be efficient."
   (font-lock-doc-face ((t (:inherit font-lock-string-face :height 120))))
   (org-ellipsis ((t (:inherit default :box nil :underline nil :weight ultra-bold))))
   :config
+  ;; Update faces with dynamic font sizes
+  (when consoli-config/font-scaling-enabled
+    (set-face-attribute 'variable-pitch nil
+                        :family org-font
+                        :height (consoli-config/font-height-org))
+    (set-face-attribute 'fixed-pitch nil
+                        :family alternative-programming-font
+                        :height (consoli-config/font-height-modeline))
+    (set-face-attribute 'font-lock-doc-face nil
+                        :height (consoli-config/font-height-modeline)))
+
   ;; Add language modes
   (add-to-list 'org-src-lang-modes (cons "rust" 'rust-ts))
   (add-to-list 'org-src-lang-modes (cons "go" 'go-ts))
@@ -1928,18 +1919,18 @@ may not be efficient."
                     (unless (string-equal todo-state "DONE")
                       (org-todo 'done))
                   (unless (string-equal todo-state "TODO")
-                    (org-todo 'todo)))))))))
+                    (org-todo 'todo))))))))))
 
-  ;; Font-lock customizations
-  (font-lock-add-keywords
-   'org-mode
-   `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)"
-      1 'org-checkbox-done-text prepend))
-   'append)
+;; Font-lock customizations
+(font-lock-add-keywords
+ 'org-mode
+ `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)"
+    1 'org-checkbox-done-text prepend))
+ 'append)
 
-  (font-lock-add-keywords 'org-mode
-                          '(("^ *\\([-]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+(font-lock-add-keywords 'org-mode
+                        '(("^ *\\([-]\\) "
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 (use-package org-modern
   :after org
@@ -1993,7 +1984,7 @@ may not be efficient."
    (prog-mode . olivetti-mode))
   :config (setq-default olivetti-body-width 170))
 
-(setq-default default-justification 'full)
+(setopt default-justification 'full)
 
 (use-package sqlite3
   :defer t)
@@ -2023,24 +2014,24 @@ may not be efficient."
                 (propertize "${authors:15}" 'face 'org-tag)))
   (org-roam-db-autosync-mode))
 
-(setq
+(setq-default
  org-roam-directory (file-truename "~/projects/brainiac/")
  org-roam-db-location (file-truename "~/projects/brainiac/org-roam.db")
  org-roam-dailies-directory "dailies/")
 
-(setq
+(setq-default
  org-roam-dailies-capture-templates
  '(("d" "default" entry
     "\n\n* %<%I:%M %p>: %?"
     :target (file+head "%<%Y-%m-%d>.org"
                        "#+TITLE: %<%Y-%m-%d>\n"))))
 
-(setq org-roam-capture-templates
-      '(("u" "uncategorized" plain
-         "* %?"
-         :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                            "#+FILETAGS: :uncategorized:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
-         :unnarrowed t)))
+(setq-default org-roam-capture-templates
+              '(("u" "uncategorized" plain
+                 "* %?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                    "#+FILETAGS: :uncategorized:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
+                 :unnarrowed t)))
 
 (add-to-list 'org-roam-capture-templates
              '("k" "book" plain
@@ -2116,12 +2107,12 @@ may not be efficient."
 
 (advice-add 'deft-parse-title :override #'cm/deft-parse-title)
 
-(setq deft-strip-summary-regexp
-      (concat "\\("
-              "[\n\t]" ;; blank
-              "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
-              "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
-              "\\)"))
+(setq-default deft-strip-summary-regexp
+              (concat "\\("
+                      "[\n\t]" ;; blank
+                      "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
+                      "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
+                      "\\)"))
 
 (with-eval-after-load 'org
   (defun rasmus/org-prettify-symbols ()
@@ -2171,25 +2162,25 @@ may not be efficient."
 
 (add-hook 'org-checkbox-statistics-hook 'consoli-config/org-checkbox-todo)
 
-(setq
- ;; adapt indentation of content to match its heading
- org-adapt-indentation nil
- org-ellipsis "   "
- org-hide-emphasis-markers t
- ;; non-nil = utf-8
- org-pretty-entities t
- org-startup-folded 'fold
- org-return-follows-link t
- ;; only needs one empty line to show an empty line when collapsed
- org-cycle-separator-lines 2
- ;; shift-select with mouse
- org-support-shift-select 'always
- ;; no help message when editing code
- org-edit-src-persistent-message nil
- ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
- org-use-sub-superscripts nil)
+;; (setq-default
+;;  ;; adapt indentation of content to match its heading
+;;  org-adapt-indentation nil
+;;  org-ellipsis "   "
+;;  org-hide-emphasis-markers t
+;;  ;; non-nil = utf-8
+;;  org-pretty-entities t
+;;  org-startup-folded 'fold
+;;  org-return-follows-link t
+;;  ;; only needs one empty line to show an empty line when collapsed
+;;  org-cycle-separator-lines 2
+;;  ;; shift-select with mouse
+;;  org-support-shift-select 'always
+;;  ;; no help message when editing code
+;;  org-edit-src-persistent-message nil
+;;  ;; disable a_b to be rendered as subscript, still can use a_{b} to get the same result
+;;  org-use-sub-superscripts nil)
 
-(set-face-attribute 'org-ellipsis nil :inherit 'default :box nil :underline nil :weight 'ultra-bold)
+;; (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil :underline nil :weight 'ultra-bold)
 
 (use-package treesit-auto
   :hook (after-init . global-treesit-auto-mode)
@@ -2248,7 +2239,7 @@ may not be efficient."
     (sp-local-pair "(" nil :post-handlers '((indent-between-pair "RET")))))
 
 (show-paren-mode 1)
-(setq show-paren-style 'mixed)
+(setopt show-paren-style 'expression)
 ;; (set-face-attribute 'show-paren-match nil :foreground "#FF3377" :weight 'regular :inherit t)
 
 (use-package rainbow-delimiters
@@ -2361,7 +2352,7 @@ may not be efficient."
        (format "# ```suggestion\n%s\n# ```\n"
                (replace-regexp-in-string "^\\+" "# " s-region))))))
 
-(setq
+(setq-default
  ediff-keep-variants nil
  ediff-make-buffers-readonly-at-startup nil
  ediff-merge-revisions-with-ancestor t
@@ -2396,7 +2387,7 @@ may not be efficient."
 
 (use-package ts-movement
   :defer t
-  :straight (ts-movement :type git :host github :repo "haritkapadia/ts-movement" :files ("*.el*"))
+  :straight (:type git :host github :repo "matheus-consoli/ts-movement")
   :ensure multiple-cursors
   :init
   (defvar-keymap me/ts-movement-map
@@ -2681,11 +2672,11 @@ may not be efficient."
               tab-width 4)
 
 ;; Scrolling behavior
-(setq scroll-preserve-screen-position 'always
-      scroll-conservatively 101
-      fast-but-imprecise-scrolling t
-      redisplay-dont-pause 1
-      jit-lock-defer-time 0)
+(setq-default scroll-preserve-screen-position 'always
+              scroll-conservatively 101
+              fast-but-imprecise-scrolling t
+              redisplay-dont-pause 1
+              jit-lock-defer-time 0)
 
 (use-package scroll-restore
   :hook (after-init . scroll-restore-mode)
@@ -2719,21 +2710,21 @@ may not be efficient."
   :custom
   (good-scroll-duration 0.2))
 
-(setq backup-directory-alist '(("." . "~/.emacs.d/backup/per-save"))
-      auto-save-file-name-transforms '((".*" "~/.emacs.d/backup/auto-saves")))
+(setopt backup-directory-alist '(("." . "~/.emacs.d/backup/per-save"))
+        auto-save-file-name-transforms '(("\\(.*/\\)?\\([^/]*\\)\\'" "~/.emacs.d/backup/auto-saves/\\2" t)))
 
-(setq delete-old-versions t
-      ;; number of new versions of a file to kept
-      kept-new-versions 1
-      ;; number of old version to kept
-      kept-old-versions 2
-      ;; numeric version control
-      version-control t
-      ;; copy files, dont rename them
-      backup-by-copying t)
+(setopt delete-old-versions t
+        ;; number of new versions of a file to kept
+        kept-new-versions 1
+        ;; number of old version to kept
+        kept-old-versions 2
+        ;; numeric version control
+        version-control t
+        ;; copy files, dont rename them
+        backup-by-copying t)
 
-(setq auto-save-timeout 15 ;; seconds
-      auto-save-interval 200)
+(setq-default auto-save-timeout 15 ;; seconds
+              auto-save-interval 200)
 
 (use-package super-save
   :hook (after-init . super-save-mode)
@@ -2742,7 +2733,7 @@ may not be efficient."
   (super-save-idle-duration 5)
   (super-save-delete-trailing-whitespace 'except-current-line))
 
-(setq create-lockfiles nil)
+(setq-default create-lockfiles nil)
 
 ;; Enhanced line editing with crux
 (use-package crux
@@ -2754,7 +2745,7 @@ may not be efficient."
 
 ;; Frame and bell settings
 (set-frame-parameter (selected-frame) 'buffer-predicate #'buffer-file-name)
-(setq ring-bell-function 'ignore)
+(setq-default ring-bell-function 'ignore)
 
 (use-package jinx
   :hook (emacs-startup . global-jinx-mode)
@@ -2766,10 +2757,11 @@ may not be efficient."
   ("M-|" . jinx-correct-nearest))
 
 ;; Additional editing settings
-(setq tab-always-indent 'complete
-      text-mode-ispell-word-completion nil
-      pulse-delay 0.03
-      pulse-iterations 13)
+(setopt tab-always-indent 'complete
+        text-mode-ispell-word-completion nil)
+
+(setq-default pulse-delay 0.03
+              pulse-iterations 13)
 
 ;; Pulse region on region-based operations
 (dolist (fn '(kill-ring-save sp-copy-sexp sp-backward-copy-sexp
@@ -2842,8 +2834,8 @@ may not be efficient."
 (delete-selection-mode t)
 
 ;; Bookmark and buffer settings
-(setq bookmark-save-flag 1
-      ibuffer-expert t)
+(setq-default bookmark-save-flag 1
+              ibuffer-expert t)
 
 (use-package clipetty
   :hook (after-init . load-clipetty-only-in-term))
@@ -2852,7 +2844,7 @@ may not be efficient."
   (when (not (display-graphic-p))
     (global-clipetty-mode t)))
 
-(setq focus-follows-mouse t)
+(setq-default focus-follows-mouse t)
 
 (global-set-key (kbd "<f9>") 'whitespace-cleanup)
 

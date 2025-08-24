@@ -1,6 +1,15 @@
-;;; breadcrumb-icons.el --- Enhanced breadcrumb navigation with icons -*- lexical-binding: t; -*-
+;;; breadcrumb-icons.el --- Breadcrumb navigation with icons -*- lexical-binding: t; -*-
 
-(require 'nerd-icons)
+(defvar breadcrumb-icons--nerd-icons-available nil
+  "Whether nerd-icons is available.")
+
+(condition-case nil
+    (progn
+      (require 'nerd-icons)
+      (setq breadcrumb-icons--nerd-icons-available t))
+  (error
+   (message "breadcrumb-icons: nerd-icons not available, icons will be disabled")
+   (setq breadcrumb-icons--nerd-icons-available nil)))
 
 (defgroup breadcrumb-icons nil
   "Icon customization for breadcrumb navigation."
@@ -10,17 +19,29 @@
 (defcustom breadcrumb-icons-project-root-icon "nf-fa-rocket" ;; 
   "Icon for project root node."
   :type 'string
-  :group 'breadcrumb-icons)
+  :group 'breadcrumb-icons
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (bound-and-true-p breadcrumb-icons-mode)
+           (breadcrumb-icons--clear-cache))))
 
 (defcustom breadcrumb-icons-folder-icon "nf-fa-folder_open" ;; 
   "Icon for folder nodes."
   :type 'string
-  :group 'breadcrumb-icons)
+  :group 'breadcrumb-icons
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (bound-and-true-p breadcrumb-icons-mode)
+           (breadcrumb-icons--clear-cache))))
 
 (defcustom breadcrumb-icons-default-leaf-icon "nf-cod-symbol_field" ;; 
   "Default icon for leaf nodes in imenu."
   :type 'string
-  :group 'breadcrumb-icons)
+  :group 'breadcrumb-icons
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (bound-and-true-p breadcrumb-icons-mode)
+           (breadcrumb-icons--clear-cache))))
 
 (defcustom breadcrumb-icons-enable-caching t
   "Whether to cache icon strings for better performance."
@@ -30,12 +51,20 @@
 (defcustom breadcrumb-icons-icon-spacing 1
   "The number of `breadcrumb-icons-icon-string` instances to include between the icon and the filename."
   :type 'integer
-  :group 'breadcrumb-icons)
+  :group 'breadcrumb-icons
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (bound-and-true-p breadcrumb-icons-mode)
+           (breadcrumb-icons--clear-cache))))
 
 (defcustom breadcrumb-icons-icon-string " "
   "The string to use as spacing between the icon and the filename."
   :type 'string
-  :group 'breadcrumb-icons)
+  :group 'breadcrumb-icons
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (bound-and-true-p breadcrumb-icons-mode)
+           (breadcrumb-icons--clear-cache))))
 
 ;;; Icon mappings
 
@@ -68,14 +97,26 @@
   (interactive)
   (clrhash breadcrumb-icons--cache))
 
+(defun breadcrumb-icons--get-spacing ()
+  "Generate spacing string based on configuration."
+  (let ((cache-key (format "spacing-%d-%s" breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string)))
+    (if breadcrumb-icons-enable-caching
+        (or (gethash cache-key breadcrumb-icons--cache)
+            (puthash cache-key
+                     (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
+                     breadcrumb-icons--cache))
+      (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string)))))
+
 (defun breadcrumb-icons--safe-icon (icon-func icon-name &rest args)
   "Safely call ICON-FUNC with ICON-NAME and ARGS.
-Return empty string if icon generation fails."
-  (condition-case err
-      (apply icon-func icon-name args)
-    (error
-     (message "breadcrumb-icons: Failed to generate icon %s: %s" icon-name err)
-     "")))
+Return empty string if icon generation fails or nerd-icons unavailable."
+  (if (not breadcrumb-icons--nerd-icons-available)
+      ""
+    (condition-case err
+        (apply icon-func icon-name args)
+      (error
+       (message "breadcrumb-icons: Failed to generate icon %s: %s" icon-name err)
+       ""))))
 
 (defun breadcrumb-icons--get-cached-icon (cache-key icon-func icon-name &rest args)
   "Get icon from cache or generate and cache it.
@@ -91,14 +132,7 @@ ICON-NAME is the icon identifier, and ARGS are additional arguments."
 (defun breadcrumb-icons--add-icon (icon string)
   "Prepend ICON to STRING with proper spacing."
   (if (and icon (not (string-empty-p icon)))
-      (let* ((spacing-cache-key (format "spacing-%d-%s" breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
-             (spacing (if breadcrumb-icons-enable-caching
-                          (or (gethash spacing-cache-key breadcrumb-icons--cache)
-                              (puthash spacing-cache-key
-                                       (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
-                                       breadcrumb-icons--cache))
-                        (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string)))))
-        (concat icon spacing string))
+      (concat icon (breadcrumb-icons--get-spacing) string)
     string))
 
 (defun breadcrumb-icons--get-ipath-icon (node-name face)
@@ -108,7 +142,8 @@ ICON-NAME is the icon identifier, and ARGS are additional arguments."
            (icon-type (nth 2 icon-data))
            (icon-func (intern (concat "nerd-icons-" (symbol-name icon-type))))
            (cache-key (format "%s-%s-%s" node-name icon-name face)))
-      (breadcrumb-icons--get-cached-icon cache-key icon-func icon-name :face face))))
+      (when (fboundp icon-func)
+        (breadcrumb-icons--get-cached-icon cache-key icon-func icon-name :face face)))))
 
 ;;; Advice functions
 
@@ -142,13 +177,7 @@ RETURN-VALUE is the original return value from the function."
                   cache-key #'nerd-icons-faicon
                   breadcrumb-icons-project-root-icon
                   :face 'breadcrumb-project-base-face))
-           (spacing-cache-key (format "spacing-%d-%s" breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
-           (spacing (if breadcrumb-icons-enable-caching
-                        (or (gethash spacing-cache-key breadcrumb-icons--cache)
-                            (puthash spacing-cache-key
-                                     (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string))
-                                     breadcrumb-icons--cache))
-                      (apply #'concat (make-list breadcrumb-icons-icon-spacing breadcrumb-icons-icon-string)))))
+           (spacing (breadcrumb-icons--get-spacing)))
       (setf (car return-value)
             (concat spacing (breadcrumb-icons--add-icon icon (car return-value))))))
   return-value)
@@ -175,24 +204,25 @@ MORE indicates if there are more nodes, R are additional arguments."
 ;;; Minor mode
 
 (defvar breadcrumb-icons--advices
-  '((breadcrumb--format-project-node . (:around . breadcrumb-icons--format-project-node-advice))
-    (breadcrumb--project-crumbs-1 . (:filter-return . breadcrumb-icons--project-crumbs-advice))
-    (breadcrumb--format-ipath-node . (:around . breadcrumb-icons--format-ipath-node-advice)))
+  '((breadcrumb--format-project-node :around breadcrumb-icons--format-project-node-advice)
+    (breadcrumb--project-crumbs-1 :filter-return breadcrumb-icons--project-crumbs-advice)
+    (breadcrumb--format-ipath-node :around breadcrumb-icons--format-ipath-node-advice))
   "List of advice functions to apply.")
 
 (defun breadcrumb-icons--apply-advices ()
   "Apply all breadcrumb icon advices."
   (dolist (advice breadcrumb-icons--advices)
-    (let ((func (car advice))
-          (advice-type (cadr advice))
-          (advice-func (cddr advice)))
-      (advice-add func advice-type advice-func))))
+    (let ((func (nth 0 advice))
+          (advice-type (nth 1 advice))
+          (advice-func (nth 2 advice)))
+      (when (fboundp func)
+        (advice-add func advice-type advice-func)))))
 
 (defun breadcrumb-icons--remove-advices ()
   "Remove all breadcrumb icon advices."
   (dolist (advice breadcrumb-icons--advices)
-    (let ((func (car advice))
-          (advice-func (cddr advice)))
+    (let ((func (nth 0 advice))
+          (advice-func (nth 2 advice)))
       (advice-remove func advice-func))))
 
 ;;;###autoload
