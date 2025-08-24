@@ -9,36 +9,6 @@
 
 (require 'color)
 
-(defun tale-themes--lighten-color (color amount)
-  "Lighten COLOR by AMOUNT (0.0-1.0)."
-  (when (and color (> (length color) 0))
-    (apply 'color-rgb-to-hex
-           (append (color-lighten-hsl
-                    (apply 'color-rgb-to-hsl
-                           (color-name-to-rgb color))
-                    amount)
-                   (list 2)))))
-
-(defun tale-themes--darken-color (color amount)
-  "Darken COLOR by AMOUNT (0.0-1.0)."
-  (when (and color (> (length color) 0))
-    (apply 'color-rgb-to-hex
-           (append (color-darken-hsl
-                    (apply 'color-rgb-to-hsl
-                           (color-name-to-rgb color))
-                    amount)
-                   (list 2)))))
-
-(defun tale-themes--blend-colors (color1 color2 alpha)
-  "Blend COLOR1 with COLOR2 using ALPHA (0.0-1.0)."
-  (when (and color1 color2 (> (length color1) 0) (> (length color2) 0))
-    (let* ((rgb1 (color-name-to-rgb color1))
-           (rgb2 (color-name-to-rgb color2))
-           (blended (list (+ (* (nth 0 rgb1) (- 1 alpha)) (* (nth 0 rgb2) alpha))
-                          (+ (* (nth 1 rgb1) (- 1 alpha)) (* (nth 1 rgb2) alpha))
-                          (+ (* (nth 2 rgb1) (- 1 alpha)) (* (nth 2 rgb2) alpha)))))
-      (apply 'color-rgb-to-hex (append blended (list 2))))))
-
 (defun tale-themes--create-theme (theme-name palette)
   "Create a theme with THEME-NAME using PALETTE."
   (let-alist palette
@@ -114,13 +84,13 @@
      `(trailing-whitespace ((t (:background ,.error-muted :foreground ,.fg-bright))))
 
      ;; == MODELINE ==
-     `(mode-line ((t (:background ,.bg-main :foreground ,.grey-docstring :weight light
+     `(mode-line ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light
                                   :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
-     `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-main :weight normal
+     `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-docstring :weight normal
                                          :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
-     `(mode-line-inactive ((t (:background ,.bg-special :foreground ,.grey-subtle :weight light
+     `(mode-line-inactive ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light :overline ,.bg-special
                                            :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
-     `(mode-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main :box (:line-width 2 :color ,.purple)))))
+     `(mode-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main))))
      `(mode-line-buffer-id ((t (:foreground ,.purple :weight bold))))
      `(mode-line-emphasis ((t (:foreground ,.green :weight bold))))
      `(mode-line-inactive-buffer-id ((t (:foreground ,.grey-subtle))))
