@@ -339,8 +339,8 @@
   :type 'boolean
   :group 'consoli-config)
 
-(defcustom consoli-config/olivetti-margin-ratio 0.15
-  "Minimum margin ratio (0.15 = 15% margins minimum)."
+(defcustom consoli-config/olivetti-margin-ratio 0.08
+  "Minimum margin ratio (0.08 = 8% margins minimum)."
   :type '(float :min 0.05 :max 0.4)
   :group 'consoli-config)
 
