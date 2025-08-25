@@ -126,7 +126,9 @@
     (programming . 110)
     (org . 130)
     (small . 100)
-    (modeline . 110))
+    (modeline . 110)
+    (tab-bar . 100)
+    (centaur-tabs . 100))
   "Base font sizes before dynamic scaling."
   :type '(alist :key-type symbol :value-type (integer :min 8))
   :group 'consoli-config)
@@ -209,6 +211,8 @@
                     ('org 1.05)          ; Larger for reading comfort
                     ('modeline 0.9)      ; Proportional but not dominant
                     ('small 0.85)        ; Smaller UI elements
+                    ('tab-bar 0.85)      ; Compact for tab bar
+                    ('centaur-tabs 0.85) ; Compact for centaur tabs
                     (_ 1.0)))            ; UI and others
                  (final-size (max 8 (round (* base-size scale-factor context-multiplier)))))
             (puthash cache-key final-size consoli-config/--font-cache)
@@ -265,7 +269,9 @@
           (prog-size (consoli-config/font-height-programming frame))
           (org-size (consoli-config/get-scaled-font-size 'org frame))
           (modeline-size (consoli-config/get-scaled-font-size 'modeline frame))
-          (small-size (consoli-config/get-scaled-font-size 'small frame)))
+          (small-size (consoli-config/get-scaled-font-size 'small frame))
+          (tab-bar-size (consoli-config/get-scaled-font-size 'tab-bar frame))
+          (centaur-tabs-size (consoli-config/get-scaled-font-size 'centaur-tabs frame)))
 
       ;; Update frame font parameters
       (when frame
@@ -281,7 +287,17 @@
                             :family alternative-programming-font
                             :height modeline-size)
         (set-face-attribute 'font-lock-doc-face nil
-                            :height modeline-size))
+                            :height prog-size))
+
+      ;; Update tab-bar faces
+      (when (featurep 'tab-bar)
+        (set-face-attribute 'tab-bar nil
+                            :family alternative-programming-font
+                            :height tab-bar-size))
+
+      ;; Update centaur-tabs faces when available
+      (when (featurep 'centaur-tabs)
+        (centaur-tabs-change-fonts alternative-programming-font centaur-tabs-size))
 
       ;; Store current frame size for change detection
       (setq consoli-config/--last-frame-size
@@ -317,6 +333,14 @@
 (defun consoli-config/font-height-small (&optional frame)
   "Get dynamically scaled small font height."
   (consoli-config/get-scaled-font-size 'small frame))
+
+(defun consoli-config/font-height-tab-bar (&optional frame)
+  "Get dynamically scaled tab-bar font height."
+  (consoli-config/get-scaled-font-size 'tab-bar frame))
+
+(defun consoli-config/font-height-centaur-tabs (&optional frame)
+  "Get dynamically scaled centaur-tabs font height."
+  (consoli-config/get-scaled-font-size 'centaur-tabs frame))
 
 ;; Early frame configuration to prevent startup flicker
 (when (display-graphic-p)

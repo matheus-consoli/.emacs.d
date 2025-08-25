@@ -21,7 +21,7 @@
               straight-vc-git-default-clone-depth 1)
 
 (straight-use-package 'use-package)
-;; (setq use-package-compute-statistics t)
+(setq use-package-compute-statistics nil)
 
 (straight-use-package
  '(org
@@ -31,20 +31,20 @@
    :files ("lisp/*.el" "contrib/lisp/*.el")))
 
 ;; Compile Elisp files automatically for better performance
-(use-package compile-angel
-  :demand t
-  :custom
-  (compile-angel-verbose nil)
-  :config
-  (setq compile-angel-excluded-files
-        (append '("/init.el"
-                  "/early-init.el"
-                  "/.mc-lists.el" ;; multiple-cursors
-                  "/my-themes/tale-themes-common.el"
-                  "/my-themes/dark-tale-themes.el"
-                  "/my-themes/bright-tale-themes.el")
-                compile-angel-excluded-files))
-  (compile-angel-on-load-mode))
+;; (use-package compile-angel
+;;   :demand t
+;;   :custom
+;;   (compile-angel-verbose nil)
+;;   :config
+;;   (setq compile-angel-excluded-files
+;;         (append '("/init.el"
+;;                   "/early-init.el"
+;;                   "/.mc-lists.el" ;; multiple-cursors
+;;                   "/my-themes/tale-themes-common.el"
+;;                   "/my-themes/dark-tale-themes.el"
+;;                   "/my-themes/bright-tale-themes.el")
+;;                 compile-angel-excluded-files))
+;;   (compile-angel-on-load-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; CORE EMACS SETTINGS
@@ -97,6 +97,8 @@
     (repeat-mode)
     (xterm-mouse-mode t)
     (window-divider-mode t)
+    (pending-delete-mode t)
+    (delete-selection-mode t)
     (global-auto-composition-mode)
     (global-auto-revert-mode))
 
@@ -212,15 +214,23 @@
             (setq consoli-config/original-mode-line-alist
                   (delq original-format consoli-config/original-mode-line-alist)))))))
 
+  (defun consoli-config/refresh-vertico-posframe ()
+    "Refresh vertico-posframe to fix potential display bugs."
+    (when (and (featurep 'vertico-posframe) vertico-posframe-mode)
+      (when (and vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
+        (posframe-refresh vertico-posframe--buffer))))
+
   (add-hook 'vertico-posframe-mode-hook
             (lambda ()
               (if vertico-posframe-mode
                   (progn
                     (add-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
-                    (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico))
+                    (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
+                    (add-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe))
                 (progn
                   (remove-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
-                  (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)))))
+                  (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
+                  (remove-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)))))
 
   (setq vertico-posframe-size-function #'consoli-config/vertico-posframe-size)
   (vertico-posframe-mode 1))
@@ -1305,7 +1315,7 @@ targets."
 ;; Tab bar font
 (set-face-attribute 'tab-bar nil
                     :font alternative-programming-font
-                    :height (consoli-config/font-height-small))
+                    :height (consoli-config/font-height-tab-bar))
 
 ;; Region selection
 (set-face-attribute 'region nil :extend nil)
@@ -1363,7 +1373,7 @@ targets."
               blink-cursor-interval 0.75
               cursor-in-non-selected-windows '(hbar . 1))
 
-(defun consoli-config/childframe-cursor-setup (frame _)
+(defun consoli-config/childframe-cursor-setup (frame)
   "Adjust cursor in childframes."
   (when (frame-parameter frame 'parent-frame) ;; it’s a childframe
     (with-selected-frame frame
@@ -1588,7 +1598,7 @@ targets."
   :hook (after-init . centaur-tabs-mode)
   :config
   (centaur-tabs-headline-match)
-  (centaur-tabs-change-fonts alternative-programming-font 100)
+  (centaur-tabs-change-fonts alternative-programming-font (consoli-config/font-height-centaur-tabs))
   (consoli-config/setup-centaur-hooks)
   :init
   (defun centaur-tabs-hide-tab (x)
@@ -2828,11 +2838,7 @@ may not be efficient."
      "NODE_PATH"))
   (exec-path-from-shell-check-startup-files nil)
   (exec-path-from-shell-shell-name (getenv "SHELL"))
-  :config
-  (exec-path-from-shell-initialize))
-
-(pending-delete-mode t)
-(delete-selection-mode t)
+  :hook (after-init . exec-path-from-shell-initialize))
 
 ;; Bookmark and buffer settings
 (setq-default bookmark-save-flag 1
