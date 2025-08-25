@@ -1982,7 +1982,8 @@ may not be efficient."
   ((org-mode . olivetti-mode)
    (markdown-mode . olivetti-mode)
    (prog-mode . olivetti-mode))
-  :config (setq-default olivetti-body-width 170))
+  :custom
+  (olivetti-body-width 0.80))
 
 (setopt default-justification 'full)
 

@@ -151,6 +151,23 @@
 (defvar consoli-config/--font-update-timer nil
   "Timer for debounced font updates.")
 
+(defun consoli-config/get-screen-resolution (&optional frame)
+  "Get the native screen resolution for FRAME's display."
+  (let ((frame (or frame (selected-frame))))
+    (if (display-graphic-p frame)
+        (let* ((attrs (frame-monitor-attributes frame))
+               (geometry (alist-get 'geometry attrs))
+               (width (nth 2 geometry))
+               (height (nth 3 geometry)))
+          (cons width height))
+      ;; Fallback for terminal
+      (cons 1920 1080))))
+
+(defun consoli-config/get-reference-area (&optional frame)
+  "Get reference area based on current screen resolution."
+  (let ((resolution (consoli-config/get-screen-resolution frame)))
+    (* (car resolution) (cdr resolution))))
+
 (defun consoli-config/get-frame-metrics (&optional frame)
   "Get frame size metrics for scaling calculations."
   (let* ((frame (or frame (selected-frame)))
@@ -169,8 +186,7 @@
   (let* ((metrics (consoli-config/get-frame-metrics frame))
          (area (alist-get 'area metrics))
          (is-vertical (alist-get 'is-vertical metrics))
-         ;; Reference: 1920x1080 screen
-         (reference-area (* 1920 1080))
+         (reference-area (consoli-config/get-reference-area frame))
          (base-scale (sqrt (/ (float area) reference-area)))
          (aspect-boost (if is-vertical consoli-config/vertical-screen-boost 1.0))
          (final-scale (* base-scale aspect-boost consoli-config/font-scaling-factor)))
@@ -267,13 +283,6 @@
         (set-face-attribute 'font-lock-doc-face nil
                             :height modeline-size))
 
-      ;; Update olivetti settings if active
-      (when (and (featurep 'olivetti) consoli-config/olivetti-scaling-enabled)
-        (dolist (window (window-list frame))
-          (with-selected-window window
-            (when (and (boundp 'olivetti-mode) olivetti-mode)
-              (consoli-config/update-olivetti-settings window)))))
-
       ;; Store current frame size for change detection
       (setq consoli-config/--last-frame-size
             (consoli-config/get-frame-metrics frame)))))
@@ -321,126 +330,6 @@
   ;; Initialize frame size tracking
   (setq consoli-config/--last-frame-size (consoli-config/get-frame-metrics)))
 
-;; Dynamic Olivetti Width System
-
-(defcustom consoli-config/olivetti-content-widths
-  '((text-mode . (65 . 85))      ; Prose: comfortable reading
-    (org-mode . (70 . 90))       ; Documentation: slightly wider
-    (markdown-mode . (70 . 90))  ; Documentation: slightly wider
-    (prog-mode . (80 . 120))     ; Code: wider for indentation
-    (default . (65 . 85)))       ; Fallback for unknown modes
-  "Content-specific olivetti width ranges (min . max) by major mode."
-  :type '(alist :key-type symbol
-                :value-type (cons (integer :min 40) (integer :max 150)))
-  :group 'consoli-config)
-
-(defcustom consoli-config/olivetti-scaling-enabled t
-  "Enable dynamic olivetti width scaling."
-  :type 'boolean
-  :group 'consoli-config)
-
-(defcustom consoli-config/olivetti-margin-ratio 0.08
-  "Minimum margin ratio (0.08 = 8% margins minimum)."
-  :type '(float :min 0.05 :max 0.4)
-  :group 'consoli-config)
-
-(defun consoli-config/get-char-width (&optional frame)
-  "Get character width in pixels for current font in FRAME."
-  (let ((frame (or frame (selected-frame))))
-    (if (display-graphic-p frame)
-        (with-selected-frame frame
-          (if (fboundp 'window-font-width)
-              (window-font-width)
-            ;; Fallback calculation
-            (let ((char-width (frame-char-width frame)))
-              (if (> char-width 0) char-width 8))))
-      8))) ; Terminal fallback
-
-(defun consoli-config/get-content-width-range (&optional buffer)
-  "Get optimal width range for BUFFER's content type."
-  (let* ((buffer (or buffer (current-buffer)))
-         (major-mode (with-current-buffer buffer major-mode))
-         ;; Try specific mode first, then parent modes, then default
-         (width-spec (or (alist-get major-mode consoli-config/olivetti-content-widths)
-                         (alist-get 'prog-mode consoli-config/olivetti-content-widths
-                                    (and (derived-mode-p 'prog-mode)))
-                         (alist-get 'text-mode consoli-config/olivetti-content-widths
-                                    (and (derived-mode-p 'text-mode)))
-                         (alist-get 'default consoli-config/olivetti-content-widths))))
-    width-spec))
-
-(defun consoli-config/calculate-olivetti-width (&optional window)
-  "Calculate optimal olivetti body width for WINDOW."
-  (if (not consoli-config/olivetti-scaling-enabled)
-      75 ; Static fallback
-    (let* ((window (or window (selected-window)))
-           (frame (window-frame window))
-           (metrics (consoli-config/get-frame-metrics frame))
-           (window-width-pixels (window-body-width window t))
-           (char-width (consoli-config/get-char-width frame))
-           (available-chars (/ window-width-pixels char-width))
-           (width-range (consoli-config/get-content-width-range))
-           (min-width (car width-range))
-           (max-width (cdr width-range))
-           (is-vertical (alist-get 'is-vertical metrics))
-           (area (alist-get 'area metrics))
-
-           ;; Screen size scaling factor
-           (reference-area (* 1920 1080))
-           (area-scale (sqrt (/ (float area) reference-area)))
-
-           ;; Adjust range based on screen size and orientation
-           (adjusted-min (if is-vertical
-                             (max 45 (round (* min-width 0.85)))  ; Narrower for vertical
-                           min-width))
-           (adjusted-max (if is-vertical
-                             (max 65 (round (* max-width 0.9)))   ; Cap vertical width
-                           (round (* max-width area-scale))))   ; Scale for large screens
-
-           ;; Calculate optimal width within available space
-           (target-width (min adjusted-max
-                              (max adjusted-min
-                                   (round (* available-chars (- 1 (* 2 consoli-config/olivetti-margin-ratio)))))))
-
-           ;; Clamp to reasonable bounds
-           (final-width (max 40 (min 150 target-width))))
-
-      final-width)))
-
-(defun consoli-config/calculate-olivetti-margins (&optional window)
-  "Calculate olivetti margin width for WINDOW."
-  (if (not consoli-config/olivetti-scaling-enabled)
-      4 ; Static fallback
-    (let* ((window (or window (selected-window)))
-           (frame (window-frame window))
-           (metrics (consoli-config/get-frame-metrics frame))
-           (area (alist-get 'area metrics))
-           (reference-area (* 1920 1080))
-           (area-scale (sqrt (/ (float area) reference-area)))
-
-           ;; Scale margins with screen size
-           (base-margin 4)
-           (scaled-margin (max 1 (round (* base-margin area-scale))))
-           (final-margin (max 1 (min 20 scaled-margin))))
-
-      final-margin)))
-
-(defun consoli-config/update-olivetti-settings (&optional window)
-  "Update olivetti settings for WINDOW with dynamic calculations."
-  (when (and (boundp 'olivetti-mode) olivetti-mode consoli-config/olivetti-scaling-enabled)
-    (let* ((window (or window (selected-window)))
-           (new-body-width (consoli-config/calculate-olivetti-width window))
-           (new-margin-width (consoli-config/calculate-olivetti-margins window))
-           (new-min-width (max 30 (round (* new-body-width 0.6)))))
-
-      ;; Update olivetti variables locally
-      (setq-local olivetti-body-width new-body-width
-                  olivetti-minimum-body-width new-min-width
-                  olivetti-margin-width new-margin-width)
-
-      ;; Refresh olivetti display if active
-      (when (fboundp 'olivetti--set-environment)
-        (olivetti--set-environment)))))
 
 ;; Interactive font scaling functions
 (defun consoli-config/toggle-font-scaling ()
@@ -473,58 +362,6 @@
              (alist-get 'height metrics)
              (alist-get 'aspect-ratio metrics)
              scale ui-size prog-size)))
-
-;; Olivetti integration functions
-(defun consoli-config/toggle-olivetti-scaling ()
-  "Toggle dynamic olivetti scaling on/off."
-  (interactive)
-  (setq consoli-config/olivetti-scaling-enabled
-        (not consoli-config/olivetti-scaling-enabled))
-  (when (and (boundp 'olivetti-mode) olivetti-mode)
-    (if consoli-config/olivetti-scaling-enabled
-        (consoli-config/update-olivetti-settings)
-      ;; Reset to defaults when disabled
-      (setq-local olivetti-body-width 75
-                  olivetti-minimum-body-width 50
-                  olivetti-margin-width 4)
-      (when (fboundp 'olivetti--set-environment)
-        (olivetti--set-environment))))
-  (message "Olivetti scaling %s"
-           (if consoli-config/olivetti-scaling-enabled "enabled" "disabled")))
-
-(defun consoli-config/show-olivetti-info ()
-  "Display current olivetti configuration and calculations."
-  (interactive)
-  (if (not (and (boundp 'olivetti-mode) olivetti-mode))
-      (message "Olivetti mode not active")
-    (let* ((body-width (consoli-config/calculate-olivetti-width))
-           (margin-width (consoli-config/calculate-olivetti-margins))
-           (min-width (max 30 (round (* body-width 0.6))))
-           (content-range (consoli-config/get-content-width-range))
-           (char-width (consoli-config/get-char-width))
-           (window-chars (/ (window-body-width nil t) char-width)))
-      (message "Olivetti: Body=%d Margin=%d Min=%d | Range=%s | Window=%d chars"
-               body-width margin-width min-width
-               (format "%d-%d" (car content-range) (cdr content-range))
-               (round window-chars)))))
-
-(defun consoli-config/refresh-olivetti ()
-  "Manually refresh olivetti settings for current window."
-  (interactive)
-  (if (not (and (boundp 'olivetti-mode) olivetti-mode))
-      (message "Olivetti mode not active")
-    (consoli-config/update-olivetti-settings)
-    (message "Olivetti settings refreshed")))
-
-;; Hook into olivetti mode activation
-(defun consoli-config/olivetti-mode-hook ()
-  "Hook function for when olivetti-mode is activated."
-  (when consoli-config/olivetti-scaling-enabled
-    (consoli-config/update-olivetti-settings)))
-
-;; Set up olivetti hooks when package loads
-(eval-after-load 'olivetti
-  '(add-hook 'olivetti-mode-hook #'consoli-config/olivetti-mode-hook))
 
 ;; from minimal-emacs.d
 (when (and (not (daemonp)) (not noninteractive))
