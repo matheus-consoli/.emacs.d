@@ -4,7 +4,7 @@
 ;;;; BOOTSTRAP & PACKAGE MANAGEMENT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Performance optimization during startup
+;; performance optimization during startup
 (setq-default garbage-collection-messages nil)
 
 ;; UTF-8 encoding setup
@@ -84,6 +84,8 @@
   (window-divider-default-places t)
   (window-divider-default-bottom-width 0)
   (window-divider-default-right-width 20)
+
+  (treesit-font-lock-level 4)
 
   :init
   ;; Load paths
@@ -170,7 +172,7 @@
       (if echo-below-window-p
           ;; Position over echo area when it's below the window
           (cons (+ window-left (/ (- (- window-right window-left) posframe-width) 2))
-                (- frame-pixel-height (+ 10 (* echo-area-height (+ 1 vertico-count)))))
+                (- frame-pixel-height (+ 10 (* echo-area-height (+ 2 vertico-count)))))
         ;; Fallback to normal bottom-center positioning
         (posframe-poshandler-window-bottom-center info))))
 
@@ -181,7 +183,7 @@
            (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
            (char-width (frame-char-width))
            (width-chars (/ window-width char-width))
-           (fixed-height (+ 1 vertico-count)))
+           (fixed-height (+ 2 vertico-count)))
       (list
        :height fixed-height
        :width (round width-chars)
@@ -342,9 +344,9 @@
            ;; Calculate proportional dimensions (50% width, 30% height max)
            (box-width (min (truncate (* window-width 0.5)) (truncate (* screen-width 0.5))))
            (box-height (min (truncate (* window-height 0.3)) (truncate (* screen-height 0.3))))
-           ;; Calculate font size based on window size (scale between 0.4 and programming font size)
+           ;; Calculate font size based on window size (scale between 0.75 and programming font size)
            (max-scale (/ (consoli-config/font-height-programming) 100.0))
-           (font-scale (+ 0.4 (* (/ (float window-width) (float screen-width)) (- max-scale 0.4)))))
+           (font-scale (+ 0.75 (* (/ (float window-width) (float screen-width)) (- max-scale 0.75)))))
 
       ;; Set dynamic dimensions
       (setq-local eldoc-box-max-pixel-width box-width
@@ -1254,7 +1256,7 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . dark-tale)
+  '((gui . witch-tale)
     (cli . dark-tale))
   "Theme configuration for different display types.")
 
@@ -1283,7 +1285,7 @@ targets."
 
 ;; Default UI font
 (set-face-attribute 'default nil
-                    :font ui-font
+                    :family ui-font
                     :height (consoli-config/font-height-ui))
 
 ;; Smaller font for transient menus
@@ -1308,13 +1310,13 @@ targets."
 
 ;; Programming-specific face customizations
 (set-face-attribute 'font-lock-comment-face nil
-                    :font programming-font
+                    :family programming-font
                     :slant 'italic
-                    :height (- (consoli-config/font-height-programming) 2))
+                    :height (consoli-config/font-height-programming))
 
 ;; Tab bar font
 (set-face-attribute 'tab-bar nil
-                    :font alternative-programming-font
+                    :family alternative-programming-font
                     :height (consoli-config/font-height-tab-bar))
 
 ;; Region selection
@@ -1561,10 +1563,9 @@ targets."
               (consoli-config/hide-terminal-window)
               (consoli-config/refresh-centaur-tabs)))
   ;; Filter Buffers for Consult-Buffer
-  (with-eval-after-load 'consult
-    ;; hide full buffer list (still available with "b" prefix)
-    (consult-customize consult--source-buffer :hidden t :default nil)
-    ;; set consult-workspace buffer list
+
+  ;; set consult-workspace buffer list
+  (defun consoli-config/consult-buffer-filter ()
     (defvar consult--source-workspace
       (list :name     "Workspace Buffers"
             :narrow   ?w
@@ -1578,7 +1579,9 @@ targets."
                                   :as #'buffer-name)))
 
       "Set workspace buffer list for consult-buffer.")
-    (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+    (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+
+  (eval-after-load 'consult #'consoli-config/consult-buffer-filter))
 
 (defun consoli-config/setup-centaur-hooks ()
   "Hide centaur tabs for some modes."
@@ -1653,9 +1656,10 @@ targets."
          ("C-<prior>" . centaur-tabs-backward)
          ("C-<next>" . centaur-tabs-forward)))
   :custom
-  (centaur-tabs-height 30)
+  (centaur-tabs-height 25)
   (centaur-tabs-set-close-button nil)
   (centaur-tabs-style "alternate")
+  (centaur-tabs-new-tab-text "")
   ;;(centaur-tabs-hide-tab-function 'centaur-tabs-hide-tab)
   (centaur-tabs-set-bar nil)
   (x-underline-at-descent-line t) ;; to correctly display the icon
@@ -1880,21 +1884,20 @@ may not be efficient."
   (org-column ((t (:background unspecified))))
   (org-column-title ((t (:background unspecified))))
   ;; Variable-pitch and other styling
-  (variable-pitch ((t (:family org-font :height 130))))
-  (fixed-pitch ((t (:family alternative-programming-font :height 120))))
-  (font-lock-doc-face ((t (:inherit font-lock-string-face :height 120))))
+  (variable-pitch ((t (:family org-font))))
+  (fixed-pitch ((t (:family alternative-programming-font))))
+  (font-lock-doc-face ((t (:inherit font-lock-string-face))))
   (org-ellipsis ((t (:inherit default :box nil :underline nil :weight ultra-bold))))
   :config
-  ;; Update faces with dynamic font sizes
-  (when consoli-config/font-scaling-enabled
-    (set-face-attribute 'variable-pitch nil
-                        :family org-font
-                        :height (consoli-config/font-height-org))
-    (set-face-attribute 'fixed-pitch nil
-                        :family alternative-programming-font
-                        :height (consoli-config/font-height-modeline))
-    (set-face-attribute 'font-lock-doc-face nil
-                        :height (consoli-config/font-height-modeline)))
+  ;; Set dynamic font sizes (always applied, respecting scaling preference)
+  (set-face-attribute 'variable-pitch nil
+                      :family org-font
+                      :height (consoli-config/font-height-org))
+  (set-face-attribute 'fixed-pitch nil
+                      :family alternative-programming-font
+                      :height (consoli-config/font-height-programming))
+  (set-face-attribute 'font-lock-doc-face nil
+                      :height (consoli-config/font-height-programming))
 
   ;; Add language modes
   (add-to-list 'org-src-lang-modes (cons "rust" 'rust-ts))

@@ -85,11 +85,11 @@
 
      ;; == MODELINE ==
      `(mode-line ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light
-                                  :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+                                  :box (:line-width (1 . 6) :style flat-button) :inherit nil))))
      `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-docstring :weight normal
-                                         :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+                                         :box (:line-width (1 . 6) :style flat-button) :inherit nil))))
      `(mode-line-inactive ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light :overline ,.bg-special
-                                           :box (:line-width (1 . -1) :style flat-button) :inherit nil))))
+                                           :box (:line-width (1 . 6) :style flat-button) :inherit nil))))
      `(mode-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main))))
      `(mode-line-buffer-id ((t (:foreground ,.purple :weight bold))))
      `(mode-line-emphasis ((t (:foreground ,.green :weight bold))))
@@ -583,8 +583,8 @@
 
      ;; Vertico
      `(vertico-current ((t (:box (:line-width (-1 . -1) :color ,.bg-selection)))))
-     `(vertico-group-title ((t (:foreground ,.purple :weight bold :underline t))))
-     `(vertico-group-separator ((t (:foreground ,.grey-border :strike-through t))))
+     `(vertico-group-title ((t (:foreground ,.purple :weight bold :height 0.9 :box (:line-width -1 :color ,.grey-subtle)))))
+     `(vertico-group-separator ((t (:foreground ,.grey-subtle :strike-through t))))
      `(vertico-multiline ((t (:foreground ,.grey-subtle :slant italic))))
      `(vertico-quick1 ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.purple)))))
      `(vertico-quick2 ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
@@ -711,15 +711,14 @@
      `(mood-line-segment-misc ((t (:foreground ,.grey-docstring :weight light))))
 
      ;; Line numbers
-     `(line-number ((t (:foreground ,.bg-inactive-sel :background ,.bg-main :box (:line-width (2 . 3) :color ,.bg-main)))))
-     `(line-number-current-line ((t (:foreground ,.purple :box (:line-width (1 . 3) :color ,.bg-main)))))
-     `(line-number-major-tick ((t (:foreground ,.yellow :background ,.bg-main :weight bold))))
-     `(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
+     `(line-number ((t (:foreground ,.bg-inactive-sel :background ,.bg-main :box (:line-width (-1 . 3) :color ,.bg-main)))))
+     `(line-number-current-line ((t (:foreground ,.purple :box (:line-width (-1 . 3) :color ,.bg-main)))))
+     ;;`(line-number-major-tick ((t (:foreground ,.yellow :background ,.bg-main :weight bold))))
+     ;;`(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
      ;;`(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
      ;;`(linum-relative-current-face ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
      ;;`(line-number-current-line-hl ((t (:foreground ,.purple :background ,.bg-selection :weight bold :height 1.0))))
      ;;`(line-number-relative ((t (:foreground ,.grey-subtle :background ,.bg-main :height 0.9))))
-     `(line-number-relative-current ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
 
      ;; Parentheses
      `(show-paren-match ((t (:foreground ,.green :weight bold))))
@@ -760,18 +759,30 @@
      `(embark-collect-match-face ((t (:background ,.focus-bg))))
 
      ;; Breadcrumb package faces
-     `(breadcrumb-face ((t (:foreground ,.grey-subtle :height 0.9 :weight light :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-imenu-crumbs-face ((t (:foreground ,.lavender :height 0.9 :weight normal :slant italic :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-imenu-leaf-face ((t (:foreground ,.purple :height 0.85 :weight semi-bold :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-project-crumbs-face ((t (:foreground ,.grey-docstring :height 0.9 :weight light :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-project-base-face ((t (:foreground ,.blue :height 0.9 :weight normal :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-project-leaf-face ((t (:foreground ,.fg-popup :height 0.85 :weight semi-bold :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-separator ((t (:foreground ,.grey-border :height 0.8))))
-     `(breadcrumb-function-face ((t (:foreground ,.purple :weight bold))))
-     `(breadcrumb-class-face ((t (:foreground ,.blue :weight bold))))
-     `(breadcrumb-method-face ((t (:foreground ,.magenta :slant italic))))
-     `(breadcrumb-variable-face ((t (:foreground ,.lavender))))
-     `(breadcrumb-property-face ((t (:foreground ,.teal))))
+     `(breadcrumb-face ((t (:foreground ,.grey-subtle :height 0.9 :weight light
+                                        :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-imenu-crumbs-face ((t (:foreground ,.lavender :height 0.9 :weight normal :slant italic
+                                                     :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-imenu-leaf-face ((t (:foreground ,.purple :height 0.85 :weight semi-bold
+                                                   :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-project-crumbs-face ((t (:foreground ,.grey-docstring :height 0.9 :weight light
+                                                       :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-project-base-face ((t (:foreground ,.blue :height 0.9 :weight normal
+                                                     :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-project-leaf-face ((t (:foreground ,.fg-popup :height 0.85 :weight semi-bold
+                                                     :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-separator ((t (:foreground ,.grey-border :height 0.8
+                                             :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-function-face ((t (:foreground ,.purple :weight bold
+                                                 :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-class-face ((t (:foreground ,.blue :weight bold
+                                              :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-method-face ((t (:foreground ,.magenta :slant italic
+                                               :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-variable-face ((t (:foreground ,.lavender
+                                                 :box (:line-width (2 . 8) :color ,.bg-alt)))))
+     `(breadcrumb-property-face ((t (:foreground ,.teal
+                                                 :box (:line-width (2 . 8) :color ,.bg-alt)))))
 
      ;; Misc Packages
      `(yas-field-highlight-face ((t (:background ,.bg-selection))))
@@ -785,8 +796,10 @@
      `(consult-async-separator ((t (:foreground ,.purple))))
      `(consult-narrow-indicator ((t (:foreground ,.purple :weight bold))))
      `(consult-bookmark ((t (:foreground ,.magenta))))
+
      `(copilot-ghost-text-face ((t (:foreground ,.grey-border :slant italic))))
      `(copilot-highlight-face ((t (:background ,.focus-bg))))
+
      `(aidermacs-diff-face-added ((t (:inherit diff-added))))
      `(aidermacs-diff-face-removed ((t (:inherit diff-removed))))
      `(aidermacs-diff-face-changed ((t (:inherit diff-changed))))
