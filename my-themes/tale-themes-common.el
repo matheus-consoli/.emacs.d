@@ -711,8 +711,8 @@
      `(mood-line-segment-misc ((t (:foreground ,.grey-docstring :weight light))))
 
      ;; Line numbers
-     `(line-number ((t (:foreground ,.bg-inactive-sel :background ,.bg-main :box (:line-width (-1 . 3) :color ,.bg-main)))))
-     `(line-number-current-line ((t (:foreground ,.purple :box (:line-width (-1 . 3) :color ,.bg-main)))))
+     `(line-number ((t (:foreground ,.bg-inactive-sel :background ,.bg-main :box (:line-width (-1 . 4) :color ,.bg-main)))))
+     `(line-number-current-line ((t (:foreground ,.purple :box (:line-width (-1 . 4) :color ,.bg-main)))))
      ;;`(line-number-major-tick ((t (:foreground ,.yellow :background ,.bg-main :weight bold))))
      ;;`(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
      ;;`(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
@@ -791,7 +791,8 @@
      `(consult-preview-line ((t (:background ,.bg-contrast))))
      `(consult-highlight-match-face ((t (:foreground ,.purple :weight bold))))
      `(consult-file ((t (:foreground ,.fg-main))))
-     `(consult-line-number ((t (:foreground ,.grey-subtle))))
+     `(consult-line-number ((t (:foreground ,.grey-subtle :inherit nil))))
+     `(consult-line-number-prefix ((t (:box nil))))
      `(consult-separator ((t (:foreground ,.grey-border))))
      `(consult-async-separator ((t (:foreground ,.purple))))
      `(consult-narrow-indicator ((t (:foreground ,.purple :weight bold))))

@@ -25,7 +25,7 @@
 
 ;; Optimizations for improving IO performance. Increase max bytes read from a sub-process in a single op
 ;; default value: 3145728 (3M)
-(setq-default read-process-output-max (* 8 1024 1024 ))
+(setq-default read-process-output-max (* 1024 1024)) ;; cat /proc/sys/fs/pipe-max-size 
 
 ;; keep the eln cache clean
 (setq-default load-prefer-newer t)

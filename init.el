@@ -2867,7 +2867,7 @@ may not be efficient."
 (global-set-key (kbd "C--") #'text-scale-decrease)
 
 ;; Buffer management
-(global-set-key (kbd "C-x k") (lambda () (interactive) (kill-buffer (current-buffer))))
+(global-set-key (kbd "C-x k") 'kill-current-buffer)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
 ;; Terminal suspend
