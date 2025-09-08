@@ -244,6 +244,9 @@
 (use-package apheleia
   :defer t)
 
+(use-package project
+  :straight (:type built-in))
+
 (defun consoli-config/eglot-mode-if-available ()
   "Start eglot if a server is available for this mode."
   (require 'eglot)
@@ -253,6 +256,7 @@
 
 ;; Eglot - LSP client
 (use-package eglot
+  :straight (:type built-in)
   :defer t
   :init
   (defvar eglot-mode-map (make-sparse-keymap)
@@ -1996,7 +2000,8 @@ may not be efficient."
    (markdown-mode . olivetti-mode)
    (prog-mode . olivetti-mode))
   :custom
-  (olivetti-body-width 0.80))
+  (olivetti-body-width 0.80)
+  (olivetti-minimum-body-width 100))
 
 (setopt default-justification 'full)
 
