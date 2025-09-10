@@ -31,22 +31,24 @@
    :files ("lisp/*.el" "contrib/lisp/*.el")))
 
 ;; Compile Elisp files automatically for better performance
-;; (use-package compile-angel
-;;   :demand t
-;;   :custom
-;;   (compile-angel-verbose nil)
-;;   :config
-;;   (setq compile-angel-excluded-files
-;;         (append '("/init.el"
-;;                   "/early-init.el"
-;;                   "/.mc-lists.el" ;; multiple-cursors
-;;                   "/my-themes/tale-themes-common.el"
-;;                   "/my-themes/dark-tale-themes.el"
-;;                   "/my-themes/bright-tale-themes.el")
-;;                 compile-angel-excluded-files))
-;;   (compile-angel-on-load-mode))
+(use-package compile-angel
+  :demand t
+  :custom
+  (compile-angel-verbose nil)
+  :config
+  (setq
+   compile-angel-excluded-files (append '("/.mc-lists.el" ;; multiple-cursors
+                                          "/init.el"
+                                          "/early-init.el")
+                                        compile-angel-excluded-files)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   compile-angel-excluded-files-regexps (append '("/my-themes/*.el"
+                                                  "/lisp/*.el")
+                                                compile-angel-excluded-files-regexps))  
+
+  (compile-angel-on-load-mode))
+
+
 ;;;; CORE EMACS SETTINGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1260,7 +1262,7 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . witch-tale)
+  '((gui . dark-tale)
     (cli . dark-tale))
   "Theme configuration for different display types.")
 
@@ -2270,9 +2272,12 @@ may not be efficient."
   :custom
   (magit-ediff-dwim-show-on-hunks t)
   (magit-format-file-function #'magit-format-file-nerd-icons)
+  (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
+  (magit-bury-buffer-function 'magit-restore-window-configuration)
   :hook
   (after-save . magit-after-save-refresh-status)
   :config
+  (setq auth-sources '("~/.authinfo.gpg"))
   (advice-add #'magit-auto-revert-mode :around #'shut-up--advice)
   (defun consoli-config/setup-magit-hooks ()
     (when (magit-git-repo-p default-directory)
