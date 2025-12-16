@@ -17,8 +17,8 @@
 (setq-default package-enable-at-startup nil)
 
 (setq-default straight-cache-autoloads t
-	      straight-use-package-by-default t
-	      straight-vc-git-default-clone-depth 1)
+              straight-use-package-by-default t
+              straight-vc-git-default-clone-depth 1)
 
 (straight-use-package 'use-package)
 (setq use-package-compute-statistics nil)
@@ -38,13 +38,13 @@
   :config
   (setq
    compile-angel-excluded-files (append '("/.mc-lists.el" ;; multiple-cursors
-					  "/init.el"
-					  "/early-init.el")
-					compile-angel-excluded-files)
+                                          "/init.el"
+                                          "/early-init.el")
+                                        compile-angel-excluded-files)
 
    compile-angel-excluded-files-regexps (append '("/my-themes/*.el"
-						  "/lisp/*.el")
-						compile-angel-excluded-files-regexps))
+                                                  "/lisp/*.el")
+                                                compile-angel-excluded-files-regexps))
 
   (compile-angel-on-load-mode))
 
@@ -62,7 +62,7 @@
 (defun shut-up--advice (fn &rest args)
   "Inhibit message from the provided FN."
   (let ((inhibit-message t)
-	(message-log-max))
+        (message-log-max))
     (apply fn args)))
 
 ;; Core Emacs configuration
@@ -108,11 +108,11 @@
   (defun crm-indicator (args)
     "Add CRM indicator to completing-read-multiple."
     (cons (format "[CRM%s] %s"
-		  (replace-regexp-in-string
-		   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-		   crm-separator)
-		  (car args))
-	  (cdr args)))
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
 
   :config
   (when (daemonp)
@@ -157,42 +157,42 @@
   (vertico-posframe-truncate-lines nil)
   (vertico-posframe-border-width 0)
   (vertico-posframe-parameters '((left-fringe . 12)
-				 (right-fringe . 12)
-				 (internal-border-width . 10)
-				 (line-spacing . 0.3)))
+                                 (right-fringe . 12)
+                                 (internal-border-width . 10)
+                                 (line-spacing . 0.3)))
   :config
   (defun consoli-config/vertico-posframe-conditional-echo-poshandler (info)
     "Position posframe over echo area only when echo area is directly below the current window."
     (let* ((window (plist-get info :parent-window))
-	   (frame (window-frame window))
-	   (frame-pixel-height  (frame-pixel-height frame))
-	   (window-edges (window-pixel-edges window))
-	   (window-bottom (nth 3 window-edges))
-	   (window-left (nth 0 window-edges))
-	   (window-right (nth 2 window-edges))
-	   (echo-area-height (window-pixel-height (minibuffer-window frame)))
-	   (echo-area-top (- frame-pixel-height echo-area-height))
-	   ;; Check if echo area is directly below the window (within a few pixels tolerance)
-	   (echo-below-window-p (<= (abs (- window-bottom echo-area-top)) 5))
-	   (posframe-width (plist-get info :posframe-width)))
+           (frame (window-frame window))
+           (frame-pixel-height  (frame-pixel-height frame))
+           (window-edges (window-pixel-edges window))
+           (window-bottom (nth 3 window-edges))
+           (window-left (nth 0 window-edges))
+           (window-right (nth 2 window-edges))
+           (echo-area-height (window-pixel-height (minibuffer-window frame)))
+           (echo-area-top (- frame-pixel-height echo-area-height))
+           ;; Check if echo area is directly below the window (within a few pixels tolerance)
+           (echo-below-window-p (<= (abs (- window-bottom echo-area-top)) 5))
+           (posframe-width (plist-get info :posframe-width)))
 
       (if echo-below-window-p
-	  ;; Position over echo area when it's below the window
-	  (cons (+ window-left (/ (- (- window-right window-left) posframe-width) 2))
-		(- frame-pixel-height (+ 10 (* echo-area-height (+ 2 vertico-count)))))
-	;; Fallback to normal bottom-center positioning
-	(posframe-poshandler-window-bottom-center info))))
+          ;; Position over echo area when it's below the window
+          (cons (+ window-left (/ (- (- window-right window-left) posframe-width) 2))
+                (- frame-pixel-height (+ 10 (* echo-area-height (+ 2 vertico-count)))))
+        ;; Fallback to normal bottom-center positioning
+        (posframe-poshandler-window-bottom-center info))))
 
   (defun consoli-config/vertico-posframe-size (buffer)
     "Set posframe width to match current window, with fixed height adjusted for line-spacing."
     (let* ((window (selected-window))
-	   (window-edges (window-pixel-edges window))
-	   (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
-	   (char-width (frame-char-width))
-	   (width-chars (/ window-width char-width))
-	   ;; Adjust height by 1.3 to account for line-height
-	   (base-height (+ 2 vertico-count))
-	   (fixed-height (ceiling (* base-height 1.3))))
+           (window-edges (window-pixel-edges window))
+           (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
+           (char-width (frame-char-width))
+           (width-chars (/ window-width char-width))
+           ;; Adjust height by 1.3 to account for line-height
+           (base-height (+ 2 vertico-count))
+           (fixed-height (ceiling (* base-height 1.3))))
       (list
        :height fixed-height
        :width (round width-chars)
@@ -207,49 +207,49 @@
     "Hide mode-line in the main window when vertico opens."
     (let ((main-window (minibuffer-selected-window)))
       (when (and main-window (window-live-p main-window))
-	(with-selected-window main-window
-	  (unless (assq main-window consoli-config/original-mode-line-alist)
-	    (push (cons main-window mode-line-format) consoli-config/original-mode-line-alist)
-	    (setq mode-line-format nil)
-	    (force-mode-line-update))))))
+        (with-selected-window main-window
+          (unless (assq main-window consoli-config/original-mode-line-alist)
+            (push (cons main-window mode-line-format) consoli-config/original-mode-line-alist)
+            (setq mode-line-format nil)
+            (force-mode-line-update))))))
 
   (defun consoli-config/restore-mode-line-for-vertico ()
     "Restore mode-line in the main window when vertico closes."
     (let ((main-window (minibuffer-selected-window)))
       (when (and main-window (window-live-p main-window))
-	(let ((original-format (assq main-window consoli-config/original-mode-line-alist)))
-	  (when original-format
-	    (with-selected-window main-window
-	      (setq mode-line-format (cdr original-format))
-	      (force-mode-line-update))
-	    (setq consoli-config/original-mode-line-alist
-		  (delq original-format consoli-config/original-mode-line-alist)))))))
+        (let ((original-format (assq main-window consoli-config/original-mode-line-alist)))
+          (when original-format
+            (with-selected-window main-window
+              (setq mode-line-format (cdr original-format))
+              (force-mode-line-update))
+            (setq consoli-config/original-mode-line-alist
+                  (delq original-format consoli-config/original-mode-line-alist)))))))
 
   (defun consoli-config/refresh-vertico-posframe ()
     "Refresh vertico-posframe to fix potential display bugs."
     (when (and (featurep 'vertico-posframe) vertico-posframe-mode)
       (when (and vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
-	(posframe-refresh vertico-posframe--buffer))))
+        (posframe-refresh vertico-posframe--buffer))))
 
   (defun consoli-config/vertico-posframe-set-line-spacing ()
     "Set line-height for vertico-posframe buffer to center text vertically."
     (when (and vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
       (with-current-buffer vertico-posframe--buffer
-	(setq-local default-text-properties '(line-height 1.3)))))
+        (setq-local default-text-properties '(line-height 1.3)))))
 
   (add-hook 'vertico-posframe-mode-hook
-	    (lambda ()
-	      (if vertico-posframe-mode
-		  (progn
-		    (add-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
-		    (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
-		    (add-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
-		    (add-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing))
-		(progn
-		  (remove-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
-		  (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
-		  (remove-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
-		  (remove-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing)))))
+            (lambda ()
+              (if vertico-posframe-mode
+                  (progn
+                    (add-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
+                    (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
+                    (add-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
+                    (add-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing))
+                (progn
+                  (remove-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
+                  (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
+                  (remove-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
+                  (remove-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing)))))
 
   (setq vertico-posframe-size-function #'consoli-config/vertico-posframe-size)
   (vertico-posframe-mode 1))
@@ -293,12 +293,12 @@
   :config
   ;; Server programs
   (add-to-list 'eglot-server-programs
-	       '(toml-ts-mode . '("taplo" "lsp" "stdio"))
-	       '(markdown-ts-mode . ,(alist-get 'markdown-mode eglot-server-programs)))
+               '(toml-ts-mode . '("taplo" "lsp" "stdio"))
+               '(markdown-ts-mode . ,(alist-get 'markdown-mode eglot-server-programs)))
 
   (defun format-on-eglot ()
     (when (and (fboundp 'eglot-current-server)
-	       (eglot-current-server))
+               (eglot-current-server))
       (eglot-format-buffer)))
 
   (add-hook 'before-save-hook #'format-on-eglot nil t)
@@ -314,30 +314,30 @@
   (defun consoli-config/eglot-setup-completion ()
     "Configure completion for Eglot-managed buffers."
     (setf (alist-get 'styles (alist-get 'lsp completion-category-defaults))
-	  '(orderless))
+          '(orderless))
     (add-hook 'orderless-style-dispatchers #'consoli-config/eglot-orderless-dispatch nil 'local)
     (setq-local completion-at-point-functions
-		(list (cape-capf-buster #'eglot-completion-at-point))))
+                (list (cape-capf-buster #'eglot-completion-at-point))))
 
   (defun consoli-config/eglot-auto-save-after-edit (&rest _)
     "Auto-save buffers after workspace edit."
     (dolist (buffer (buffer-list))
       (with-current-buffer buffer
-	(when (and buffer-file-name (buffer-modified-p))
-	  (save-buffer)))))
+        (when (and buffer-file-name (buffer-modified-p))
+          (save-buffer)))))
 
   (advice-add 'eglot--apply-workspace-edit :after #'consoli-config/eglot-auto-save-after-edit)
 
   :bind (:map eglot-mode-map
-	      ("C-c l r" . eglot-rename)
-	      ("C-c l a" . eglot-code-actions)
-	      ("C-c l t" . eglot-find-type-definition)
-	      ("C-c l v" . consult-eglot-symbols)
-	      ("<f4>" . eglot-inlay-hints-mode))
+              ("C-c l r" . eglot-rename)
+              ("C-c l a" . eglot-code-actions)
+              ("C-c l t" . eglot-find-type-definition)
+              ("C-c l v" . consult-eglot-symbols)
+              ("<f4>" . eglot-inlay-hints-mode))
 
   :hook ((prog-mode . consoli-config/eglot-mode-if-available)
-	 (eglot-managed-mode . consoli-config/eglot-setup-completion)
-	 (eglot-managed-mode . eglot-inlay-hints-mode)))
+         (eglot-managed-mode . consoli-config/eglot-setup-completion)
+         (eglot-managed-mode . eglot-inlay-hints-mode)))
 
 (use-package eglot-booster
   :straight (:host github :repo "jdtsmith/eglot-booster")
@@ -346,9 +346,9 @@
 (use-package consult-eglot
   :after (consult eglot)
   :bind (:map eglot-mode-map
-	      ("C-c l s" . consult-eglot-symbols)
-	      ("C-c l i" . consult-imenu)
-	      ("C-c l e" . consult-flycheck)))
+              ("C-c l s" . consult-eglot-symbols)
+              ("C-c l i" . consult-imenu)
+              ("C-c l e" . consult-flycheck)))
 
 (use-package eldoc-box
   :custom
@@ -359,55 +359,55 @@
   (defun consoli-config/eldoc-box-dynamic-sizing ()
     "Dynamically set eldoc-box dimensions and font size based on window size."
     (let* ((window (selected-window))
-	   (window-width (window-pixel-width window))
-	   (window-height (window-pixel-height window))
-	   (screen-width (display-pixel-width))
-	   (screen-height (display-pixel-height))
-	   ;; Calculate proportional dimensions (50% width, 30% height max)
-	   (box-width (min (truncate (* window-width 0.5)) (truncate (* screen-width 0.5))))
-	   (box-height (min (truncate (* window-height 0.3)) (truncate (* screen-height 0.3))))
-	   ;; Calculate font size based on window size (scale between 0.75 and programming font size)
-	   (max-scale (/ (consoli-config/font-height-programming) 100.0))
-	   (font-scale (+ 0.75 (* (/ (float window-width) (float screen-width)) (- max-scale 0.75)))))
+           (window-width (window-pixel-width window))
+           (window-height (window-pixel-height window))
+           (screen-width (display-pixel-width))
+           (screen-height (display-pixel-height))
+           ;; Calculate proportional dimensions (50% width, 30% height max)
+           (box-width (min (truncate (* window-width 0.5)) (truncate (* screen-width 0.5))))
+           (box-height (min (truncate (* window-height 0.3)) (truncate (* screen-height 0.3))))
+           ;; Calculate font size based on window size (scale between 0.75 and programming font size)
+           (max-scale (/ (consoli-config/font-height-programming) 100.0))
+           (font-scale (+ 0.75 (* (/ (float window-width) (float screen-width)) (- max-scale 0.75)))))
 
       ;; Set dynamic dimensions
       (setq-local eldoc-box-max-pixel-width box-width
-		  eldoc-box-max-pixel-height box-height
-		  default-text-properties '(line-spacing 0 line-height 1))
+                  eldoc-box-max-pixel-height box-height
+                  default-text-properties '(line-spacing 0 line-height 1))
 
       ;; Apply font parameters to eldoc-box faces
       (set-face-attribute 'eldoc-box-body nil
-			  :family programming-font
-			  :height font-scale)
+                          :family programming-font
+                          :height font-scale)
       (set-face-attribute 'eldoc-box-border nil :height font-scale)))
 
   (defun consoli-config/eldoc-box-bottom-right-position (width height)
     "Position eldoc-box at bottom-right, accounting for frame size, fringes, and modeline."
     (let* ((window (selected-window))
-	   (frame (window-frame window))
-	   (window-edges (window-pixel-edges window))
-	   (window-right (nth 2 window-edges))
-	   (window-bottom (nth 3 window-edges))
-	   (frame-width (frame-pixel-width frame))
-	   (frame-height (frame-pixel-height frame))
-	   (right-fringe (or (cadr (window-fringes window)) 0))
-	   (modeline-height (window-mode-line-height window))
-	   ;; Calculate margins as percentage of frame size with minimums
-	   (margin-x (max 20 (+ right-fringe (/ frame-width 40))))
-	   (margin-y (max 15 (+ (or modeline-height 0) (/ frame-height 50)))))
+           (frame (window-frame window))
+           (window-edges (window-pixel-edges window))
+           (window-right (nth 2 window-edges))
+           (window-bottom (nth 3 window-edges))
+           (frame-width (frame-pixel-width frame))
+           (frame-height (frame-pixel-height frame))
+           (right-fringe (or (cadr (window-fringes window)) 0))
+           (modeline-height (window-mode-line-height window))
+           ;; Calculate margins as percentage of frame size with minimums
+           (margin-x (max 20 (+ right-fringe (/ frame-width 40))))
+           (margin-y (max 15 (+ (or modeline-height 0) (/ frame-height 50)))))
       (cons (- window-right width margin-x)
-	    (- window-bottom height margin-y))))
+            (- window-bottom height margin-y))))
 
   ;; Apply dynamic sizing before showing eldoc-box
   (advice-add 'eldoc-box--display :before
-	      (lambda (&rest _) (consoli-config/eldoc-box-dynamic-sizing)))
+              (lambda (&rest _) (consoli-config/eldoc-box-dynamic-sizing)))
 
   (setq eldoc-box-position-function #'consoli-config/eldoc-box-bottom-right-position)
 
   ;; some margin for the docs
   (setf (alist-get 'internal-border-width eldoc-box-frame-parameters) 5)
   :bind (:map eglot-mode-map
-	      ("C-c l d" . eldoc-box-help-at-point))
+              ("C-c l d" . eldoc-box-help-at-point))
   :hook (eglot-managed-mode . eldoc-box-hover-mode))
 
 (use-package breadcrumb
@@ -439,21 +439,21 @@
   (eglot-x-enable-snippet-text-edit t)
   :bind
   (:map eglot-mode-map
-	("M-S-." . eglot-x-find-refs)
-	("C-c l R" . eglot-x-ask-runnables)
-	("C-c l w" . eglot-x-find-workspace-symbol)
-	("C-c l o" . eglot-x-open-external-documentation)
-	("C-c l s" . eglot-x-structural-search-replace))
+        ("M-S-." . eglot-x-find-refs)
+        ("C-c l R" . eglot-x-ask-runnables)
+        ("C-c l w" . eglot-x-find-workspace-symbol)
+        ("C-c l o" . eglot-x-open-external-documentation)
+        ("C-c l s" . eglot-x-structural-search-replace))
   :hook (eglot-managed-mode . eglot-x-setup))
 
 (use-package eglot-cthier
   :straight (:host codeberg :repo "harald/eglot-supplements" :files ("eglot-cthier.el" "toggletree.el"))
   :after eglot
   :bind (:map eglot-mode-map
-	      ("C-c l h i" . eglot-cthier-request-incoming-call-hierarchy)
-	      ("C-c l h o" . eglot-cthier-request-outgoing-call-hierarchy)
-	      ("C-c l h S" . eglot-cthier-request-supertype-call-hierarchy)
-	      ("C-c l h s" . eglot-cthier-request-subtype-call-hierarchy)))
+              ("C-c l h i" . eglot-cthier-request-incoming-call-hierarchy)
+              ("C-c l h o" . eglot-cthier-request-outgoing-call-hierarchy)
+              ("C-c l h S" . eglot-cthier-request-supertype-call-hierarchy)
+              ("C-c l h s" . eglot-cthier-request-subtype-call-hierarchy)))
 
 (use-package eglot-semtok
   :straight (:host codeberg :repo "harald/eglot-supplements" :files ("eglot-semtok.el"))
@@ -515,27 +515,27 @@
      ((string-prefix-p "~" word) `(orderless-flex . ,(substring word 1)))))
 
   (setq orderless-style-dispatchers '(consoli-config/orderless-dispatch
-				      orderless-affix-dispatch))
+                                      orderless-affix-dispatch))
 
   (defun consoli-config/completion-sort-by-history (completions)
     "Sort COMPLETIONS by putting recently used items first."
     (let ((hist (symbol-value minibuffer-history-variable)))
       (sort completions
-	    (lambda (a b)
-	      (let ((pos-a (cl-position a hist :test #'string=))
-		    (pos-b (cl-position b hist :test #'string=)))
-		(cond
-		 ((and pos-a pos-b) (< pos-a pos-b))
-		 (pos-a t)
-		 (pos-b nil)
-		 (t (string< a b))))))))
+            (lambda (a b)
+              (let ((pos-a (cl-position a hist :test #'string=))
+                    (pos-b (cl-position b hist :test #'string=)))
+                (cond
+                 ((and pos-a pos-b) (< pos-a pos-b))
+                 (pos-a t)
+                 (pos-b nil)
+                 (t (string< a b))))))))
 
   ;; Apply history-based sorting to commands
   (setq completion-category-overrides
-	(append completion-category-overrides
-		'((command (styles orderless)
-			   (cycle . t)
-			   (sort . consoli-config/completion-sort-by-history))))))
+        (append completion-category-overrides
+                '((command (styles orderless)
+                           (cycle . t)
+                           (sort . consoli-config/completion-sort-by-history))))))
 
 ;; corfu-quick flickering fix: pad keys to match icon width
 (defun consoli-config/corfu-quick-pad-keys (keys)
@@ -593,8 +593,8 @@ the icons, the total width remains constant."
   (corfu-separator ?\s)
   :bind
   (:map corfu-map
-	("M-q" . corfu-quick-complete)
-	("C-i" . corfu-quick-insert))
+        ("M-q" . corfu-quick-complete)
+        ("C-i" . corfu-quick-insert))
   :config
   (defun consoli-config/setup-corfu ()
     "Initialize Corfu completion system."
@@ -608,7 +608,7 @@ the icons, the total width remains constant."
     "Enable Corfu in the minibuffer."
     (when (where-is-internal #'completion-at-point (list (current-local-map)))
       (setq-local corfu-echo-delay nil
-		  corfu-popupinfo-delay nil)
+                  corfu-popupinfo-delay nil)
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'consoli-config/corfu-enable-in-minibuffer)
 
@@ -628,7 +628,7 @@ the icons, the total width remains constant."
   (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15)))
 
 (dolist (hook '(text-mode-hook
-		git-commit-mode-hook))
+                git-commit-mode-hook))
   (add-hook hook #'consoli-config/set-custom-text-properties))
 
 ;; Nerd icons for Corfu
@@ -648,21 +648,21 @@ the icons, the total width remains constant."
   (defun consoli-config/cape-setup-prog ()
     "Setup completion-at-point for programming modes."
     (setq-local completion-at-point-functions
-		(list (cape-capf-super
-		       #'cape-elisp-block
-		       #'cape-dabbrev
-		       #'cape-keyword
-		       #'cape-file))
-		cape-dabbrev-min-length 3))
+                (list (cape-capf-super
+                       #'cape-elisp-block
+                       #'cape-dabbrev
+                       #'cape-keyword
+                       #'cape-file))
+                cape-dabbrev-min-length 3))
 
   (defun consoli-config/cape-setup-text ()
     "Setup completion-at-point for text modes."
     (setq-local completion-at-point-functions
-		(list (cape-capf-super
-		       #'cape-dabbrev
-		       #'cape-dict
-		       #'cape-file))
-		cape-dabbrev-min-length 3))
+                (list (cape-capf-super
+                       #'cape-dabbrev
+                       #'cape-dict
+                       #'cape-file))
+                cape-dabbrev-min-length 3))
 
   (add-hook 'text-mode-hook #'consoli-config/cape-setup-text)
 
@@ -674,8 +674,8 @@ the icons, the total width remains constant."
     (consoli-config/cape-setup-prog)
     ;; Set programming font
     (face-remap-add-relative 'default
-			     :family programming-font
-			     :height (consoli-config/font-height-programming))
+                             :family programming-font
+                             :height (consoli-config/font-height-programming))
     ;; Infer indentation style
     (consoli-config/infer-indentation-style))
 
@@ -692,7 +692,7 @@ the icons, the total width remains constant."
 (use-package dabbrev
   :defer t
   :bind (("M-/" . dabbrev-completion)
-	 ("C-M-/" . dabbrev-expand))
+         ("C-M-/" . dabbrev-expand))
   :config
   (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
   (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
@@ -709,9 +709,9 @@ the icons, the total width remains constant."
 (use-package which-key
   :config
   (setq which-key-idle-delay 0.25
-	which-key-max-description-length 45
-	which-key-idle-secondary-delay 0.05
-	which-key-show-remaining-keys t)
+        which-key-max-description-length 45
+        which-key-idle-secondary-delay 0.05
+        which-key-show-remaining-keys t)
   :init (which-key-mode)
   ;; config for which-key output for repeat-mode maps
   ;; taken from https://gist.github.com/karthink/9f054dc8fba07fd117738bec31652a90
@@ -730,12 +730,12 @@ the icons, the total width remains constant."
     (unless (null consoli-config/which-key-last-timer)
       (cancel-timer consoli-config/which-key-last-timer))
     (when-let* ((cmd (or this-command real-this-command))
-		(keymap1 (repeat--command-property 'repeat-mode-map)))
+                (keymap1 (repeat--command-property 'repeat-mode-map)))
       (run-with-idle-timer
        which-key-idle-delay nil
        (lambda ()
-	 (which-key--create-buffer-and-show
-	  nil (symbol-value keymap1))))))
+         (which-key--create-buffer-and-show
+          nil (symbol-value keymap1))))))
 
   (defun consoli-config/which-key-repeat-mode-dispatch ()
     (interactive)
@@ -747,13 +747,13 @@ the icons, the total width remains constant."
   (defun consoli-config/which-key-repeat-mode-binding ()
     (when repeat-mode
       (when-let* ((rep-map-sym (or repeat-map (repeat--command-property 'repeat-map)))
-		  (keymap3 (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
-	(set-transient-map
-	 (make-composed-keymap
-	  (let ((map (make-sparse-keymap)))
-	    (define-key map (kbd "C-h") #'consoli-config/which-key-repeat-mode-dispatch)
-	    map)
-	  keymap3)))))
+                  (keymap3 (and (symbolp rep-map-sym) (symbol-value rep-map-sym))))
+        (set-transient-map
+         (make-composed-keymap
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-h") #'consoli-config/which-key-repeat-mode-dispatch)
+            map)
+          keymap3)))))
 
   ;; for some odd reason `repeat-post-hook' and `repeat-pre-hook' are functions instead
   ;; of variables so functions on hook must be added through `advice-add'
@@ -784,11 +784,11 @@ the icons, the total width remains constant."
     "Keymap for treesit-jump commands.")
   :bind-keymap ("C-," . treesit-jump-map)
   :bind (:map treesit-jump-map
-	      ("j" . treesit-jump-jump)
-	      ("s" . treesit-jump-select)
-	      ("d" . treesit-jump-delete)
-	      ("p" . treesit-jump-parent-jump)
-	      ("t" . treesit-jump-transient)))
+              ("j" . treesit-jump-jump)
+              ("s" . treesit-jump-select)
+              ("d" . treesit-jump-delete)
+              ("p" . treesit-jump-parent-jump)
+              ("t" . treesit-jump-transient)))
 
 (use-package embark
   :bind
@@ -801,9 +801,9 @@ the icons, the total width remains constant."
   :config
   ;; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
-	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-		 nil
-		 (window-parameters (mode-line-format . none)))))
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
   :after (embark consult)
@@ -818,36 +818,36 @@ targets."
   (when (bound-and-true-p which-key-mode)
     (lambda (&optional keymap targets prefix)
       (if (null keymap)
-	  (which-key--hide-popup-ignore-command)
-	(which-key--show-keymap
-	 (if (eq (plist-get (car targets) :type) 'embark-become)
-	     "Become"
-	   (format "Act on %s '%s'%s"
-		   (plist-get (car targets) :type)
-		   (embark--truncate-target (plist-get (car targets) :target))
-		   (if (cdr targets) "…" "")))
-	 (if prefix
-	     (pcase (lookup-key keymap prefix 'accept-default)
-	       ((and (pred keymapp) km) km)
-	       (_ (key-binding prefix 'accept-default)))
-	   keymap)
-	 nil nil t (lambda (binding)
-		     (not (string-suffix-p "-argument" (cdr binding)))))))))
+          (which-key--hide-popup-ignore-command)
+        (which-key--show-keymap
+         (if (eq (plist-get (car targets) :type) 'embark-become)
+             "Become"
+           (format "Act on %s '%s'%s"
+                   (plist-get (car targets) :type)
+                   (embark--truncate-target (plist-get (car targets) :target))
+                   (if (cdr targets) "…" "")))
+         (if prefix
+             (pcase (lookup-key keymap prefix 'accept-default)
+               ((and (pred keymapp) km) km)
+               (_ (key-binding prefix 'accept-default)))
+           keymap)
+         nil nil t (lambda (binding)
+                     (not (string-suffix-p "-argument" (cdr binding)))))))))
 
 (setq embark-indicators
       '(embark-which-key-indicator
-	embark-highlight-indicator
-	embark-isearch-highlight-indicator))
+        embark-highlight-indicator
+        embark-isearch-highlight-indicator))
 
 (defun embark-hide-which-key-indicator (fn &rest args)
   "Hide the which-key indicator immediately when using the completing-read prompter."
   (which-key--hide-popup-ignore-command)
   (let ((embark-indicators
-	 (remq #'embark-which-key-indicator embark-indicators)))
+         (remq #'embark-which-key-indicator embark-indicators)))
     (apply fn args)))
 
 (advice-add #'embark-completing-read-prompter
-	    :around #'embark-hide-which-key-indicator)
+            :around #'embark-hide-which-key-indicator)
 
 (use-package yasnippet
   :defer t
@@ -863,12 +863,12 @@ targets."
   :hook (after-init . global-flycheck-mode)
   :config
   (add-to-list 'display-buffer-alist
-	       `(,(rx bos "*Flycheck errors*" eos)
-		 (display-buffer-reuse-window
-		  display-buffer-in-side-window)
-		 (side            . bottom)
-		 (reusable-frames . visible)
-		 (window-height   . 0.33))))
+               `(,(rx bos "*Flycheck errors*" eos)
+                 (display-buffer-reuse-window
+                  display-buffer-in-side-window)
+                 (side            . bottom)
+                 (reusable-frames . visible)
+                 (window-height   . 0.33))))
 
 (use-package flycheck-inline
   :defer t
@@ -878,57 +878,57 @@ targets."
 (use-package consult
   ;; Replace bindings. Lazily loaded by `use-package'.
   :bind (;; C-c bindings in `mode-specific-map'
-	 ("C-c M-x" . consult-mode-command)
-	 ("C-c h" . consult-history)
-	 ("C-c k" . consult-kmacro)
-	 ("C-c m" . consult-man)
-	 ("C-c i" . consult-info)
-	 ([remap Info-search] . consult-info)
-	 ;; C-x bindings in `ctl-x-map'
-	 ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-	 ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-	 ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-	 ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-	 ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
-	 ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
-	 ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-	 ;; Custom M-# bindings for fast register access
-	 ("M-#" . consult-register-load)
-	 ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-	 ("C-M-#" . consult-register)
-	 ;; Other custom bindings
-	 ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-	 ;; M-g bindings in `goto-map'
-	 ("M-g e" . consult-compile-error)
-	 ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
-	 ("M-g g" . consult-goto-line)             ;; orig. goto-line
-	 ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-	 ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-	 ("M-g m" . consult-mark)
-	 ("M-g k" . consult-global-mark)
-	 ("M-g i" . consult-imenu)
-	 ("M-g I" . consult-imenu-multi)
-	 ;; M-s bindings in `search-map'
-	 ("M-s d" . consult-find)                  ;; Alternative: consult-fd
-	 ("M-s c" . consult-locate)
-	 ("M-s g" . consult-grep)
-	 ("M-s G" . consult-git-grep)
-	 ("M-s r" . consult-ripgrep)
-	 ("M-s l" . consult-line)
-	 ("M-s L" . consult-line-multi)
-	 ("M-s k" . consult-keep-lines)
-	 ("M-s u" . consult-focus-lines)
-	 ;; Isearch integration
-	 ("M-s e" . consult-isearch-history)
-	 :map isearch-mode-map
-	 ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-	 ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-	 ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-	 ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-	 ;; Minibuffer history
-	 :map minibuffer-local-map
-	 ("M-s" . consult-history)                 ;; orig. next-matching-history-element
-	 ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+         ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings in `goto-map'
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings in `search-map'
+         ("M-s d" . consult-find)                  ;; Alternative: consult-fd
+         ("M-s c" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
 
   ;; Enable automatic preview at point in the *Completions* buffer. This is
   ;; relevant when you use the default completion UI.
@@ -946,7 +946,7 @@ targets."
 
   ;; Use Consult to select xref locations with preview
   (setq xref-show-xrefs-function #'consult-xref
-	xref-show-definitions-function #'consult-xref)
+        xref-show-definitions-function #'consult-xref)
 
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
@@ -1003,8 +1003,8 @@ targets."
     (hl-line-mode -1)
     ;; Set font
     (face-remap-add-relative 'default
-			     :family programming-font
-			     :height (consoli-config/font-height-programming))
+                             :family programming-font
+                             :height (consoli-config/font-height-programming))
     ;; Hide modeline
     (consoli-config/hide-modeline))
 
@@ -1022,20 +1022,20 @@ targets."
   (defun consoli-config/get-project-root ()
     "Get current project root, compatible with tabspaces."
     (if-let* ((project (project-current)))
-	(project-root project)
+        (project-root project)
       default-directory))
 
   (defun consoli-config/project-terminal-name (project-root index)
     "Generate terminal buffer name for PROJECT-ROOT and INDEX."
     (let ((project-name (if-let* ((project (project-current)))
-			    (project-name project)
-			  (file-name-nondirectory (string-remove-suffix "/" project-root)))))
+                            (project-name project)
+                          (file-name-nondirectory (string-remove-suffix "/" project-root)))))
       (format "*vterm: %s-%d*" project-name index)))
 
   (defun consoli-config/get-project-terminals (project-root)
     "Get list of live terminal buffers for PROJECT-ROOT."
     (seq-filter #'buffer-live-p
-		(gethash project-root consoli-config/project-terminals '())))
+                (gethash project-root consoli-config/project-terminals '())))
 
   (defun consoli-config/add-project-terminal (project-root buffer)
     "Add BUFFER to PROJECT-ROOT's terminal list."
@@ -1050,25 +1050,25 @@ targets."
   (defun consoli-config/cleanup-dead-terminals ()
     "Remove dead buffers from project terminals tracking."
     (maphash (lambda (project-root terminals)
-	       (let ((live-terminals (seq-filter #'buffer-live-p terminals)))
-		 (if live-terminals
-		     (puthash project-root live-terminals consoli-config/project-terminals)
-		   (remhash project-root consoli-config/project-terminals))))
-	     consoli-config/project-terminals))
+               (let ((live-terminals (seq-filter #'buffer-live-p terminals)))
+                 (if live-terminals
+                     (puthash project-root live-terminals consoli-config/project-terminals)
+                   (remhash project-root consoli-config/project-terminals))))
+             consoli-config/project-terminals))
 
   (defun consoli-config/is-terminal-for-current-project-p (buffer)
     "Check if BUFFER is a terminal buffer for the current project."
     (when (and (string-prefix-p "*vterm:" (buffer-name buffer))
-	       (buffer-live-p buffer))
+               (buffer-live-p buffer))
       (let* ((current-project-root (consoli-config/get-project-root))
-	     (project-terminals (consoli-config/get-project-terminals current-project-root)))
-	(memq buffer project-terminals))))
+             (project-terminals (consoli-config/get-project-terminals current-project-root)))
+        (memq buffer project-terminals))))
 
   ;; Terminal Window Management
   (defun consoli-config/create-terminal-window ()
     "Create a window at the bottom for terminals."
     (let* ((root-window (frame-root-window))
-	   (window (split-window root-window (- consoli-config/terminal-height) 'below)))
+           (window (split-window root-window (- consoli-config/terminal-height) 'below)))
       (setq consoli-config/terminal-window window)
       ;; Configure window parameters for better integration
       (set-window-parameter window 'no-other-window t)
@@ -1078,21 +1078,21 @@ targets."
   (defun consoli-config/get-or-create-terminal-window ()
     "Get existing terminal window or create new one."
     (if (and consoli-config/terminal-window
-	     (window-live-p consoli-config/terminal-window))
-	consoli-config/terminal-window
+             (window-live-p consoli-config/terminal-window))
+        consoli-config/terminal-window
       (consoli-config/create-terminal-window)))
 
   (defun consoli-config/hide-terminal-window ()
     "Hide the terminal window."
     (when (and consoli-config/terminal-window
-	       (window-live-p consoli-config/terminal-window))
+               (window-live-p consoli-config/terminal-window))
       (delete-window consoli-config/terminal-window)
       (setq consoli-config/terminal-window nil)))
 
   (defun consoli-config/terminal-window-visible-p ()
     "Check if terminal window is currently visible."
     (and consoli-config/terminal-window
-	 (window-live-p consoli-config/terminal-window)))
+         (window-live-p consoli-config/terminal-window)))
 
   (defun consoli-config/focus-terminal-window ()
     "Focus the terminal window if visible."
@@ -1104,81 +1104,81 @@ targets."
     (interactive)
     (consoli-config/cleanup-dead-terminals)
     (let* ((project-root (consoli-config/get-project-root))
-	   (terminals (consoli-config/get-project-terminals project-root))
-	   (index (1+ (length terminals)))
-	   (buffer-name (consoli-config/project-terminal-name project-root index))
-	   (default-directory project-root))
+           (terminals (consoli-config/get-project-terminals project-root))
+           (index (1+ (length terminals)))
+           (buffer-name (consoli-config/project-terminal-name project-root index))
+           (default-directory project-root))
 
       (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
-	(with-selected-window terminal-window
-	  (let ((buffer (vterm buffer-name)))
-	    (consoli-config/add-project-terminal project-root buffer)
-	    ;; Refresh centaur-tabs to show the new terminal
-	    (when (bound-and-true-p centaur-tabs-mode)
-	      (centaur-tabs-display-update))
-	    buffer)))))
+        (with-selected-window terminal-window
+          (let ((buffer (vterm buffer-name)))
+            (consoli-config/add-project-terminal project-root buffer)
+            ;; Refresh centaur-tabs to show the new terminal
+            (when (bound-and-true-p centaur-tabs-mode)
+              (centaur-tabs-display-update))
+            buffer)))))
 
   (defun consoli-config/switch-project-terminal ()
     "Switch between terminals in the current project."
     (interactive)
     (consoli-config/cleanup-dead-terminals)
     (let* ((project-root (consoli-config/get-project-root))
-	   (terminals (consoli-config/get-project-terminals project-root)))
+           (terminals (consoli-config/get-project-terminals project-root)))
 
       (cond
        ((null terminals)
-	(consoli-config/new-project-terminal))
+        (consoli-config/new-project-terminal))
 
        ((= 1 (length terminals))
-	(let ((terminal-window (consoli-config/get-or-create-terminal-window)))
-	  (with-selected-window terminal-window
-	    (switch-to-buffer (car terminals)))))
+        (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
+          (with-selected-window terminal-window
+            (switch-to-buffer (car terminals)))))
 
        (t
-	(let* ((terminal-names (mapcar #'buffer-name terminals))
-	       (choice (completing-read "Switch to terminal: " terminal-names nil t)))
-	  (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
-	    (with-selected-window terminal-window
-	      (switch-to-buffer choice))))))))
+        (let* ((terminal-names (mapcar #'buffer-name terminals))
+               (choice (completing-read "Switch to terminal: " terminal-names nil t)))
+          (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
+            (with-selected-window terminal-window
+              (switch-to-buffer choice))))))))
 
   (defun consoli-config/toggle-project-terminal ()
     "Toggle terminal visibility for current project."
     (interactive)
     (if (consoli-config/terminal-window-visible-p)
-	(consoli-config/hide-terminal-window)
+        (consoli-config/hide-terminal-window)
       (progn
-	(consoli-config/switch-project-terminal)
-	(consoli-config/focus-terminal-window))))
+        (consoli-config/switch-project-terminal)
+        (consoli-config/focus-terminal-window))))
 
   (defun consoli-config/kill-project-terminals ()
     "Kill all terminals for the current project."
     (interactive)
     (let* ((project-root (consoli-config/get-project-root))
-	   (terminals (consoli-config/get-project-terminals project-root)))
+           (terminals (consoli-config/get-project-terminals project-root)))
       (when terminals
-	(dolist (terminal terminals)
-	  (when (buffer-live-p terminal)
-	    (kill-buffer terminal)))
-	(remhash project-root consoli-config/project-terminals)
-	(when (consoli-config/terminal-window-visible-p)
-	  (consoli-config/hide-terminal-window))
-	(message "Killed %d terminal(s) for project" (length terminals)))))
+        (dolist (terminal terminals)
+          (when (buffer-live-p terminal)
+            (kill-buffer terminal)))
+        (remhash project-root consoli-config/project-terminals)
+        (when (consoli-config/terminal-window-visible-p)
+          (consoli-config/hide-terminal-window))
+        (message "Killed %d terminal(s) for project" (length terminals)))))
 
   ;; Terminal lifecycle management
   (defun consoli-config/cleanup-terminal-on-kill ()
     "Clean up terminal tracking when buffer is killed."
     (when (string-match-p "^\\*vterm:" (buffer-name))
       (let ((project-root (consoli-config/get-project-root)))
-	(consoli-config/remove-project-terminal project-root (current-buffer)))))
+        (consoli-config/remove-project-terminal project-root (current-buffer)))))
 
   (add-hook 'kill-buffer-hook #'consoli-config/cleanup-terminal-on-kill)
 
   ;; Hide terminal when switching projects
   (with-eval-after-load 'project
     (add-hook 'project-switch-hook
-	      (lambda ()
-		(consoli-config/hide-terminal-window)
-		(consoli-config/refresh-centaur-tabs)))))
+              (lambda ()
+                (consoli-config/hide-terminal-window)
+                (consoli-config/refresh-centaur-tabs)))))
 
 ;; Integration with your existing mode-line hiding
 ;; (Note: consoli-config/hide-modeline is already added via the dolist below)
@@ -1236,15 +1236,15 @@ targets."
   (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
   :bind
   (:map prog-mode-map
-	("C-c C-o RET" . global-copilot-mode))
+        ("C-c C-o RET" . global-copilot-mode))
   (:map copilot-mode-map
-	("<TAB>" . consoli-config/copilot-tab)
-	("C-c C-o n" . copilot-next-completion)
-	("C-c C-o SPC" . copilot-complete)
-	("C-c C-o p" . copilot-previous-completion)
-	("C-c C-o a" . copilot-accept-completion)
-	("C-c C-o C-a l" . copilot-accept-completion-by-line)
-	("C-c C-o C-a w" . copilot-accept-completion-by-word)))
+        ("<TAB>" . consoli-config/copilot-tab)
+        ("C-c C-o n" . copilot-next-completion)
+        ("C-c C-o SPC" . copilot-complete)
+        ("C-c C-o p" . copilot-previous-completion)
+        ("C-c C-o a" . copilot-accept-completion)
+        ("C-c C-o C-a l" . copilot-accept-completion-by-line)
+        ("C-c C-o C-a w" . copilot-accept-completion-by-word)))
 
 (use-package claude-code-ide
   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
@@ -1318,8 +1318,8 @@ targets."
   "Apply appropriate theme based on display type."
   (condition-case err
       (if (display-graphic-p)
-	  (load-theme (alist-get 'gui consoli-themes) t)
-	(load-theme (alist-get 'cli consoli-themes) t))
+          (load-theme (alist-get 'gui consoli-themes) t)
+        (load-theme (alist-get 'cli consoli-themes) t))
     (error (message "Failed to load theme: %s" err))))
 
 ;; Initialize theme system
@@ -1329,9 +1329,9 @@ targets."
 ;; Apply theme on startup and new frames
 (consoli-config/apply-theme)
 (add-hook 'after-make-frame-functions
-	  (lambda (frame)
-	    (select-frame frame)
-	    (consoli-config/apply-theme)))
+          (lambda (frame)
+            (select-frame frame)
+            (consoli-config/apply-theme)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; FONT & FACE CONFIGURATION
@@ -1339,39 +1339,39 @@ targets."
 
 ;; Default UI font
 (set-face-attribute 'default nil
-		    :family ui-font
-		    :height (consoli-config/font-height-ui))
+                    :family ui-font
+                    :height (consoli-config/font-height-ui))
 
 ;; Smaller font for transient menus
 (add-hook 'transient-setup-buffer-hook
-	  (lambda ()
-	    (face-remap-add-relative 'default
-				     :family ui-font
-				     :height (consoli-config/font-height-small))))
+          (lambda ()
+            (face-remap-add-relative 'default
+                                     :family ui-font
+                                     :height (consoli-config/font-height-small))))
 
 ;; Mode line fonts
 (set-face-attribute 'mode-line nil
-		    :family modeline-font
-		    :height (consoli-config/font-height-modeline))
+                    :family modeline-font
+                    :height (consoli-config/font-height-modeline))
 
 (set-face-attribute 'mode-line-active nil
-		    :family modeline-font
-		    :height (consoli-config/font-height-modeline))
+                    :family modeline-font
+                    :height (consoli-config/font-height-modeline))
 
 (set-face-attribute 'mode-line-inactive nil
-		    :family modeline-font
-		    :height (consoli-config/font-height-modeline))
+                    :family modeline-font
+                    :height (consoli-config/font-height-modeline))
 
 ;; Programming-specific face customizations
 (set-face-attribute 'font-lock-comment-face nil
-		    :family programming-font
-		    :slant 'italic
-		    :height (consoli-config/font-height-programming))
+                    :family programming-font
+                    :slant 'italic
+                    :height (consoli-config/font-height-programming))
 
 ;; Tab bar font
 (set-face-attribute 'tab-bar nil
-		    :family alternative-programming-font
-		    :height (consoli-config/font-height-tab-bar))
+                    :family alternative-programming-font
+                    :height (consoli-config/font-height-tab-bar))
 
 ;; Region selection
 (set-face-attribute 'region nil :extend nil)
@@ -1415,7 +1415,7 @@ targets."
 
 ;; Startup and UI cleanup
 (setopt inhibit-startup-screen t
-	initial-scratch-message nil)
+        initial-scratch-message nil)
 (eval '(setq inhibit-startup-echo-area-message "consoli"))
 
 ;; Disable UI elements
@@ -1425,9 +1425,9 @@ targets."
 
 ;; Cursor configuration
 (setq-default cursor-type '(bar . 1)
-	      blink-cursor-delay 5
-	      blink-cursor-interval 0.75
-	      cursor-in-non-selected-windows '(hbar . 1))
+              blink-cursor-delay 5
+              blink-cursor-interval 0.75
+              cursor-in-non-selected-windows '(hbar . 1))
 
 (defun consoli-config/childframe-cursor-setup (frame)
   "Adjust cursor in childframes."
@@ -1466,24 +1466,24 @@ targets."
   (defun consoli-config/show-hl-line ()
     "Enable `hl-line-mode` unless in ignored modes."
     (unless (or hl-line-mode
-		(apply #'derived-mode-p consoli-config/hl-line-ignored-modes))
+                (apply #'derived-mode-p consoli-config/hl-line-ignored-modes))
       (hl-line-mode 1)))
 
   (defun consoli-config/hide-hl-line ()
     "Disable `hl-line-mode` unless in ignored modes."
     (when (and hl-line-mode
-	       (not (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)))
+               (not (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)))
       (hl-line-mode -1)))
 
   (defun consoli-config/start-idle-timer ()
     "Start idle timer to show `hl-line-mode` after some time."
     (unless (apply #'derived-mode-p consoli-config/hl-line-ignored-modes)
       (when consoli-config/hide-hl-line-timer
-	(cancel-timer consoli-config/hide-hl-line-timer))
+        (cancel-timer consoli-config/hide-hl-line-timer))
       (condition-case err
-	  (setq consoli-config/hide-hl-line-timer
-		(run-with-idle-timer consoli-config/show-hl-line-after-secs nil #'consoli-config/show-hl-line))
-	(error (message "Error starting idle timer: %s" err)))))
+          (setq consoli-config/hide-hl-line-timer
+                (run-with-idle-timer consoli-config/show-hl-line-after-secs nil #'consoli-config/show-hl-line))
+        (error (message "Error starting idle timer: %s" err)))))
 
   (defun consoli-config/cleanup-hl-line-timer ()
     "Cancel and clean up idle hl-line timer."
@@ -1502,9 +1502,9 @@ targets."
   :hook (after-init . global-hl-todo-mode))
 
 (define-key prog-mode-map (kbd "C-|")
-	    (lambda ()
-	      (interactive)
-	      (hl-todo-insert "TODO(matheus-consoli): ")))
+            (lambda ()
+              (interactive)
+              (hl-todo-insert "TODO(matheus-consoli): ")))
 
 ;; Line numbers for programming modes
 (use-package display-line-numbers
@@ -1535,20 +1535,20 @@ targets."
   :hook (after-init . tab-bar-mode)
   :bind
   (:map tab-bar-map
-	("<next>" . tab-bar-switch-to-next-tab)
-	("<prior>" . tab-bar-switch-to-prev-tab))
+        ("<next>" . tab-bar-switch-to-next-tab)
+        ("<prior>" . tab-bar-switch-to-prev-tab))
   :config
   (setq tab-bar-new-tab-choice t
-	tab-bar-new-tab-to 'rightmost
-	tab-bar-close-button-show nil
-	tab-bar-show 0
-	tab-bar-new-button-show nil
-	tab-bar-tab-name-function #'consoli-config/tab-bar-project-name
-	tab-bar-tab-name-truncated-max 30
-	tab-bar-tab-hints nil
-	tab-bar-auto-width t
-	tab-bar-auto-width-max '((100) 20)
-	tab-bar-auto-width-min '((15) 2)))
+        tab-bar-new-tab-to 'rightmost
+        tab-bar-close-button-show nil
+        tab-bar-show 0
+        tab-bar-new-button-show nil
+        tab-bar-tab-name-function #'consoli-config/tab-bar-project-name
+        tab-bar-tab-name-truncated-max 30
+        tab-bar-tab-hints nil
+        tab-bar-auto-width t
+        tab-bar-auto-width-max '((100) 20)
+        tab-bar-auto-width-min '((15) 2)))
 
 (defun consoli-config/buffer-has-project-p ()
   "Return non-nil if current buffer belongs to a project."
@@ -1570,21 +1570,21 @@ targets."
 
   ;; Show tab-bar only when we have project tabs
   (add-hook 'tab-bar-tab-post-open-functions
-	    (lambda (&rest _)
-	      (when (> (length (tab-bar-tabs)) 1)
-		(setq tab-bar-show 0))))
+            (lambda (&rest _)
+              (when (> (length (tab-bar-tabs)) 1)
+                (setq tab-bar-show 0))))
 
   ;; Close non-project tabs on startup
   (run-with-idle-timer 0.1 nil
-		       (lambda ()
-			 (let ((tabs (tab-bar-tabs)))
-			   (dolist (tab tabs)
-			     (let ((tab-name (alist-get 'name tab)))
-			       (unless (and tab-name
-					    (not (string-match-p "^\\*.*\\*$" tab-name))
-					    (not (string= tab-name "Default")))
-				 (when (> (length tabs) 1)
-				   (tab-bar-close-tab (1+ (cl-position tab tabs)))))))))))
+                       (lambda ()
+                         (let ((tabs (tab-bar-tabs)))
+                           (dolist (tab tabs)
+                             (let ((tab-name (alist-get 'name tab)))
+                               (unless (and tab-name
+                                            (not (string-match-p "^\\*.*\\*$" tab-name))
+                                            (not (string= tab-name "Default")))
+                                 (when (> (length tabs) 1)
+                                   (tab-bar-close-tab (1+ (cl-position tab tabs)))))))))))
 
 (add-hook 'after-init-hook #'consoli-config/setup-project-only-tabs)
 
@@ -1599,7 +1599,7 @@ targets."
   :straight (:type git :host github :repo "mclear-tools/tabspaces")
   :hook (after-init . tabspaces-mode)
   :commands (tabspaces-switch-or-create-workspace
-	     tabspaces-open-or-create-project-and-workspace)
+             tabspaces-open-or-create-project-and-workspace)
   :custom
   (tabspaces-use-filtered-buffers-as-default t)
   (tabspaces-session-project-session-store "~/.emacs.d/tabspaces-sessions")
@@ -1613,24 +1613,24 @@ targets."
   :config
   ;; Tabspaces integration for terminals
   (add-hook 'tabspaces-switch-workspace-finish-hook
-	    (lambda ()
-	      (consoli-config/hide-terminal-window)
-	      (consoli-config/refresh-centaur-tabs)))
+            (lambda ()
+              (consoli-config/hide-terminal-window)
+              (consoli-config/refresh-centaur-tabs)))
   ;; Filter Buffers for Consult-Buffer
 
   ;; set consult-workspace buffer list
   (defun consoli-config/consult-buffer-filter ()
     (defvar consult--source-workspace
       (list :name     "Workspace Buffers"
-	    :narrow   ?w
-	    :history  'buffer-name-history
-	    :category 'buffer
-	    :state    #'consult--buffer-state
-	    :default  t
-	    :items    (lambda () (consult--buffer-query
-				  :predicate #'tabspaces--local-buffer-p
-				  :sort 'visibility
-				  :as #'buffer-name)))
+            :narrow   ?w
+            :history  'buffer-name-history
+            :category 'buffer
+            :state    #'consult--buffer-state
+            :default  t
+            :items    (lambda () (consult--buffer-query
+                                  :predicate #'tabspaces--local-buffer-p
+                                  :sort 'visibility
+                                  :as #'buffer-name)))
 
       "Set workspace buffer list for consult-buffer.")
     (add-to-list 'consult-buffer-sources 'consult--source-workspace))
@@ -1640,15 +1640,15 @@ targets."
 (defun consoli-config/setup-centaur-hooks ()
   "Hide centaur tabs for some modes."
   (dolist (hook '(aidermacs-comint-mode-hook
-		  aidermacs-vterm-mode-hook
-		  compilation-mode-hook
-		  git-commit-mode-hook
-		  magit-mode-hook
-		  message-mode-hook
-		  messages-buffer-mode-hook
-		  org-src-mode-hook
-		  special-mode-hook
-		  transient-setup-buffer-hook))
+                  aidermacs-vterm-mode-hook
+                  compilation-mode-hook
+                  git-commit-mode-hook
+                  magit-mode-hook
+                  message-mode-hook
+                  messages-buffer-mode-hook
+                  org-src-mode-hook
+                  special-mode-hook
+                  transient-setup-buffer-hook))
     (add-hook hook #'centaur-tabs-local-mode)))
 
 (use-package centaur-tabs
@@ -1694,21 +1694,21 @@ targets."
 
        ;; Is not magit buffer.
        (and (string-prefix-p "magit" name)
-	    (not (file-name-extension name)))
+            (not (file-name-extension name)))
 
        ;; Hide non-project terminal buffers (terminals from other projects)
        (and (string-prefix-p "*vterm:" name)
-	    (not (consoli-config/is-terminal-for-current-project-p x))))))
+            (not (consoli-config/is-terminal-for-current-project-p x))))))
 
   ;; hide tabs for some modes
 
   :bind
   (:map centaur-tabs-mode-map
-	(([remap next-buffer] . centaur-tabs-forward)
-	 ([remap previous-buffer] . centaur-tabs-backward)
-	 ("C-c t j" . centaur-tabs-ace-jump)
-	 ("C-<prior>" . centaur-tabs-backward)
-	 ("C-<next>" . centaur-tabs-forward)))
+        (([remap next-buffer] . centaur-tabs-forward)
+         ([remap previous-buffer] . centaur-tabs-backward)
+         ("C-c t j" . centaur-tabs-ace-jump)
+         ("C-<prior>" . centaur-tabs-backward)
+         ("C-<next>" . centaur-tabs-forward)))
   :custom
   (centaur-tabs-height 25)
   (centaur-tabs-set-close-button nil)
@@ -1744,10 +1744,10 @@ targets."
   (treemacs-resize-icons 11)
   :bind
   (:map global-map
-	("C-c ; ;" . treemacs)
-	("C-c ; B" . treemacs-bookmark)
-	("C-c ; f" . treemacs-find-file)
-	("C-c ; g" . treemacs-find-tag)))
+        ("C-c ; ;" . treemacs)
+        ("C-c ; B" . treemacs-bookmark)
+        ("C-c ; f" . treemacs-find-file)
+        ("C-c ; g" . treemacs-find-tag)))
 
 (use-package treemacs-magit
   :defer t
@@ -1771,34 +1771,34 @@ targets."
   (defun consoli-config/custom-segment-scroll ()
     (let* ((scroll (mood-line-segment-scroll)))
       (if (member scroll '("All" "Top" "Bottom"))
-	  ""
-	scroll)))
+          ""
+        scroll)))
 
   (defun consoli-config/buffer-status-segment ()
     (or (mood-line-segment-buffer-status)
-	(propertize "●" 'face '(:inherit success :weight normal))))
+        (propertize "●" 'face '(:inherit success :weight normal))))
 
   (setq mood-line-format
-	(mood-line-defformat
-	 :left
-	 (((mood-line-segment-major-mode) . " ")
-	  ((consoli-config/buffer-status-segment) . " ")
-	  ((consoli-config/custom-segment-cursor-position) . " ")
-	  ((consoli-config/custom-segment-scroll) . " ")
-	  ((mood-line-segment-region) . " ")
-	  (mood-line-segment-multiple-cursors))
-	 :right
-	 (((mood-line-segment-misc-info) . " ")
-	  ((mood-line-segment-checker) . " ")
-	  (mood-line-segment-vc))))
+        (mood-line-defformat
+         :left
+         (((mood-line-segment-major-mode) . " ")
+          ((consoli-config/buffer-status-segment) . " ")
+          ((consoli-config/custom-segment-cursor-position) . " ")
+          ((consoli-config/custom-segment-scroll) . " ")
+          ((mood-line-segment-region) . " ")
+          (mood-line-segment-multiple-cursors))
+         :right
+         (((mood-line-segment-misc-info) . " ")
+          ((mood-line-segment-checker) . " ")
+          (mood-line-segment-vc))))
   :custom (mood-line-glyph-alist mood-line-glyphs-fira-code))
 
 (defun consoli-config/setup-echo-area ()
   "Ensure echo area buffers are created."
   (dolist (fn '(save-buffer
-		write-file
-		set-mark-command
-		keyboard-quit))
+                write-file
+                set-mark-command
+                keyboard-quit))
     (advice-add fn :around #'shut-up--advice))
   (put 'quit 'error-message "")
 
@@ -1820,12 +1820,12 @@ targets."
   (setq-local mode-line-format nil))
 
 (dolist (hook '(aidermacs-comint-mode-hook
-		aidermacs-vterm-mode-hook
-		compilation-mode-hook
-		git-commit-mode-hook
-		messages-buffer-mode-hook
-		special-mode-hook
-		transient-setup-buffer-hook))
+                aidermacs-vterm-mode-hook
+                compilation-mode-hook
+                git-commit-mode-hook
+                messages-buffer-mode-hook
+                special-mode-hook
+                transient-setup-buffer-hook))
   (add-hook hook #'consoli-config/hide-modeline))
 
 ;; Org prettify symbols helper functions
@@ -1837,61 +1837,61 @@ targets."
 
 (defun rasmus/org-prettify-src--update ()
   (let ((case-fold-search t)
-	(re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
-	found)
+        (re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
+        found)
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward re nil t)
-	(goto-char (match-end 0))
-	(let ((args (org-trim
-		     (buffer-substring-no-properties (point)
-						     (line-end-position)))))
-	  (when (org-string-nw-p args)
-	    (let ((new-cell (cons args rasmus/ob-header-symbol)))
-	      (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
-	      (cl-pushnew new-cell found :test #'equal)))))
+        (goto-char (match-end 0))
+        (let ((args (org-trim
+                     (buffer-substring-no-properties (point)
+                                                     (line-end-position)))))
+          (when (org-string-nw-p args)
+            (let ((new-cell (cons args rasmus/ob-header-symbol)))
+              (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
+              (cl-pushnew new-cell found :test #'equal)))))
       (setq prettify-symbols-alist
-	    (cl-set-difference prettify-symbols-alist
-			       (cl-set-difference
-				(cl-remove-if-not
-				 (lambda (elm)
-				   (eq (cdr elm) rasmus/ob-header-symbol))
-				 prettify-symbols-alist)
-				found :test #'equal)))
+            (cl-set-difference prettify-symbols-alist
+                               (cl-set-difference
+                                (cl-remove-if-not
+                                 (lambda (elm)
+                                   (eq (cdr elm) rasmus/ob-header-symbol))
+                                 prettify-symbols-alist)
+                                found :test #'equal)))
       ;; Clean up old font-lock-keywords.
       (font-lock-remove-keywords nil prettify-symbols--keywords)
       (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
       (font-lock-add-keywords nil prettify-symbols--keywords)
       (while (re-search-forward re nil t)
-	(font-lock-flush (line-beginning-position) (line-end-position))))))
+        (font-lock-flush (line-beginning-position) (line-end-position))))))
 
 (defun rasmus/org-prettify-src ()
   "Hide src options via `prettify-symbols-mode'.
 `prettify-symbols-mode' is used because it has uncollpasing. It's
 may not be efficient."
   (let* ((case-fold-search t)
-	 (at-src-block (save-excursion
-			 (beginning-of-line)
-			 (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
+         (at-src-block (save-excursion
+                         (beginning-of-line)
+                         (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
     ;; Test if we moved out of a block.
     (when (or (and rasmus/org-at-src-begin
-		   (not at-src-block))
-	      ;; File was just opened.
-	      (eq rasmus/org-at-src-begin -1))
+                   (not at-src-block))
+              ;; File was just opened.
+              (eq rasmus/org-at-src-begin -1))
       (rasmus/org-prettify-src--update))
     (setq rasmus/org-at-src-begin at-src-block)))
 
 (defun rasmus/org-prettify-symbols ()
   (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-	(cl-reduce 'append
-		   (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-			   `(("#+begin_src" . ?)
-			     ("#+end_src"   . ?)
-			     ("#+header:" . ,rasmus/ob-header-symbol)
-			     ("#+begin_quote" . ?)
-			     ("#+end_quote" . ?)
-			     ("#+begin_comment" . ?)
-			     ("#+end_comment" . ?)))))
+        (cl-reduce 'append
+                   (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                           `(("#+begin_src" . ?)
+                             ("#+end_src"   . ?)
+                             ("#+header:" . ,rasmus/ob-header-symbol)
+                             ("#+begin_quote" . ?)
+                             ("#+end_quote" . ?)
+                             ("#+begin_comment" . ?)
+                             ("#+end_comment" . ?)))))
   (turn-on-prettify-symbols-mode)
   (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
 
@@ -1899,17 +1899,17 @@ may not be efficient."
   :defer t
   :straight (:host github :repo "emacsmirror/org" :files ("lisp/*.el" "contrib/lisp/*.el"))
   :hook ((org-mode . variable-pitch-mode)
-	 (org-mode . org-appear-mode)
-	 (org-mode . olivetti-mode)
-	 (org-mode . (lambda ()
-		       "Beautify Org Checkbox Symbol"
-		       (push '("[ ]" . "") prettify-symbols-alist)
-		       (push '("[X]" . "" ) prettify-symbols-alist)
-		       (push '("[-]" . "" ) prettify-symbols-alist)
-		       (prettify-symbols-mode)))
-	 (org-mode . rasmus/org-prettify-symbols)
-	 (org-after-todo-statistics . org-summary-todo)
-	 (org-checkbox-statistics . my/org-checkbox-todo))
+         (org-mode . org-appear-mode)
+         (org-mode . olivetti-mode)
+         (org-mode . (lambda ()
+                       "Beautify Org Checkbox Symbol"
+                       (push '("[ ]" . "") prettify-symbols-alist)
+                       (push '("[X]" . "" ) prettify-symbols-alist)
+                       (push '("[-]" . "" ) prettify-symbols-alist)
+                       (prettify-symbols-mode)))
+         (org-mode . rasmus/org-prettify-symbols)
+         (org-after-todo-statistics . org-summary-todo)
+         (org-checkbox-statistics . my/org-checkbox-todo))
   :custom
   ;; Basic org settings
   (org-adapt-indentation nil)
@@ -1947,13 +1947,13 @@ may not be efficient."
   :config
   ;; Set dynamic font sizes (always applied, respecting scaling preference)
   (set-face-attribute 'variable-pitch nil
-		      :family org-font
-		      :height (consoli-config/font-height-org))
+                      :family org-font
+                      :height (consoli-config/font-height-org))
   (set-face-attribute 'fixed-pitch nil
-		      :family alternative-programming-font
-		      :height (consoli-config/font-height-programming))
+                      :family alternative-programming-font
+                      :height (consoli-config/font-height-programming))
   (set-face-attribute 'font-lock-doc-face nil
-		      :height (consoli-config/font-height-programming))
+                      :height (consoli-config/font-height-programming))
 
   ;; Add language modes
   (add-to-list 'org-src-lang-modes (cons "rust" 'rust-ts))
@@ -1969,26 +1969,26 @@ may not be efficient."
     "Switch header TODO state to DONE when all checkboxes are ticked, to TODO otherwise"
     (let ((todo-state (org-get-todo-state)) beg end)
       (unless (not todo-state)
-	(save-excursion
-	  (org-back-to-heading t)
-	  (setq beg (point))
-	  (end-of-line)
-	  (setq end (point))
-	  (goto-char beg)
-	  (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]"
-				 end t)
-	      (if (match-end 1)
-		  (if (equal (match-string 1) "100%")
-		      (unless (string-equal todo-state "DONE")
-			(org-todo 'done))
-		    (unless (string-equal todo-state "TODO")
-		      (org-todo 'todo)))
-		(if (and (> (match-end 2) (match-beginning 2))
-			 (equal (match-string 2) (match-string 3)))
-		    (unless (string-equal todo-state "DONE")
-		      (org-todo 'done))
-		  (unless (string-equal todo-state "TODO")
-		    (org-todo 'todo))))))))))
+        (save-excursion
+          (org-back-to-heading t)
+          (setq beg (point))
+          (end-of-line)
+          (setq end (point))
+          (goto-char beg)
+          (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]"
+                                 end t)
+              (if (match-end 1)
+                  (if (equal (match-string 1) "100%")
+                      (unless (string-equal todo-state "DONE")
+                        (org-todo 'done))
+                    (unless (string-equal todo-state "TODO")
+                      (org-todo 'todo)))
+                (if (and (> (match-end 2) (match-beginning 2))
+                         (equal (match-string 2) (match-string 3)))
+                    (unless (string-equal todo-state "DONE")
+                      (org-todo 'done))
+                  (unless (string-equal todo-state "TODO")
+                    (org-todo 'todo))))))))))
 
 ;; Font-lock customizations
 (font-lock-add-keywords
@@ -1998,8 +1998,8 @@ may not be efficient."
  'append)
 
 (font-lock-add-keywords 'org-mode
-			'(("^ *\\([-]\\) "
-			   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+                        '(("^ *\\([-]\\) "
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 (use-package org-modern
   :after org
@@ -2037,14 +2037,14 @@ may not be efficient."
 (add-hook 'org-mode-hook #'consoli-config/org-mode-setup)
 
 (add-hook 'org-mode-hook (lambda ()
-			   (push '("[ ]" . "") prettify-symbols-alist)
-			   (push '("[X]" . "" ) prettify-symbols-alist)
-			   (push '("[-]" . "" ) prettify-symbols-alist)
-			   (prettify-symbols-mode)))
+                           (push '("[ ]" . "") prettify-symbols-alist)
+                           (push '("[X]" . "" ) prettify-symbols-alist)
+                           (push '("[-]" . "" ) prettify-symbols-alist)
+                           (prettify-symbols-mode)))
 
 (font-lock-add-keywords 'org-mode
-			'(("^ *\\([-]\\) "
-			   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+                        '(("^ *\\([-]\\) "
+                           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 (use-package olivetti
   :hook
@@ -2065,12 +2065,12 @@ may not be efficient."
 (use-package org-roam
   :defer t
   :bind (("C-c b f" . org-roam-node-find)
-	 ("C-c b i" . org-roam-node-insert)
-	 ("C-c b c" . org-roam-capture)
-	 ("C-c b g" . org-roam-graph)
-	 ("C-c b d" . org-roam-dailies-capture-today)
-	 ("C-c b D" . org-roam-dailies-goto-today)
-	 ("C-c b y" . org-roam-dailies-goto-previous))
+         ("C-c b i" . org-roam-node-insert)
+         ("C-c b c" . org-roam-capture)
+         ("C-c b g" . org-roam-graph)
+         ("C-c b d" . org-roam-dailies-capture-today)
+         ("C-c b D" . org-roam-dailies-goto-today)
+         ("C-c b y" . org-roam-dailies-goto-previous))
   :config
   (cl-defmethod org-roam-node-keywords ((node org-roam-node))
     "Return the currently set category for the NODE."
@@ -2079,10 +2079,10 @@ may not be efficient."
     "Return the currently set category for the NODE."
     (cdr (assoc-string "AUTHORS" (org-roam-node-properties node))))
   (setq org-roam-node-display-template
-	(concat "${title:*} "
-		(propertize "${tags:15}" 'face 'org-tag)
-		(propertize "${keywords:20}" 'face 'org-tag)
-		(propertize "${authors:15}" 'face 'org-tag)))
+        (concat "${title:*} "
+                (propertize "${tags:15}" 'face 'org-tag)
+                (propertize "${keywords:20}" 'face 'org-tag)
+                (propertize "${authors:15}" 'face 'org-tag)))
   (org-roam-db-autosync-mode))
 
 (setq-default
@@ -2095,58 +2095,58 @@ may not be efficient."
  '(("d" "default" entry
     "\n\n* %<%I:%M %p>: %?"
     :target (file+head "%<%Y-%m-%d>.org"
-		       "#+TITLE: %<%Y-%m-%d>\n"))))
+                       "#+TITLE: %<%Y-%m-%d>\n"))))
 
 (setq-default org-roam-capture-templates
-	      '(("u" "uncategorized" plain
-		 "* %?"
-		 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-				    "#+FILETAGS: :uncategorized:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
-		 :unnarrowed t)))
+              '(("u" "uncategorized" plain
+                 "* %?"
+                 :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                    "#+FILETAGS: :uncategorized:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
+                 :unnarrowed t)))
 
 (add-to-list 'org-roam-capture-templates
-	     '("k" "book" plain
-	       "\n\n* Contents%?"
-	       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-				  ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :book:\n#+TITLE: ${title}\n#+DATE: %U\n")
-	       :unnarrowed t))
+             '("k" "book" plain
+               "\n\n* Contents%?"
+               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                  ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :book:\n#+TITLE: ${title}\n#+DATE: %U\n")
+               :unnarrowed t))
 
 (add-to-list 'org-roam-capture-templates
-	     '("p" "paper" plain
-	       "* Reference\nYear: %^{year}\nLink: %^{Link}\n\n* Abstract\n%?"
-	       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-				  ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :paper:\n#+TITLE: ${title}\n#+DATE: %U\n")
-	       :unnarrowed t))
+             '("p" "paper" plain
+               "* Reference\nYear: %^{year}\nLink: %^{Link}\n\n* Abstract\n%?"
+               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                  ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :paper:\n#+TITLE: ${title}\n#+DATE: %U\n")
+               :unnarrowed t))
 
 (add-to-list 'org-roam-capture-templates
-	     '("b" "blog post" plain
-	       "* Reference\nYear: %^{year}\nLink: %^{link}\n\n* %?"
-	       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-				  ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :blog:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
-	       :unnarrowed t))
+             '("b" "blog post" plain
+               "* Reference\nYear: %^{year}\nLink: %^{link}\n\n* %?"
+               :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                  ":PROPERTIES:\n:AUTHORS: %^{authors}\n:KEYWORDS: %^{keywords}\n:END:\n\n#+FILETAGS: :blog:\n#+TITLE: ${title}\n#+DATE: %U\n\n")
+               :unnarrowed t))
 
 (add-to-list 'org-roam-capture-templates
-	     '("s" "therapy session" entry
-	       "** sessão %? - %<%Y/%m/%d>"
-	       :target (file+head "20231113224353-therapy.org"
-				  "* Sessões")
-	       ))
+             '("s" "therapy session" entry
+               "** sessão %? - %<%Y/%m/%d>"
+               :target (file+head "20231113224353-therapy.org"
+                                  "* Sessões")
+               ))
 
 (add-to-list 'org-roam-capture-templates
-	     '("t" "disfunctional thought" entry
-	       "** [%<%Y/%m/%d %Hh%M>] "
-	       :target (file+head "20231113224353-therapy.org"
-				  "* Disfunctional thought")
-	       ))
+             '("t" "disfunctional thought" entry
+               "** [%<%Y/%m/%d %Hh%M>] "
+               :target (file+head "20231113224353-therapy.org"
+                                  "* Disfunctional thought")
+               ))
 
 (use-package org-roam-ui
   :defer t
   :after org-roam
   :config
   (setq org-roam-ui-sync-theme t
-	org-roam-ui-follow t
-	org-roam-ui-update-on-save t
-	org-roam-ui-open-on-start t)
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t)
   (defun open-org-roam-ui ()
     (interactive)
     (when (not (bound-and-true-p org-roam-ui-mode))
@@ -2162,9 +2162,9 @@ may not be efficient."
   ("<f8>" . deft)
   :config
   (setq deft-recursive t
-	deft-use-filter-string-for-filename t
-	deft-default-extension "org"
-	deft-directory (file-truename "~/projects/brainiac")))
+        deft-use-filter-string-for-filename t
+        deft-default-extension "org"
+        deft-directory (file-truename "~/projects/brainiac")))
 
 (defun cm/deft-parse-title (file contents)
   "Parse the given FILE and CONTENTS and determine the title.
@@ -2173,30 +2173,30 @@ may not be efficient."
    used as title."
   (let ((begin (string-match "^#\\+[tT][iI][tT][lL][eE]: .*$" contents)))
     (if begin
-	(string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
+        (string-trim (substring contents begin (match-end 0)) "#\\+[tT][iI][tT][lL][eE]: *" "[\n\t ]+")
       (deft-base-filename file))))
 
 (advice-add 'deft-parse-title :override #'cm/deft-parse-title)
 
 (setq-default deft-strip-summary-regexp
-	      (concat "\\("
-		      "[\n\t]" ;; blank
-		      "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
-		      "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
-		      "\\)"))
+              (concat "\\("
+                      "[\n\t]" ;; blank
+                      "\\|^#\\+[[:alpha:]_]+:.*$" ;; org-mode metadata
+                      "\\|^:PROPERTIES:\n\\(.+\n\\)+:END:\n"
+                      "\\)"))
 
 (with-eval-after-load 'org
   (defun rasmus/org-prettify-symbols ()
     (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-	  (cl-reduce 'append
-		     (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-			     `(("#+begin_src" . ?)
-			       ("#+end_src"   . ?)
-			       ("#+header:" . ,rasmus/ob-header-symbol)
-			       ("#+begin_quote" . ?)
-			       ("#+end_quote" . ?)
-			       ("#+begin_comment" . ?)
-			       ("#+end_comment" . ?)))))
+          (cl-reduce 'append
+                     (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                             `(("#+begin_src" . ?)
+                               ("#+end_src"   . ?)
+                               ("#+header:" . ,rasmus/ob-header-symbol)
+                               ("#+begin_quote" . ?)
+                               ("#+end_quote" . ?)
+                               ("#+begin_comment" . ?)
+                               ("#+end_comment" . ?)))))
     (turn-on-prettify-symbols-mode)
     (add-hook 'post-command-hook 'rasmus/org-prettify-src t t)))
 
@@ -2211,25 +2211,25 @@ may not be efficient."
   (let ((todo-state (org-get-todo-state)) beg end)
     (unless (not todo-state)
       (save-excursion
-	(org-back-to-heading t)
-	(setq beg (point))
-	(end-of-line)
-	(setq end (point))
-	(goto-char beg)
-	(if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]"
-			       end t)
-	    (if (match-end 1)
-		(if (equal (match-string 1) "100%")
-		    (unless (string-equal todo-state "DONE")
-		      (org-todo 'done))
-		  (unless (string-equal todo-state "TODO")
-		    (org-todo 'todo)))
-	      (if (and (> (match-end 2) (match-beginning 2))
-		       (equal (match-string 2) (match-string 3)))
-		  (unless (string-equal todo-state "DONE")
-		    (org-todo 'done))
-		(unless (string-equal todo-state "TODO")
-		  (org-todo 'todo)))))))))
+        (org-back-to-heading t)
+        (setq beg (point))
+        (end-of-line)
+        (setq end (point))
+        (goto-char beg)
+        (if (re-search-forward "\\[\\([0-9]*%\\)\\]\\|\\[\\([0-9]*\\)/\\([0-9]*\\)\\]"
+                               end t)
+            (if (match-end 1)
+                (if (equal (match-string 1) "100%")
+                    (unless (string-equal todo-state "DONE")
+                      (org-todo 'done))
+                  (unless (string-equal todo-state "TODO")
+                    (org-todo 'todo)))
+              (if (and (> (match-end 2) (match-beginning 2))
+                       (equal (match-string 2) (match-string 3)))
+                  (unless (string-equal todo-state "DONE")
+                    (org-todo 'done))
+                (unless (string-equal todo-state "TODO")
+                  (org-todo 'todo)))))))))
 
 (add-hook 'org-checkbox-statistics-hook 'consoli-config/org-checkbox-todo)
 
@@ -2295,19 +2295,19 @@ may not be efficient."
   :config
   ;; Rust-specific pairs
   (sp-with-modes '(rust-ts-mode)
-		 (sp-local-pair "<" ">" :post-handlers '((indent-between-pair "RET")))
-		 (sp-local-pair "'" nil :actions nil))
+    (sp-local-pair "<" ">" :post-handlers '((indent-between-pair "RET")))
+    (sp-local-pair "'" nil :actions nil))
 
   ;; Org-mode pairs
   (sp-with-modes '(org-mode)
-		 (sp-local-pair "~" "~")
-		 (sp-local-pair "=" "="))
+    (sp-local-pair "~" "~")
+    (sp-local-pair "=" "="))
 
   ;; Programming mode pairs with better indentation
   (sp-with-modes '(prog-mode)
-		 (sp-local-pair "{" nil :post-handlers '((indent-between-pair "RET")))
-		 (sp-local-pair "[" nil :post-handlers '((indent-between-pair "RET")))
-		 (sp-local-pair "(" nil :post-handlers '((indent-between-pair "RET")))))
+    (sp-local-pair "{" nil :post-handlers '((indent-between-pair "RET")))
+    (sp-local-pair "[" nil :post-handlers '((indent-between-pair "RET")))
+    (sp-local-pair "(" nil :post-handlers '((indent-between-pair "RET")))))
 
 (show-paren-mode 1)
 (setopt show-paren-style 'expression)
@@ -2409,7 +2409,7 @@ may not be efficient."
   (github-review :type git :host github :repo "charignon/github-review" :files ("*.el"))
   :after forge
   :bind (("C-x r" . github-review-forge-pr-at-point)
-	 :map diff-mode-map ("C-c s" . my/github-review-kill-suggestion))
+         :map diff-mode-map ("C-c s" . my/github-review-kill-suggestion))
   :config
   ;; from github.com/anticomputer/gh-notify
   (defun my/github-review-kill-suggestion ()
@@ -2417,12 +2417,12 @@ may not be efficient."
     (interactive)
     (setq deactivate-mark t)
     (let ((s-region
-	   (buffer-substring-no-properties
-	    (region-beginning)
-	    (region-end))))
+           (buffer-substring-no-properties
+            (region-beginning)
+            (region-end))))
       (kill-new
        (format "# ```suggestion\n%s\n# ```\n"
-	       (replace-regexp-in-string "^\\+" "# " s-region))))))
+               (replace-regexp-in-string "^\\+" "# " s-region))))))
 
 (setq-default
  ediff-keep-variants nil
@@ -2523,8 +2523,8 @@ may not be efficient."
   :defer t
   :straight
   (:host github
-	 :repo "matheus-consoli/treesitter-context.el"
-	 :files ("*.el"))
+         :repo "matheus-consoli/treesitter-context.el"
+         :files ("*.el"))
   :hook
   (rust-ts-mode . treesitter-context-mode)
   (js-ts-mode . treesitter-context-mode)
@@ -2532,7 +2532,7 @@ may not be efficient."
   (tsx-ts-mode . treesitter-context-mode)
   :bind
   (:map treesitter-context-mode
-	("C-)" . treesitter-context-focus-mode))
+        ("C-)" . treesitter-context-focus-mode))
   :custom
   (treesitter-context-frame-position 'top-right)
   (treesitter-context-frame-padding 1)
@@ -2559,9 +2559,9 @@ may not be efficient."
   (define-key treesit-fold-mode-map (kbd "C-c f") 'treesit-fold-command-prefix)
   :bind
   (:map treesit-fold-command-prefix
-	("t" . treesit-fold-toggle)
-	("o" . treesit-fold-open-all)
-	("c" . treesit-fold-close-all)))
+        ("t" . treesit-fold-toggle)
+        ("o" . treesit-fold-open-all)
+        ("c" . treesit-fold-close-all)))
 
 (use-package visual-regexp
   :defer t)
@@ -2573,7 +2573,7 @@ may not be efficient."
    ("C-r" . vr/isearch-backward)
    ("C-s" . vr/isearch-forward))
   (:map me/multiple-cursors-map
-	("r" . vr/mc-mark)))
+        ("r" . vr/mc-mark)))
 
 (use-package better-jumper
   :init
@@ -2591,37 +2591,37 @@ may not be efficient."
 (defun consoli-config/rust-eglot-setup ()
   "Set up rust-analyzer initialization options for Eglot."
   (setq-local eglot-workspace-configuration
-	      '((:rust-analyzer
-		 (:lruCapacity 1920) ; (* 15 128)
-		 (:procMacro (:enable . t))
-		 (:lens
-		  (:references
-		   (:adt (:enable . t))
-		   (:enumVariant (:enable . t))
-		   (:method (:enable . t))
-		   (:trait (:enable . t))))
-		 (:completion (:autoimport (:enable . t)))
-		 (:inlayHints
-		  (:bindingModeHints (:enable . t))
-		  (:chainingHints (:enable . t))
-		  (:closingBraceHints (:minLines . 0))
-		  (:closureCaptureHints (:enable . t))
-		  (:closureReturnTypeHints (:enable . "with_block"))
-		  (:discriminantHints (:enable . "always"))
-		  (:expressionAdjustmentHints
-		   (:enable . "always")
-		   (:mode . "prefer_postfix"))
-		  (:implicitDrops (:enable . t))
-		  (:lifetimeElisionHints
-		   (:enable . "always")
-		   (:useParameterNames . t))
-		  (:maxLen . 25)
-		  (:parameterHints (:enable . t))
-		  (:reborrowHints (:enable . "always"))
-		  (:displayClosureReturnTypeHints . t)
-		  ;; (:hideClosureInitialization . t)
-		  ;; (:hideNamedConstructor . t)
-		  )))))
+              '((:rust-analyzer
+                 (:lruCapacity 1920) ; (* 15 128)
+                 (:procMacro (:enable . t))
+                 (:lens
+                  (:references
+                   (:adt (:enable . t))
+                   (:enumVariant (:enable . t))
+                   (:method (:enable . t))
+                   (:trait (:enable . t))))
+                 (:completion (:autoimport (:enable . t)))
+                 (:inlayHints
+                  (:bindingModeHints (:enable . t))
+                  (:chainingHints (:enable . t))
+                  (:closingBraceHints (:minLines . 0))
+                  (:closureCaptureHints (:enable . t))
+                  (:closureReturnTypeHints (:enable . "with_block"))
+                  (:discriminantHints (:enable . "always"))
+                  (:expressionAdjustmentHints
+                   (:enable . "always")
+                   (:mode . "prefer_postfix"))
+                  (:implicitDrops (:enable . t))
+                  (:lifetimeElisionHints
+                   (:enable . "always")
+                   (:useParameterNames . t))
+                  (:maxLen . 25)
+                  (:parameterHints (:enable . t))
+                  (:reborrowHints (:enable . "always"))
+                  (:displayClosureReturnTypeHints . t)
+                  ;; (:hideClosureInitialization . t)
+                  ;; (:hideNamedConstructor . t)
+                  )))))
 (defun consoli-config/rust-ts-mode-setup ()
   "Complete setup for rust-ts-mode."
   ;; Setup eglot for Rust
@@ -2633,23 +2633,23 @@ may not be efficient."
 
 (defface consoli-config-rust-unwrap-face
   '((t (:inherit error
-		 :weight bold
-		 :foreground "#AD3E3E")))
+                 :weight bold
+                 :foreground "#AD3E3E")))
   "Face for Rust .unwrap() calls")
 
 (defface consoli-config-rust-macro-face
   '((t (:inherit font-lock-function-call-face
-		 :slant italic
-		 :width expanded
-		 :underline t)))
+                 :slant italic
+                 :width expanded
+                 :underline t)))
   "Face for Rust todo! macro calls")
 
 (defface consoli-config-rust-attribute-face
   '((t (:inherit font-lock-preprocessor-face
-		 :weight light
-		 :width expanded
-		 :slant oblique
-		 :foreground "#7e57c2")))
+                 :weight light
+                 :width expanded
+                 :slant oblique
+                 :foreground "#7e57c2")))
   "Face for Rust attribute items")
 
 (defun consoli-config/rust-ts-mode-highlighting ()
@@ -2664,8 +2664,8 @@ may not be efficient."
      :feature 'unwrap-call
      :override t
      '(((field_expression
-	 field: (field_identifier) @consoli-config-rust-unwrap-face)
-	(:match "^unwrap$" @consoli-config-rust-unwrap-face))))
+         field: (field_identifier) @consoli-config-rust-unwrap-face)
+        (:match "^unwrap$" @consoli-config-rust-unwrap-face))))
 
     ;; Highlight todo!() macro
     (treesit-font-lock-rules
@@ -2673,8 +2673,8 @@ may not be efficient."
      :feature 'todo-macro
      :override t
      '(((macro_invocation
-	 (identifier) @consoli-config-rust-macro-face)
-	(:match "^todo$" @consoli-config-rust-macro-face))))
+         (identifier) @consoli-config-rust-macro-face)
+        (:match "^todo$" @consoli-config-rust-macro-face))))
 
     ;; Highlight #[attribute] items
     (treesit-font-lock-rules
@@ -2687,12 +2687,12 @@ may not be efficient."
   :defer t
   :after rust-ts-mode
   :bind (:map rust-ts-mode-map
-	      ("C-c C-c t" . cargo-transient)
-	      ("C-c C-c c" . cargo-transient-check)
-	      ("C-c C-c l" . cargo-transient-clippy)
-	      ("C-c C-c f" . cargo-transient-clippy-fix)
-	      ("C-c C-c k" . cargo-transient-clippy-test)
-	      ("C-c C-c r" . cargo-transient-run)))
+              ("C-c C-c t" . cargo-transient)
+              ("C-c C-c c" . cargo-transient-check)
+              ("C-c C-c l" . cargo-transient-clippy)
+              ("C-c C-c f" . cargo-transient-clippy-fix)
+              ("C-c C-c k" . cargo-transient-clippy-test)
+              ("C-c C-c r" . cargo-transient-run)))
 
 ;; (setq
 ;;  lsp-rust-analyzer-rustfmt-override-command ["./build/x86_64-unknown-linux-gnu/stage0/bin/rustfmt", "--edition=2021"]
@@ -2704,27 +2704,27 @@ may not be efficient."
 
 (defun consoli-config/python-eglot-setup ()
   (setq-local eglot-workspace-configuration
-	      '((:pylsp . (:configurationSources ["flake8"]
-						 :plugins (:pycodestyle (:enabled :json-false)
-									:mccabe (:enabled :json-false)
-									:pyflakes (:enabled :json-false)
-									:flake8 (:enabled :json-false
-											  :maxLineLength 88)
-									:ruff (:enabled t
-											:lineLength 88)
-									:pydocstyle (:enabled t
-											      :convention "numpy")
-									:yapf (:enabled :json-false)
-									:autopep8 (:enabled :json-false)
-									:black (:enabled t
-											 :line_length 88
-											 :cache_config t)))))))
+              '((:pylsp . (:configurationSources ["flake8"]
+                                                 :plugins (:pycodestyle (:enabled :json-false)
+                                                                        :mccabe (:enabled :json-false)
+                                                                        :pyflakes (:enabled :json-false)
+                                                                        :flake8 (:enabled :json-false
+                                                                                          :maxLineLength 88)
+                                                                        :ruff (:enabled t
+                                                                                        :lineLength 88)
+                                                                        :pydocstyle (:enabled t
+                                                                                              :convention "numpy")
+                                                                        :yapf (:enabled :json-false)
+                                                                        :autopep8 (:enabled :json-false)
+                                                                        :black (:enabled t
+                                                                                         :line_length 88
+                                                                                         :cache_config t)))))))
 
 (use-package hyprlang-ts-mode
   :defer t
   :config
   (add-to-list 'treesit-language-source-alist
-	       '(hyprlang "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"))
+               '(hyprlang "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"))
   :custom
   (hyprlang-ts-mode-indent-offset 4))
 
@@ -2739,19 +2739,19 @@ may not be efficient."
     "toggle between markdown-view-mode and markdown-ts-mode."
     (interactive)
     (if (eq major-mode 'markdown-view-mode)
-	(markdown-ts-mode)
+        (markdown-ts-mode)
       (markdown-view-mode)))
 
   (add-hook 'markdown-view-mode-hook
-	    (lambda ()
-	      (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
-	      (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode)))
+            (lambda ()
+              (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
+              (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode)))
 
   (add-hook 'markdown-ts-mode-hook
-	    (lambda ()
-	      (read-only-mode -1)
-	      (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
-	      (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode))))
+            (lambda ()
+              (read-only-mode -1)
+              (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
+              (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode))))
 
 (use-package just-ts-mode
   :defer t)
@@ -2763,14 +2763,14 @@ may not be efficient."
 ;; Basic editing settings
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq-default indent-tabs-mode nil
-	      tab-width 4)
+              tab-width 4)
 
 ;; Scrolling behavior
 (setq-default scroll-preserve-screen-position 'always
-	      scroll-conservatively 101
-	      fast-but-imprecise-scrolling t
-	      redisplay-dont-pause 1
-	      jit-lock-defer-time 0)
+              scroll-conservatively 101
+              fast-but-imprecise-scrolling t
+              redisplay-dont-pause 1
+              jit-lock-defer-time 0)
 
 (use-package scroll-restore
   :hook (after-init . scroll-restore-mode)
@@ -2785,7 +2785,7 @@ may not be efficient."
 (defun consoli-config/infer-indentation-style ()
   "Infer indentation style from buffer content."
   (let ((space-count (how-many "^ " (point-min) (point-max)))
-	(tab-count (how-many "^\t" (point-min) (point-max))))
+        (tab-count (how-many "^\t" (point-min) (point-max))))
     (cond
      ((> space-count tab-count) (setq indent-tabs-mode nil))
      ((> tab-count space-count) (setq indent-tabs-mode t)))))
@@ -2805,20 +2805,20 @@ may not be efficient."
   (good-scroll-duration 0.2))
 
 (setopt backup-directory-alist '(("." . "~/.emacs.d/backup/per-save"))
-	auto-save-file-name-transforms '(("\\(.*/\\)?\\([^/]*\\)\\'" "~/.emacs.d/backup/auto-saves/\\2" t)))
+        auto-save-file-name-transforms '(("\\(.*/\\)?\\([^/]*\\)\\'" "~/.emacs.d/backup/auto-saves/\\2" t)))
 
 (setopt delete-old-versions t
-	;; number of new versions of a file to kept
-	kept-new-versions 1
-	;; number of old version to kept
-	kept-old-versions 2
-	;; numeric version control
-	version-control t
-	;; copy files, dont rename them
-	backup-by-copying t)
+        ;; number of new versions of a file to kept
+        kept-new-versions 1
+        ;; number of old version to kept
+        kept-old-versions 2
+        ;; numeric version control
+        version-control t
+        ;; copy files, dont rename them
+        backup-by-copying t)
 
 (setq-default auto-save-timeout 15 ;; seconds
-	      auto-save-interval 200)
+              auto-save-interval 200)
 
 (use-package super-save
   :hook (after-init . super-save-mode)
@@ -2852,27 +2852,27 @@ may not be efficient."
 
 ;; Additional editing settings
 (setopt tab-always-indent 'complete
-	text-mode-ispell-word-completion nil)
+        text-mode-ispell-word-completion nil)
 
 (setq-default pulse-delay 0.03
-	      pulse-iterations 13)
+              pulse-iterations 13)
 
 ;; Pulse region on region-based operations
 (dolist (fn '(kill-ring-save sp-copy-sexp sp-backward-copy-sexp
-			     kill-region
-			     sp-wrap-round sp-wrap-square sp-wrap-curly))
+                             kill-region
+                             sp-wrap-round sp-wrap-square sp-wrap-curly))
   (advice-add fn :before #'consoli-config/pulse-current-region))
 
 ;; Pulse sexp on sexp-based operations
 (dolist (fn '(sp-kill-sexp sp-backward-kill-sexp sp-kill-hybrid-sexp
-			   sp-transpose-sexp sp-unwrap-sexp sp-backward-unwrap-sexp))
+                           sp-transpose-sexp sp-unwrap-sexp sp-backward-unwrap-sexp))
   (advice-add fn :before #'consoli-config/pulse-sexp-at-point))
 
 (use-package undo-tree
   :hook (after-init . global-undo-tree-mode)
   :config
   (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))
-	undo-tree-visualizer-lazy-drawing 10))
+        undo-tree-visualizer-lazy-drawing 10))
 
 (use-package colorful-mode
   :hook (prog-mode text-mode))
@@ -2880,20 +2880,20 @@ may not be efficient."
 (use-package annotate
   :config
   (setq annotate-annotation-column 25
-	annotate-use-messages nil
-	annotate-use-echo-area nil
-	annotate-highlight-faces '((:underline "#c4addd")
-				   (:underline "#d1c0ec")
-				   (:underline "#8d77a8"))
-	annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
-						   :slant italic
-						   :family alternative-programming-font)
-					 (:inherit 'font-lock-comment-face
-						   :slant italic
-						   :family alternative-programming-font)
-					 (:inherit 'font-lock-comment-face
-						   :slant italic
-						   :family alternative-programming-font)))
+        annotate-use-messages nil
+        annotate-use-echo-area nil
+        annotate-highlight-faces '((:underline "#c4addd")
+                                   (:underline "#d1c0ec")
+                                   (:underline "#8d77a8"))
+        annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
+                                                   :slant italic
+                                                   :family alternative-programming-font)
+                                         (:inherit 'font-lock-comment-face
+                                                   :slant italic
+                                                   :family alternative-programming-font)
+                                         (:inherit 'font-lock-comment-face
+                                                   :slant italic
+                                                   :family alternative-programming-font)))
   :hook (prog-mode . annotate-mode)
   :init
   (setq annotate-mode-map (make-sparse-keymap))
@@ -2901,14 +2901,14 @@ may not be efficient."
   (define-key annotate-mode-map (kbd "C-c C-a") 'annotate-command-prefix)
   :bind
   (:map annotate-command-prefix
-	("n" . annotate-toggle-annotation-text)
-	("a" . annotate-annotate)
-	("d" . annotate-delete-annotation)
-	("s" . annotate-show-annotation-summary)
-	("c" . annotate-change-annotation-colors)
-	("p" . annotate-change-annotation-position)
-	("<left>" . annotate-goto-next-annotation)
-	("<right>" . annotate-goto-previous-annotation)))
+        ("n" . annotate-toggle-annotation-text)
+        ("a" . annotate-annotate)
+        ("d" . annotate-delete-annotation)
+        ("s" . annotate-show-annotation-summary)
+        ("c" . annotate-change-annotation-colors)
+        ("p" . annotate-change-annotation-position)
+        ("<left>" . annotate-goto-next-annotation)
+        ("<right>" . annotate-goto-previous-annotation)))
 
 (use-package exec-path-from-shell
   :if (eq system-type 'gnu/linux)
@@ -2925,7 +2925,7 @@ may not be efficient."
 
 ;; Bookmark and buffer settings
 (setq-default bookmark-save-flag 1
-	      ibuffer-expert t)
+              ibuffer-expert t)
 
 (use-package clipetty
   :hook (after-init . load-clipetty-only-in-term))
@@ -3031,28 +3031,28 @@ may not be efficient."
   "Pulse the sexp that smartparens will operate on."
   (when (bound-and-true-p smartparens-mode)
     (condition-case nil
-	(let ((bounds (cond
-		       ;; If we're inside a sexp and at the beginning, get the enclosing sexp
-		       ((and (sp-point-in-sexp) (sp-beginning-of-sexp-p))
-			(save-excursion (sp-backward-up-sexp) (sp-get-sexp)))
-		       ;; If we're at the end of a sexp, get the sexp we're after
-		       ((sp-end-of-sexp-p)
-			(save-excursion (sp-backward-sexp) (sp-get-sexp)))
-		       ;; Try to get the sexp immediately following point
-		       ((save-excursion (sp-forward-sexp) (sp-get-sexp)))
-		       ;; Try to get the sexp immediately before point
-		       ((save-excursion (sp-backward-sexp) (sp-get-sexp)))
-		       ;; If inside a sexp, get the enclosing one
-		       ((sp-point-in-sexp)
-			(save-excursion (sp-backward-up-sexp) (sp-get-sexp)))
-		       ;; Last resort: try sp-get-sexp at point
-		       (t (sp-get-sexp)))))
-	  (if bounds
-	      (pulse-momentary-highlight-region
-	       (sp-get bounds :beg)
-	       (sp-get bounds :end))
-	    ;; Fallback: pulse current line if no sexp found
-	    (pulse-momentary-highlight-one-line (point))))
+        (let ((bounds (cond
+                       ;; If we're inside a sexp and at the beginning, get the enclosing sexp
+                       ((and (sp-point-in-sexp) (sp-beginning-of-sexp-p))
+                        (save-excursion (sp-backward-up-sexp) (sp-get-sexp)))
+                       ;; If we're at the end of a sexp, get the sexp we're after
+                       ((sp-end-of-sexp-p)
+                        (save-excursion (sp-backward-sexp) (sp-get-sexp)))
+                       ;; Try to get the sexp immediately following point
+                       ((save-excursion (sp-forward-sexp) (sp-get-sexp)))
+                       ;; Try to get the sexp immediately before point
+                       ((save-excursion (sp-backward-sexp) (sp-get-sexp)))
+                       ;; If inside a sexp, get the enclosing one
+                       ((sp-point-in-sexp)
+                        (save-excursion (sp-backward-up-sexp) (sp-get-sexp)))
+                       ;; Last resort: try sp-get-sexp at point
+                       (t (sp-get-sexp)))))
+          (if bounds
+              (pulse-momentary-highlight-region
+               (sp-get bounds :beg)
+               (sp-get bounds :end))
+            ;; Fallback: pulse current line if no sexp found
+            (pulse-momentary-highlight-one-line (point))))
       ;; If any smartparens function fails, fallback to current line
       (error (pulse-momentary-highlight-one-line (point))))))
 
