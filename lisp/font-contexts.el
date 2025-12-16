@@ -29,7 +29,8 @@
     (small . 0.7)
     (modeline . 0.8)
     (tab-bar . 0.8)
-    (centaur-tabs . 0.8))
+    (centaur-tabs . 0.8)
+    (echo-area . 0.8))
   "Font size ratios relative to base size.")
 
 (defconst consoli-config/display-categories
@@ -110,6 +111,10 @@
 (defun consoli-config/font-height-centaur-tabs (&optional frame)
   "Get centaur-tabs font height for FRAME."
   (consoli-config/calculate-font-size 'centaur-tabs frame))
+
+(defun consoli-config/font-height-echo-area (&optional frame)
+  "Get echo-area font height for FRAME."
+  (consoli-config/calculate-font-size 'echo-area frame))
 
 (defun consoli-config/adjust-font-scale (factor)
   "Adjust global font scaling FACTOR interactively."

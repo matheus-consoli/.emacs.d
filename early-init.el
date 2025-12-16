@@ -1,6 +1,7 @@
 ;;; -*- lexical-binding: t; -*-
 ;; tell emacs to use plists for lsp
 (setenv "LSP_USE_PLISTS" "true")
+(setq-default lsp-use-plists t)
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -25,7 +26,7 @@
 
 ;; Optimizations for improving IO performance. Increase max bytes read from a sub-process in a single op
 ;; default value: 3145728 (3M)
-(setq-default read-process-output-max (* 1024 1024)) ;; cat /proc/sys/fs/pipe-max-size 
+(setq-default read-process-output-max (* 1024 1024)) ;; cat /proc/sys/fs/pipe-max-size
 
 ;; keep the eln cache clean
 (setq-default load-prefer-newer t)
@@ -33,6 +34,7 @@
 (setq-default ffap-machine-p-known 'reject)
 
 (setq-default native-comp-deferred-compilation t
+              package-quickstart t
               native-comp-jit-compilation t
               native-comp-prune-cache t
               native-comp-async-jobs-number (- (num-processors) 1)
@@ -55,17 +57,20 @@
     znver3-march)
    (t '())))
 
-(defconst options (append '("-O3"
+(defconst options (append '("-Ofast"
+                            "-g0"
                             "-fno-finite-math-only"
                             "-funroll-loops"
                             "-finline-functions"
                             "-fomit-frame-pointer"
                             "-floop-nest-optimize"
                             "-fipa-pta"
-                            "-fno-semantic-interposition")
+                            "-fno-finite-math-only"
+                            "-fno-semantic-interposition"
+                            "-flto=auto")
                           arch-specific-options))
 
-(setq-default native-comp-speed 2
+(setq-default native-comp-speed 3
               native-comp-compiler-options options
               native-comp-driver-options options)
 

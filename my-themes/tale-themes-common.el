@@ -241,7 +241,7 @@
      `(org-modern-todo ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
 
      ;; Magit and VC
-     `(magit-section-heading ((t (:foreground ,.purple :weight bold :height 1.1))))
+     `(magit-section-heading ((t (:foreground ,.purple :weight semi-bold :height 1.2 :box (:line-width 4 :style flat-button)))))
      `(magit-section-highlight ((t (:background ,.bg-contrast))))
      `(magit-section-secondary-heading ((t (:foreground ,.blue :weight bold))))
      `(magit-branch-current ((t (:foreground ,.yellow :weight bold :box (:line-width 1 :color ,.yellow)))))
@@ -252,8 +252,17 @@
      `(magit-diff-added ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg))))
      `(magit-diff-removed ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg))))
      `(magit-diff-context ((t (:foreground ,.grey-subtle))))
-     `(magit-diff-hunk-heading ((t (:background ,.bg-alt :foreground ,.fg-bright :weight bold))))
-     `(magit-diff-hunk-heading-highlight ((t (:background ,.bg-selection :foreground ,.fg-bright :weight bold))))
+
+     `(magit-filename ((t (:background ,.bg-main :foreground ,.fg-main :height 1.1 :box (:line-width 2 :style flat-button)))))
+
+     `(magit-diff-file-heading ((t (:background ,.bg-main :foreground ,.fg-main :height 1.1 :box (:line-width 2 :style flat-button)))))
+     `(magit-diff-file-heading-highlight ((t (:background ,.bg-selection :weight bold))))
+     `(magit-diff-file-heading-selection ((t (:background ,.visual-selection :weight bold))))
+
+     `(magit-diff-hunk-heading ((t (:background ,.bg-contrast :foreground ,.blue :weight bold :overline ,.grey-border))))
+     `(magit-diff-hunk-heading-highlight ((t (:background ,.hover-bg :foreground ,.blue :weight bold :overline ,.grey-border))))
+     `(magit-diff-hunk-heading-selection ((t (:background ,.bg-selection :foreground ,.blue :weight bold :overline ,.grey-border))))
+
      `(magit-diff-added-highlight ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg :weight bold))))
      `(magit-diff-removed-highlight ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg :weight bold))))
      `(magit-diff-context-highlight ((t (:background ,.bg-dim :foreground ,.fg-main))))

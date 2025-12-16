@@ -14,7 +14,7 @@
   '((ui-font
      ("Atkinson Hyperlegible Mono" "SF Mono"))
     (programming-font
-     ("Dank Mono" "Victor Mono"))
+     ("Myna" "Victor Mono"))
     (org-font
      ("Margem Rounded Test" "Maple Mono"))
     (modeline-font
