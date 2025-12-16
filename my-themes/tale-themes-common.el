@@ -1014,13 +1014,28 @@
                (cons "DONE"  (list :foreground .green :weight 'bold)))))))
 
 (defun tale-themes--hooks-function (palette)
-  "Apply special face properties using PALETTE."
+  "apply special face properties using PALETTE."
   (let-alist palette
     ;; special fringes
     (setq-local left-fringe-width 30
                 right-fringe-width 30
                 default-text-properties '(line-spacing 0 line-height 1)
                 truncate-lines t)
+
+    ;; update fringes in all windows showing this buffer
+    ;; setq-local only affects new windows, must update existing windows explicitly
+    (dolist (window (get-buffer-window-list (current-buffer) nil t))
+      (set-window-fringes window 30 30))
+
+    ;; add buffer-local hook to re-apply fringes when window state changes
+    ;; this catches cases like transient opening/closing that might reset fringes
+    (add-hook 'window-state-change-hook
+              (lambda ()
+                (when (eq (current-buffer) (window-buffer))
+                  (dolist (window (get-buffer-window-list (current-buffer) nil t))
+                    (set-window-fringes window 30 30))))
+              nil t)
+
     (face-remap-add-relative 'fringe :background .bg-special)
 
     ;; special background
@@ -1040,6 +1055,7 @@
     compilation-mode-hook
     git-commit-mode-hook
     magit-mode-hook
+    magit-refresh-buffer-hook
     magit-post-refresh-hook
     magit-post-stage-hook
     magit-post-unstage-hook
