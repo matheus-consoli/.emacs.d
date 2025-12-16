@@ -591,7 +591,7 @@
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
      ;; Vertico
-     `(vertico-current ((t (:box (:line-width (-1 . -1) :color ,.bg-selection)))))
+     `(vertico-current ((t (:box (:line-width (1 . 2) :color ,.bg-main) :underline (:color ,.bg-selection :line-width -1) :overline (:color ,.bg-selection :line-width 1)))))
      `(vertico-group-title ((t (:foreground ,.purple :weight bold :height 0.9 :box (:line-width -1 :color ,.grey-subtle)))))
      `(vertico-group-separator ((t (:foreground ,.grey-subtle :strike-through t))))
      `(vertico-multiline ((t (:foreground ,.grey-subtle :slant italic))))
@@ -1108,6 +1108,14 @@ THEME-NAME is used to store cleanup functions in the appropriate variable."
       (disable-theme current-theme))
     (load-theme next-theme t)
     (message "Switched to %s theme" next-theme)))
+
+;; Add underline to each vertico item
+(with-eval-after-load 'vertico
+  (cl-defmethod vertico--format-candidate :around
+    (cand prefix suffix index start)
+    (let ((result (cl-call-next-method cand prefix suffix index start)))
+      (add-face-text-property 0 (length result) `(:box (:line-width (1 . 2) :color ,(face-background 'default))) 'append result)
+      result)))
 
 (provide 'tale-themes-common)
 ;;; tale-themes-common.el ends here

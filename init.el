@@ -184,13 +184,15 @@
 	(posframe-poshandler-window-bottom-center info))))
 
   (defun consoli-config/vertico-posframe-size (buffer)
-    "Set posframe width to match current window, with fixed height."
+    "Set posframe width to match current window, with fixed height adjusted for line-spacing."
     (let* ((window (selected-window))
 	   (window-edges (window-pixel-edges window))
 	   (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
 	   (char-width (frame-char-width))
 	   (width-chars (/ window-width char-width))
-	   (fixed-height (+ 2 vertico-count)))
+	   ;; Adjust height by 1.3 to account for line-height
+	   (base-height (+ 2 vertico-count))
+	   (fixed-height (ceiling (* base-height 1.3))))
       (list
        :height fixed-height
        :width (round width-chars)
@@ -229,17 +231,25 @@
       (when (and vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
 	(posframe-refresh vertico-posframe--buffer))))
 
+  (defun consoli-config/vertico-posframe-set-line-spacing ()
+    "Set line-height for vertico-posframe buffer to center text vertically."
+    (when (and vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
+      (with-current-buffer vertico-posframe--buffer
+	(setq-local default-text-properties '(line-height 1.3)))))
+
   (add-hook 'vertico-posframe-mode-hook
 	    (lambda ()
 	      (if vertico-posframe-mode
 		  (progn
 		    (add-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
 		    (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
-		    (add-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe))
+		    (add-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
+		    (add-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing))
 		(progn
 		  (remove-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
 		  (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
-		  (remove-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)))))
+		  (remove-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
+		  (remove-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing)))))
 
   (setq vertico-posframe-size-function #'consoli-config/vertico-posframe-size)
   (vertico-posframe-mode 1))
@@ -527,6 +537,40 @@
 			   (cycle . t)
 			   (sort . consoli-config/completion-sort-by-history))))))
 
+;; corfu-quick flickering fix: pad keys to match icon width
+(defun consoli-config/corfu-quick-pad-keys (keys)
+  "pad quick selection keys to 2 characters to match icon width.
+this prevents width changes and flickering when quick selection is activated."
+  (let ((pad-width 2))  ; match nerd-icons width
+    (if (< (length keys) pad-width)
+        (concat keys (make-string (- pad-width (length keys)) ?\s))
+      keys)))
+
+(defun consoli-config/corfu-quick--read-padded (&optional first)
+  "advice corfu-quick--read to pad keys, preventing flicker.
+keys are padded to 2 chars to match icon width, so when they replace
+the icons, the total width remains constant."
+  (cl-letf* ((list nil)
+             (orig-formatter (symbol-function #'corfu--format-candidates))
+             ((symbol-function #'corfu--format-candidates)
+              (lambda (cands)
+                (setq cands (funcall orig-formatter cands))
+                ;; iterate through formatted candidates and replace with padded keys
+                (cl-loop for cand in-ref (nth 2 cands) for index from 0 do
+                         (pcase-let ((`(,keys . ,events) (corfu-quick--keys first index)))
+                           ;; pad keys to 2 characters
+                           (setq keys (consoli-config/corfu-quick-pad-keys keys))
+                           (setf list (nconc events list)
+                                 cand (concat keys (substring cand (min (length cand) (length keys)))))))
+                cands)))
+    ;; show candidates popup and read key selection
+    (corfu--candidates-popup
+     (posn-at-point (+ (car completion-in-region--data) (length corfu--base))))
+    (alist-get (read-key) list)))
+
+(with-eval-after-load 'corfu-quick
+  (advice-add 'corfu-quick--read :override #'consoli-config/corfu-quick--read-padded))
+
 ;; Corfu - completion overlay
 (use-package corfu
   :hook (after-init . consoli-config/setup-corfu)
@@ -539,11 +583,13 @@
   (corfu-popupinfo-delay '(1.30 . 1.50))
   (corfu-popupinfo-max-height 15)
   (corfu-popupinfo-max-width 80)
+  (corfu-left-margin-width 2)
+  (corfu-right-margin-width 2)
   (corfu-preselect 'first)
   (corfu-preview-current nil)
   (corfu-quit-at-boundary t)
   (corfu-quit-no-match 'separator)
-  (corfu-scroll-margin 3)
+  (corfu-scroll-margin 1)
   (corfu-separator ?\s)
   :bind
   (:map corfu-map
@@ -554,7 +600,9 @@
     "Initialize Corfu completion system."
     (global-corfu-mode)
     (corfu-history-mode)
-    (corfu-popupinfo-mode))
+    (corfu-popupinfo-mode)
+    ;; Set line-spacing only in corfu popup buffer
+    (advice-add 'corfu--make-buffer :after #'consoli-config/corfu-set-line-spacing))
 
   (defun consoli-config/corfu-enable-in-minibuffer ()
     "Enable Corfu in the minibuffer."
@@ -562,7 +610,18 @@
       (setq-local corfu-echo-delay nil
 		  corfu-popupinfo-delay nil)
       (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'consoli-config/corfu-enable-in-minibuffer))
+  (add-hook 'minibuffer-setup-hook #'consoli-config/corfu-enable-in-minibuffer)
+
+  (defun consoli-config/corfu-set-line-spacing (buffer)
+    "Set line-spacing and line-height for corfu popup buffer only."
+    (with-current-buffer buffer
+      (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15))))
+
+  (defun consoli-config/corfu-adjust-popup-height (orig-fun frame x y width height)
+    "Adjust corfu popup height to account for line-spacing."
+    (funcall orig-fun frame x y width (ceiling (* height 1.35)))) ;; (+ line-spacing line-height 0.05)
+
+  (advice-add 'corfu--make-frame :around #'consoli-config/corfu-adjust-popup-height))
 
 (defun consoli-config/set-custom-text-properties ()
   "Modern line spacing for current buffer."
@@ -1167,7 +1226,6 @@ targets."
   (interactive)
   (or (copilot-accept-completion)
       (indent-for-tab-command)))
-
 (use-package copilot
   :defer t
   :straight (:host github :repo "copilot-emacs/copilot.el")
@@ -1187,25 +1245,6 @@ targets."
 	("C-c C-o a" . copilot-accept-completion)
 	("C-c C-o C-a l" . copilot-accept-completion-by-line)
 	("C-c C-o C-a w" . copilot-accept-completion-by-word)))
-
-(use-package aidermacs
-  :bind (("C-;" . aidermacs-transient-menu))
-  :config
-  (setenv "ANTHROPIC_API_KEY" (shell-command-to-string "echo -n $ANTHROPIC_API_KEY"))
-  (setenv "OPENROUTER_API_KEY" (shell-command-to-string "echo -n $OPENROUTER_API_KEY"))
-  :custom
-  (aidermacs-auto-commits nil)
-  (aidermacs-default-chat-mode 'architect)
-  (aidermacs-backend 'vterm)
-  ;; watch for comments ending with `AI` (vterm only)
-  (aidermacs-watch-files t)
-  (aidermacs-vterm-use-theme-colors t)
-  (aidermacs-show-diff-after-change nil)
-  (aidermacs-default-model "anthropic/claude-sonnet-4-20250514")
-  (aidermacs-architect-model "anthropic/claude-opus-4-20250514")
-  ;; (aidermacs-extra-args '("--reasoning-effort high"))
-  (aidermacs-global-read-only-files '("~/Projects/templates/agents/rust-pro.md" "~/Projects/templates/agents/backend-architect.md"))
-  (aidermacs-project-read-only-files '("CONVENTIONS.md" "README.md")))
 
 (use-package claude-code-ide
   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
