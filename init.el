@@ -301,7 +301,9 @@
                (eglot-current-server))
       (eglot-format-buffer)))
 
-  (add-hook 'before-save-hook #'format-on-eglot nil t)
+  (add-hook 'eglot-managed-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'format-on-eglot nil t)))
 
   ;; Completion integration
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
@@ -1311,7 +1313,7 @@ targets."
 ;; Theme configuration
 (defvar consoli-themes
   '((gui . dark-tale)
-    (cli . dark-tale))
+    (cli . bright-tale))
   "Theme configuration for different display types.")
 
 (defun consoli-config/apply-theme ()
