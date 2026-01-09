@@ -89,14 +89,12 @@
 
 (setq-default inhibit-compacting-font-caches t)
 
-;; Load font scaling system
+;; Load font system
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(require 'font-families)
-(require 'font-contexts)
-(require 'font-scaling)
+(require 'font-config)
 
 ;; Initialize font scaling early to prevent startup flicker
-(consoli-config/init-font-scaling)
+(consoli-fonts/init)
 
 ;; from minimal-emacs.d
 (when (and (not (daemonp)) (not noninteractive))

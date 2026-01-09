@@ -273,7 +273,7 @@
 
 ;; Eglot - LSP client
 (use-package eglot
-  :straight (:type built-in)
+  :straight t; (:type built-in)
   :defer t
   :init
   (defvar eglot-mode-map (make-sparse-keymap)
@@ -345,6 +345,10 @@
   :straight (:host github :repo "jdtsmith/eglot-booster")
   :hook (eglot-managed . eglot-booster-mode))
 
+(use-package eglot-hover
+  :straight (:host codeberg :repo "slotThe/eglot-hover")
+  :hook (eglot-managed-mode . eglot-hover-mode))
+
 (use-package consult-eglot
   :after (consult eglot)
   :bind (:map eglot-mode-map
@@ -369,7 +373,7 @@
            (box-width (min (truncate (* window-width 0.5)) (truncate (* screen-width 0.5))))
            (box-height (min (truncate (* window-height 0.3)) (truncate (* screen-height 0.3))))
            ;; Calculate font size based on window size (scale between 0.75 and programming font size)
-           (max-scale (/ (consoli-config/font-height-programming) 100.0))
+           (max-scale (/ (consoli-fonts/size 'programming) 100.0))
            (font-scale (+ 0.75 (* (/ (float window-width) (float screen-width)) (- max-scale 0.75)))))
 
       ;; Set dynamic dimensions
@@ -379,7 +383,7 @@
 
       ;; Apply font parameters to eldoc-box faces
       (set-face-attribute 'eldoc-box-body nil
-                          :family programming-font
+                          :family (consoli-fonts/get 'programming)
                           :height font-scale)
       (set-face-attribute 'eldoc-box-border nil :height font-scale)))
 
@@ -676,8 +680,8 @@ the icons, the total width remains constant."
     (consoli-config/cape-setup-prog)
     ;; Set programming font
     (face-remap-add-relative 'default
-                             :family programming-font
-                             :height (consoli-config/font-height-programming))
+                             :family (consoli-fonts/get 'programming)
+                             :height (consoli-fonts/size 'programming))
     ;; Infer indentation style
     (consoli-config/infer-indentation-style))
 
@@ -1005,8 +1009,8 @@ targets."
     (hl-line-mode -1)
     ;; Set font
     (face-remap-add-relative 'default
-                             :family programming-font
-                             :height (consoli-config/font-height-programming))
+                             :family (consoli-fonts/get 'programming)
+                             :height (consoli-fonts/size 'programming))
     ;; Hide modeline
     (consoli-config/hide-modeline))
 
@@ -1341,39 +1345,39 @@ targets."
 
 ;; Default UI font
 (set-face-attribute 'default nil
-                    :family ui-font
-                    :height (consoli-config/font-height-ui))
+                    :family (consoli-fonts/get 'ui)
+                    :height (consoli-fonts/size 'ui))
 
 ;; Smaller font for transient menus
 (add-hook 'transient-setup-buffer-hook
           (lambda ()
             (face-remap-add-relative 'default
-                                     :family ui-font
-                                     :height (consoli-config/font-height-small))))
+                                     :family (consoli-fonts/get 'ui)
+                                     :height (consoli-fonts/size 'small))))
 
 ;; Mode line fonts
 (set-face-attribute 'mode-line nil
-                    :family modeline-font
-                    :height (consoli-config/font-height-modeline))
+                    :family (consoli-fonts/get 'modeline)
+                    :height (consoli-fonts/size 'modeline))
 
 (set-face-attribute 'mode-line-active nil
-                    :family modeline-font
-                    :height (consoli-config/font-height-modeline))
+                    :family (consoli-fonts/get 'modeline)
+                    :height (consoli-fonts/size 'modeline))
 
 (set-face-attribute 'mode-line-inactive nil
-                    :family modeline-font
-                    :height (consoli-config/font-height-modeline))
+                    :family (consoli-fonts/get 'modeline)
+                    :height (consoli-fonts/size 'modeline))
 
 ;; Programming-specific face customizations
 (set-face-attribute 'font-lock-comment-face nil
-                    :family programming-font
+                    :family (consoli-fonts/get 'programming)
                     :slant 'italic
-                    :height (consoli-config/font-height-programming))
+                    :height (consoli-fonts/size 'programming))
 
 ;; Tab bar font
 (set-face-attribute 'tab-bar nil
-                    :family alternative-programming-font
-                    :height (consoli-config/font-height-tab-bar))
+                    :family (consoli-fonts/get 'alt-mono)
+                    :height (consoli-fonts/size 'tab-bar))
 
 ;; Region selection
 (set-face-attribute 'region nil :extend nil)
@@ -1657,7 +1661,7 @@ targets."
   :hook (after-init . centaur-tabs-mode)
   :config
   (centaur-tabs-headline-match)
-  (centaur-tabs-change-fonts alternative-programming-font (consoli-config/font-height-centaur-tabs))
+  (centaur-tabs-change-fonts (consoli-fonts/get 'alt-mono) (consoli-fonts/size 'centaur-tabs))
   (consoli-config/setup-centaur-hooks)
   :init
   (defun centaur-tabs-hide-tab (x)
@@ -1806,10 +1810,10 @@ targets."
 
   (get-buffer-create " *Echo Area 0*")
   (with-current-buffer " *Echo Area 0*"
-    (face-remap-add-relative 'default `(:inherit mode-line :height ,(consoli-config/font-height-echo-area) :box nil)))
+    (face-remap-add-relative 'default `(:inherit mode-line :height ,(consoli-fonts/size 'echo-area) :box nil)))
   (get-buffer-create " *Echo Area 1*")
   (with-current-buffer " *Echo Area 1*"
-    (face-remap-add-relative 'default `(:inherit mode-line :height ,(consoli-config/font-height-echo-area) :box nil))))
+    (face-remap-add-relative 'default `(:inherit mode-line :height ,(consoli-fonts/size 'echo-area) :box nil))))
 
 (add-hook 'after-init-hook #'consoli-config/setup-echo-area)
 
@@ -1942,20 +1946,20 @@ may not be efficient."
   (org-column ((t (:background unspecified))))
   (org-column-title ((t (:background unspecified))))
   ;; Variable-pitch and other styling
-  (variable-pitch ((t (:family org-font))))
-  (fixed-pitch ((t (:family alternative-programming-font))))
+  (variable-pitch ((t (:family ,(consoli-fonts/get 'org)))))
+  (fixed-pitch ((t (:family ,(consoli-fonts/get 'alt-mono)))))
   (font-lock-doc-face ((t (:inherit font-lock-string-face))))
   (org-ellipsis ((t (:inherit default :box nil :underline nil :weight ultra-bold))))
   :config
   ;; Set dynamic font sizes (always applied, respecting scaling preference)
   (set-face-attribute 'variable-pitch nil
-                      :family org-font
-                      :height (consoli-config/font-height-org))
+                      :family (consoli-fonts/get 'org)
+                      :height (consoli-fonts/size 'org))
   (set-face-attribute 'fixed-pitch nil
-                      :family alternative-programming-font
-                      :height (consoli-config/font-height-programming))
+                      :family (consoli-fonts/get 'alt-mono)
+                      :height (consoli-fonts/size 'programming))
   (set-face-attribute 'font-lock-doc-face nil
-                      :height (consoli-config/font-height-programming))
+                      :height (consoli-fonts/size 'programming))
 
   ;; Add language modes
   (add-to-list 'org-src-lang-modes (cons "rust" 'rust-ts))
@@ -2755,6 +2759,11 @@ may not be efficient."
               (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
               (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode))))
 
+(use-package yaml-mode)
+(use-package yaml-pro
+  :defer t
+  :hook ((yaml-mode . yasml-pro-ts-mode)))
+
 (use-package just-ts-mode
   :defer t)
 
@@ -2887,15 +2896,15 @@ may not be efficient."
         annotate-highlight-faces '((:underline "#c4addd")
                                    (:underline "#d1c0ec")
                                    (:underline "#8d77a8"))
-        annotate-annotation-text-faces '((:inherit 'font-lock-comment-face
+        annotate-annotation-text-faces `((:inherit 'font-lock-comment-face
                                                    :slant italic
-                                                   :family alternative-programming-font)
+                                                   :family ,(consoli-fonts/get 'alt-mono))
                                          (:inherit 'font-lock-comment-face
                                                    :slant italic
-                                                   :family alternative-programming-font)
+                                                   :family ,(consoli-fonts/get 'alt-mono))
                                          (:inherit 'font-lock-comment-face
                                                    :slant italic
-                                                   :family alternative-programming-font)))
+                                                   :family ,(consoli-fonts/get 'alt-mono))))
   :hook (prog-mode . annotate-mode)
   :init
   (setq annotate-mode-map (make-sparse-keymap))

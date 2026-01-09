@@ -96,13 +96,13 @@
      `(mode-line-inactive-buffer-id ((t (:foreground ,.grey-subtle))))
 
      ;; == FONT LOCK & SYNTAX HIGHLIGHTING ==
-     `(font-lock-builtin-face ((t (:foreground ,.magenta))))
+     `(font-lock-builtin-face ((t (:foreground ,.magenta :slant italic))))
      `(font-lock-comment-delimiter-face ((t (:foreground ,.grey-subtle :slant italic))))
      `(font-lock-comment-face ((t (:foreground ,.grey-comment-blue :slant italic))))
      `(font-lock-constant-face ((t (:foreground ,.purple :weight bold))))
      `(font-lock-doc-face ((t (:foreground ,.grey-docstring :slant italic))))
      `(font-lock-function-name-face ((t (:foreground ,.purple :weight bold))))
-     `(font-lock-keyword-face ((t (:foreground ,.magenta :weight bold))))
+     `(font-lock-keyword-face ((t (:foreground ,.magenta :weight bold :slant italic))))
      `(font-lock-negation-char-face ((t (:foreground ,.rose :weight bold))))
      `(font-lock-preprocessor-face ((t (:foreground ,.teal))))
      `(font-lock-regexp-grouping-backslash ((t (:foreground ,.yellow))))
@@ -591,7 +591,7 @@
      `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
      ;; Vertico
-     `(vertico-current ((t (:box (:line-width (1 . 2) :color ,.bg-main) :underline (:color ,.bg-selection :line-width -1) :overline (:color ,.bg-selection :line-width 1)))))
+     `(vertico-current ((t (:background ,.bg-alt))))
      `(vertico-group-title ((t (:foreground ,.purple :weight bold :height 0.9 :box (:line-width -1 :color ,.grey-subtle)))))
      `(vertico-group-separator ((t (:foreground ,.grey-subtle :strike-through t))))
      `(vertico-multiline ((t (:foreground ,.grey-subtle :slant italic))))
@@ -1125,13 +1125,16 @@ THEME-NAME is used to store cleanup functions in the appropriate variable."
     (load-theme next-theme t)
     (message "Switched to %s theme" next-theme)))
 
-;; Add underline to each vertico item
+;; Add symbol prefix to current vertico item
 (with-eval-after-load 'vertico
-  (cl-defmethod vertico--format-candidate :around
-    (cand prefix suffix index start)
-    (let ((result (cl-call-next-method cand prefix suffix index start)))
-      (add-face-text-property 0 (length result) `(:box (:line-width (1 . 2) :color ,(face-background 'default))) 'append result)
-      result)))
+  (defun consoli-config/vertico-format-candidate-with-prefix (orig-fun cand prefix suffix index start)
+    "Add a symbol prefix to the currently selected vertico candidate."
+    (let* ((result (funcall orig-fun cand prefix suffix index start))
+           (current-p (= vertico--index index))
+           (symbol (if current-p "❯" " ")))
+      (concat symbol result)))
+
+  (advice-add 'vertico--format-candidate :around #'consoli-config/vertico-format-candidate-with-prefix))
 
 (provide 'tale-themes-common)
 ;;; tale-themes-common.el ends here
