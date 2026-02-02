@@ -86,7 +86,7 @@
      ;; == MODELINE ==
      `(mode-line ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light
                                   :box (:line-width (1 . 6) :style flat-button) :inherit nil))))
-     `(mode-line-active ((t (:background ,.bg-main :foreground ,.fg-docstring :weight normal
+     `(mode-line-active ((t (:background ,.bg-main :foreground ,.grey-docstring :weight normal
                                          :box (:line-width (1 . 6) :style flat-button) :inherit nil))))
      `(mode-line-inactive ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light :overline ,.bg-special
                                            :box (:line-width (1 . 6) :style flat-button) :inherit nil))))

@@ -14,9 +14,9 @@
 ;;; Font Families
 
 (defconst consoli-fonts/families
-  '((ui          . ("Atkinson Hyperlegible Mono" "SF Mono"))
+  '((ui          . ("SF Mono" "Atkinson Hyperlegible Mono"))
     (programming . ("Dank Mono" "Victor Mono" "Myna"))
-    (org         . ("Margem Rounded Test" "Maple Mono"))
+    (org         . ("Monaspace Radon Frozen" "Margem Rounded Test" "Maple Mono"))
     (modeline    . ("Reddit Mono" "SF Mono"))
     (alt-mono    . ("Victor Mono" "Myna")))
   "Font families with fallback preferences.")

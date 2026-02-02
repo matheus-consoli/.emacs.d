@@ -153,6 +153,7 @@
   :requires posframe
   :custom
   (vertico-posframe-poshandler 'consoli-config/vertico-posframe-conditional-echo-poshandler)
+  (vertico-posframe-font (consoli-fonts/get 'ui))
   (vertico-posframe-border-width 10)
   (vertico-posframe-truncate-lines nil)
   (vertico-posframe-border-width 0)
@@ -415,6 +416,16 @@
   :bind (:map eglot-mode-map
               ("C-c l d" . eldoc-box-help-at-point))
   :hook (eglot-managed-mode . eldoc-box-hover-mode))
+
+(use-package dape
+  :hook
+  (kill-emacs . dape-breakpoint-save)
+  (after-init . dape-breakpoint-load)
+  :custom
+  (dape-breakpoint-global-mode +1)
+  (add-hook 'dape-display-source-hook #'pulse-momentary-highlight-one-line)
+  ;; kill compile buffer on build success
+  (add-hook 'dape-compile-hook #'kill-buffer))
 
 (use-package breadcrumb
   :hook (eglot-managed-mode . breadcrumb-mode)
@@ -961,6 +972,33 @@ targets."
   ;; force consult-line to use absolute line numbers to avoid jumping issues
   (setq consult-line-numbers-relative-p nil)
 
+  ;; Fix consult-line jump failures with orderless partial matches.
+  ;; When vertico returns the selected candidate, the tofu suffix or text
+  ;; properties might differ, causing consult--lookup-location to fail.
+  ;; This fix tries multiple approaches to get the location.
+  ;; NOTE: verify in the future if it is still needed
+  (defun consoli-config/consult-line-match-robust (selected candidates &rest _)
+    "Robust lookup for consult-line that handles orderless and tofu issues."
+    ;; Try getting location directly from selected's text property
+    (or (when-let* ((loc (get-text-property 0 'consult-location selected)))
+          (let ((pos (car loc)))
+            (if (consp pos)
+                (set-marker (make-marker) (cdr pos) (car pos))
+              pos)))
+        ;; Fall back to standard lookup
+        (consult--lookup-location selected candidates)
+        ;; Last resort: find by comparing stripped strings
+        (cl-loop for cand in candidates
+                 when (string= (consult--tofu-strip selected)
+                               (consult--tofu-strip cand))
+                 return (let* ((loc (get-text-property 0 'consult-location cand))
+                               (pos (car loc)))
+                          (if (consp pos)
+                              (set-marker (make-marker) (cdr pos) (car pos))
+                            pos)))))
+
+  (advice-add 'consult--line-match :override #'consoli-config/consult-line-match-robust)
+
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
   ;; (setq consult-preview-key 'any)
@@ -972,8 +1010,8 @@ targets."
    consult-theme :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep consult-man
    consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-file-register
-   consult--source-recent-file consult--source-project-recent-file
+   consult-source-bookmark consult-source-file-register
+   consult-source-recent-file consult-source-project-recent-file
    ;; :preview-key "M-."
    :preview-key '(:debounce 0.4 any))
 
@@ -2009,6 +2047,8 @@ may not be efficient."
 
 (use-package org-modern
   :after org
+  :custom
+  (org-modern-fold-stars '(("󠀠" . "󠀠") ("󠀠" . "󠀠") ("󠀠" . "󠀠") ("󠀠" . "󠀠") ("󠀠" . "󠀠"))) ;; insert-char tag-space
   :hook (org-mode . org-modern-mode))
 
 (use-package org-variable-pitch
@@ -2017,6 +2057,11 @@ may not be efficient."
 (use-package org-appear
   :after org
   :custom (org-appear-delay 2))
+
+(use-package org-fringe-levels
+  :straight (org-fringe-levels :type built-in)
+  :hook (org-mode . org-fringe-levels-mode)
+  :load-path "~/.emacs.d/lisp")
 
 (defface org-checkbox-done-text
   '((t (:foreground "#71696A" :strike-through t)))
@@ -2327,6 +2372,7 @@ may not be efficient."
   :bind (("C-x g" . magit-status))
   :custom
   (magit-ediff-dwim-show-on-hunks t)
+  (magit-status-show-untracked-files 'all)
   (magit-format-file-function #'magit-format-file-nerd-icons)
   (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (magit-bury-buffer-function 'magit-restore-window-configuration)
