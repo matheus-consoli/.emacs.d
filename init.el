@@ -294,8 +294,11 @@
   :config
   ;; Server programs
   (add-to-list 'eglot-server-programs
-               '(toml-ts-mode . '("taplo" "lsp" "stdio"))
+               '(toml-ts-mode . '("taplo" "lsp" "stdio")))
+  (add-to-list 'eglot-server-programs
                '(markdown-ts-mode . ,(alist-get 'markdown-mode eglot-server-programs)))
+  ;; (add-to-list 'eglot-server-programs
+  ;;              '(lua-ts-mode . '("lua-language-server")))
 
   (defun format-on-eglot ()
     (when (and (fboundp 'eglot-current-server)
@@ -1354,7 +1357,7 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . dark-tale)
+  '((gui . honed-tale)
     (cli . bright-tale))
   "Theme configuration for different display types.")
 
@@ -2753,6 +2756,7 @@ may not be efficient."
 ;;  lsp-rust-analyzer-proc-macro-enable t)
 
 (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+(add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode))
 
 (defun consoli-config/python-eglot-setup ()
   (setq-local eglot-workspace-configuration
@@ -2780,6 +2784,10 @@ may not be efficient."
   :custom
   (hyprlang-ts-mode-indent-offset 4))
 
+(use-package jq-format
+  :demand t
+  :after json-mode)
+
 (use-package markdown-ts-mode
   :mode ("\\.md\\'" . markdown-ts-mode)
   :defer t
@@ -2805,6 +2813,15 @@ may not be efficient."
               (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
               (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode))))
 
+(use-package roc-ts-mode
+  :mode ("\\.roc\\'" . roc-ts-mode)
+  :init
+  (require 'eglot)
+  (add-to-list 'eglot-server-programs
+               '(roc-ts-mode . ("/home/consoli/projects/languages/roc_nightly-linux_arm64-2026-09-03-62fcb65/roc"  "experimental-lsp")))
+  (add-hook 'roc-ts-mode-hook #'eglot-ensure))
+
+
 (use-package yaml-mode)
 (use-package yaml-pro
   :defer t
@@ -2812,6 +2829,13 @@ may not be efficient."
 
 (use-package just-ts-mode
   :defer t)
+
+(use-package unison-ts-mode
+  :straight (:host github :repo "fmguerreiro/unison-ts-mode")
+  :mode ("\\.u\\'" "\\.unison\\'")
+  :config
+  (add-to-list 'eglot-server-programs
+               '((unison-ts-mode unisonlang-mode) "127.0.0.1" 5757)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; EDITING BEHAVIOR
