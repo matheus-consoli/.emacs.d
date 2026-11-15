@@ -40,9 +40,9 @@
          (visual-selection . "#D5D0C8")
          (inactive-selection . "#E0DED9")
 
-         (success-muted . "#4A7A5A")
-         (warning-muted . "#A08050")
-         (error-muted . "#A05050")
+         (success-fg . "#3A6A4A")
+         (warning-fg . "#76572D")
+         (error-fg . "#8A4A4A")
          (info-muted . "#5A6A8A")
 
          (diff-added-bg . "#E8F0E8")
@@ -56,8 +56,7 @@
          (completion-bg . "#F2F0EB"))))
 
   (tale-themes--create-theme 'cloud-tale cloud-palette)
-  (tale-themes--set-variables 'cloud-tale cloud-palette)
-  (tale-themes--setup-hooks 'cloud-tale cloud-palette))
+  (tale-themes--set-variables 'cloud-tale cloud-palette))
 
 ;;;###autoload
 (defun cloud-tale-theme ()

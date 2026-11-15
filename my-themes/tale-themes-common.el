@@ -7,10 +7,19 @@
 
 ;;; Code:
 
-(require 'color)
+(require 'face-remap)
+
+(defface tale-themes-special-buffer '((t (:height 0.9)))
+  "Default face remapping for special buffers."
+  :group 'tale-themes-group)
+
+(defface tale-themes-special-fringe '((t nil))
+  "Fringe face remapping for special buffers."
+  :group 'tale-themes-group)
 
 (defun tale-themes--create-theme (theme-name palette)
   "Create a theme with THEME-NAME using PALETTE."
+  (put theme-name 'tale-theme t)
   (let-alist palette
     (custom-theme-set-faces
      theme-name
@@ -30,10 +39,9 @@
      `(window-divider ((t (:foreground ,.bg-main))))
      `(window-divider-last-pixel ((t (:foreground ,.bg-alt))))
      `(window-divider-first-pixel ((t (:foreground ,.bg-alt))))
-     `(success ((t (:foreground ,.success-muted :weight bold))))
-     `(warning ((t (:foreground ,.warning-muted :weight bold))))
-     `(error ((t (:foreground ,.error-muted :weight bold))))
-     `(match ((t (:foreground ,.bg-main :background ,.green :weight bold))))
+     `(success ((t (:foreground ,.success-fg :weight bold))))
+     `(warning ((t (:foreground ,.warning-fg :weight bold))))
+     `(error ((t (:foreground ,.error-fg :weight bold))))
      `(shadow ((t (:foreground ,.grey-subtle))))
 
      ;; == UI ELEMENTS ==
@@ -50,6 +58,9 @@
      `(tty-menu-disabled-face ((t (:background ,.bg-popup :foreground ,.grey-subtle))))
      `(tty-menu-selected-face ((t (:background ,.bg-selection :foreground ,.fg-bright))))
 
+     `(tale-themes-special-buffer ((t (:background ,.bg-special :foreground ,.fg-bright :height 0.9))))
+     `(tale-themes-special-fringe ((t (:background ,.bg-special))))
+
      ;; Interface elements
      `(scroll-bar ((t (:background ,.bg-contrast :foreground ,.grey-border))))
      `(tool-bar ((t (:background ,.bg-alt :foreground ,.fg-main :box (:line-width 1 :style released-button)))))
@@ -60,9 +71,9 @@
      ;; Selection-related faces
      `(lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
      `(isearch ((t (:background ,.purple :foreground ,.bg-main :bold t))))
-     `(isearch-fail ((t (:background ,.error-muted :foreground ,.magenta))))
+     `(isearch-fail ((t (:background ,.diff-removed-bg :foreground ,.error-fg))))
      `(query-replace ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
-     `(match ((t (:background ,.success-muted :foreground ,.green))))
+     `(match ((t (:background ,.diff-added-bg :foreground ,.success-fg :weight bold))))
      `(isearch-overlay ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
      `(lazy-highlight-overlay ((t (:background ,.bg-dim :box (:line-width -1 :color ,.purple)))))
      `(match-overlay ((t (:background ,.bg-selection :foreground ,.green))))
@@ -81,7 +92,7 @@
      `(homoglyph ((t (:foreground ,.yellow))))
      `(nobreak-hyphen ((t (:foreground ,.yellow))))
      `(nobreak-space ((t (:foreground ,.yellow :underline t))))
-     `(trailing-whitespace ((t (:background ,.error-muted :foreground ,.fg-bright))))
+     `(trailing-whitespace ((t (:background ,.diff-removed-bg :foreground ,.fg-bright))))
 
      ;; == MODELINE ==
      `(mode-line ((t (:background ,.bg-main :foreground ,.grey-subtle :weight light
@@ -110,12 +121,12 @@
      `(font-lock-string-face ((t (:foreground ,.yellow))))
      `(font-lock-type-face ((t (:foreground ,.blue))))
      `(font-lock-variable-name-face ((t (:foreground ,.lavender))))
-     `(font-lock-warning-face ((t (:foreground ,.warning-muted :weight bold))))
+     `(font-lock-warning-face ((t (:foreground ,.warning-fg :weight bold))))
 
      ;; == TREE-SITTER SUPPORT ==
-     `(treesit-font-lock-function-call-face ((t (:foreground ,.purple))))
-     `(treesit-font-lock-variable-use-face ((t (:foreground ,.lavender))))
-     `(treesit-font-lock-property-use-face ((t (:foreground ,.blue))))
+     `(font-lock-function-call-face ((t (:foreground ,.purple))))
+     `(font-lock-variable-use-face ((t (:foreground ,.lavender))))
+     `(font-lock-property-use-face ((t (:foreground ,.blue))))
      `(treesit-font-lock-number-face ((t (:foreground ,.purple :weight bold))))
      `(treesit-font-lock-operator-face ((t (:foreground ,.magenta))))
      `(treesit-font-lock-bracket-face ((t (:foreground ,.grey-border))))
@@ -134,25 +145,12 @@
      `(treesit-font-lock-field-face ((t (:foreground ,.teal))))
      `(treesit-font-lock-method-face ((t (:foreground ,.purple :slant italic))))
 
-     ;; Tree-sitter Semantic Tokens
-     `(treesit-font-lock-class-face ((t (:foreground ,.blue :weight bold))))
-     `(treesit-font-lock-interface-face ((t (:foreground ,.teal :slant italic))))
-     `(treesit-font-lock-enum-face ((t (:foreground ,.magenta :weight bold))))
-     `(treesit-font-lock-struct-face ((t (:foreground ,.blue :weight normal))))
-     `(treesit-font-lock-namespace-face ((t (:foreground ,.lavender :weight bold))))
-     `(treesit-font-lock-module-face ((t (:foreground ,.purple :underline t))))
-     `(treesit-font-lock-macro-face ((t (:foreground ,.yellow :weight bold :slant italic))))
-     `(treesit-font-lock-attribute-face ((t (:foreground ,.grey-docstring :slant italic))))
-     `(treesit-font-lock-parameter-face ((t (:foreground ,.rose :slant italic))))
-     `(treesit-font-lock-field-face ((t (:foreground ,.teal))))
-     `(treesit-font-lock-method-face ((t (:foreground ,.purple :slant italic))))
-
      ;; Whitespace
      `(whitespace-space ((t (:foreground ,.grey-border))))
      `(whitespace-tab ((t (:foreground ,.grey-border))))
      `(whitespace-newline ((t (:foreground ,.grey-border))))
-     `(whitespace-trailing ((t (:background ,.error-muted))))
-     `(whitespace-empty ((t (:background ,.warning-muted))))
+     `(whitespace-trailing ((t (:background ,.diff-removed-bg))))
+     `(whitespace-empty ((t (:background ,.diff-changed-bg))))
 
      ;; tab-bar-mode
      `(tab-bar ((t (:background ,.bg-main :foreground ,.fg-main))))
@@ -201,7 +199,7 @@
      `(org-block-end-line ((t (:foreground ,.grey-comment-blue :background ,.bg-alt :extend t :weight bold))))
      `(org-code ((t (:foreground ,.yellow :background ,.bg-contrast))))
      `(org-verbatim ((t (:foreground ,.green :background ,.bg-contrast))))
-     `(org-quote ((t (:background ,.bg-contrast :foreground ,.fg-main :slant italic :extend t :border-left (:width 3 :color ,.purple)))))
+     `(org-quote ((t (:background ,.bg-contrast :foreground ,.fg-main :slant italic :extend t))))
      `(org-checkbox ((t (:foreground ,.purple :weight bold))))
      `(org-checkbox-done-text ((t (:foreground ,.grey-border :strike-through t))))
      `(org-table ((t (:foreground ,.fg-main :background ,.bg-code))))
@@ -219,7 +217,7 @@
      `(org-upcoming-deadline ((t (:foreground ,.yellow :slant italic))))
      `(org-deadline-announce ((t (:foreground ,.magenta :weight bold))))
      `(org-time-grid ((t (:foreground ,.grey-border))))
-     `(org-warning ((t (:foreground ,.error-muted :weight bold))))
+     `(org-warning ((t (:foreground ,.error-fg :weight bold))))
 
      `(org-superstar-leading-bullet-face ((t (:foreground ,.grey-subtle))))
      `(org-superstar-item-bullet-face ((t (:foreground ,.purple))))
@@ -287,7 +285,7 @@
      ;; Conventional Commit
      `(conventional-commit-type-face ((t (:foreground ,.magenta :weight bold))))
      `(conventional-commit-scope-face ((t (:foreground ,.yellow :slant italic))))
-     `(conventional-commit-breaking-change-face ((t (:foreground ,.error-muted :weight bold :underline t))))
+     `(conventional-commit-breaking-change-face ((t (:foreground ,.error-fg :weight bold :underline t))))
 
      `(diff-added ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg))))
      `(diff-removed ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg))))
@@ -446,8 +444,8 @@
      `(flycheck-error-list-checker-name ((t (:foreground ,.yellow))))
      `(flycheck-error-list-id ((t (:foreground ,.purple))))
      `(flycheck-error-list-id-with-explainer ((t (:foreground ,.purple :box (:line-width -1 :color ,.purple)))))
-     `(flycheck-inline-error ((t (:background ,.error-muted :foreground ,.magenta :box (:line-width -1 :color ,.magenta)))))
-     `(flycheck-inline-warning ((t (:background ,.warning-muted :foreground ,.yellow :box (:line-width -1 :color ,.yellow)))))
+     `(flycheck-inline-error ((t (:background ,.diff-removed-bg :foreground ,.error-fg :box (:line-width -1 :color ,.error-fg)))))
+     `(flycheck-inline-warning ((t (:background ,.diff-changed-bg :foreground ,.warning-fg :box (:line-width -1 :color ,.warning-fg)))))
      `(flycheck-inline-info ((t (:background ,.bg-contrast :foreground ,.purple :box (:line-width -1 :color ,.purple)))))
      `(flycheck-color-mode-line-error-face ((t (:foreground ,.magenta :weight bold))))
      `(flycheck-color-mode-line-warning-face ((t (:foreground ,.yellow :weight bold))))
@@ -475,8 +473,8 @@
      `(flycheck-error-overlay ((t (:underline (:style wave :color ,.magenta) :background ,.bg-contrast))))
      `(flycheck-warning-overlay ((t (:underline (:style wave :color ,.yellow) :background ,.bg-contrast))))
      `(flycheck-info-overlay ((t (:underline (:style wave :color ,.purple) :background ,.bg-contrast))))
-     `(flycheck-overlay-error ((t :background ,.error-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
-     `(flycheck-overlay-warning ((t :background ,.warning-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
+     `(flycheck-overlay-error ((t :background ,.diff-removed-bg :foreground ,.error-fg :height 0.9 :weight normal)))
+     `(flycheck-overlay-warning ((t :background ,.diff-changed-bg :foreground ,.warning-fg :height 0.9 :weight normal)))
      `(flycheck-overlay-info ((t :background ,.info-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
 
      ;; == FLYMAKE FACES ==
@@ -579,7 +577,7 @@
      `(corfu-bar ((t (:background ,.grey-border))))
      `(corfu-border ((t (:background ,.bg-special))))
      `(corfu-deprecated ((t (:foreground ,.grey-subtle :strike-through t))))
-     `(corfu-annotation ((t (:foreground ,.grey-subtle :slant italic))))
+     `(corfu-annotations ((t (:foreground ,.grey-subtle :slant italic))))
      `(corfu-echo ((t (:foreground ,.grey-subtle :slant italic))))
      `(corfu-metadata-face ((t (:foreground ,.grey-subtle))))
      `(corfu-documentation-face ((t (:foreground ,.grey-subtle))))
@@ -720,8 +718,14 @@
      `(mood-line-segment-misc ((t (:foreground ,.grey-docstring :weight light))))
 
      ;; Line numbers
-     `(line-number ((t (:foreground ,.bg-inactive-sel :background ,.bg-main :box (:line-width (-1 . 4) :color ,.bg-main)))))
-     `(line-number-current-line ((t (:foreground ,.purple :box (:line-width (-1 . 4) :color ,.bg-main)))))
+     `(line-number ((((class color) (min-colors 16))
+                     (:foreground ,.grey-docstring :background ,.bg-main
+                      :box (:line-width (-1 . 4) :color ,.bg-main)))
+                    (t (:inherit default))))
+     `(line-number-current-line ((((class color) (min-colors 16))
+                                  (:foreground ,.purple :background ,.bg-main
+                                   :box (:line-width (-1 . 4) :color ,.bg-main)))
+                                 (t (:inherit default :weight bold :inverse-video t))))
      ;;`(line-number-major-tick ((t (:foreground ,.yellow :background ,.bg-main :weight bold))))
      ;;`(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
      ;;`(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
@@ -732,7 +736,7 @@
      ;; Parentheses
      `(show-paren-match ((t (:foreground ,.green :weight bold))))
      `(show-paren-match-expression ((t (:background ,.bg-contrast))))
-     `(show-paren-mismatch ((t (:background ,.error-muted :foreground ,.fg-popup :weight bold :strike-through t))))
+     `(show-paren-mismatch ((t (:background ,.diff-removed-bg :foreground ,.fg-popup :weight bold :strike-through t))))
      `(sp-pair-overlay-face ((t (:background ,.bg-contrast))))
      `(sp-show-pair-match-face ((t (:foreground ,.visual-selection :weight ultra-bold))))
      `(sp-show-pair-mismatch-face ((t (:background ,.magenta :foreground ,.fg-bright :weight bold))))
@@ -747,8 +751,8 @@
      `(rainbow-delimiters-depth-7-face ((t (:foreground ,.purple))))
      `(rainbow-delimiters-depth-8-face ((t (:foreground ,.green))))
      `(rainbow-delimiters-depth-9-face ((t (:foreground ,.yellow))))
-     `(rainbow-delimiters-unmatched-face ((t (:background ,.error-muted :foreground ,.fg-bright :strike-through t))))
-     `(rainbow-delimiters-mismatched-face ((t (:background ,.error-muted :foreground ,.fg-bright :strike-through t))))
+     `(rainbow-delimiters-unmatched-face ((t (:background ,.diff-removed-bg :foreground ,.fg-bright :strike-through t))))
+     `(rainbow-delimiters-mismatched-face ((t (:background ,.diff-removed-bg :foreground ,.fg-bright :strike-through t))))
 
      ;; Sideline packages
      `(sideline-flycheck-error-face ((t (:foreground ,.magenta))))
@@ -842,7 +846,7 @@
      `(symbol-overlay-current-face ((t (:background ,.purple :foreground ,.bg-main))))
      `(treesitter-context-face ((t (:background ,.bg-code :foreground ,.grey-subtle :height 0.9))))
      `(treesit-fold-face ((t (:foreground ,.grey-border))))
-     `(cognitive-complexity-highlight-face ((t (:background ,.warning-muted :foreground ,.bg-main))))
+     `(cognitive-complexity-highlight-face ((t (:background ,.diff-changed-bg :foreground ,.warning-fg))))
 
      ;; == VISUAL-REGEXP FACES ==
      `(vr/match-0 ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
@@ -927,8 +931,6 @@
      `(diary-time ((t (:foreground ,.grey-docstring))))
 
      ;; == BOOKMARK FACES ==
-     `(bookmark-menu-heading ((t (:foreground ,.purple :weight bold :height 1.1))))
-     `(bookmark-menu-bookmark ((t (:foreground ,.fg-main))))
      `(bookmark-menu-file-name ((t (:foreground ,.blue))))
      `(bookmark-menu-annotation ((t (:foreground ,.grey-docstring :slant italic))))
 
@@ -977,7 +979,6 @@
      `(mc/region-face ((t (:background ,.visual-selection))))
 
      ;; Symbol Overlay Enhanced
-     `(symbol-overlay-default-face ((t (:background ,.focus-bg :box (:line-width 1 :color ,.purple)))))
      `(symbol-overlay-face-1 ((t (:background ,.purple :foreground ,.bg-main))))
      `(symbol-overlay-face-2 ((t (:background ,.magenta :foreground ,.bg-main))))
      `(symbol-overlay-face-3 ((t (:background ,.green :foreground ,.bg-main))))
@@ -988,10 +989,8 @@
      `(symbol-overlay-face-8 ((t (:background ,.lavender :foreground ,.bg-main))))
 
      ;; Smartparens Enhanced
-     `(sp-pair-overlay-face ((t (:background ,.bg-selection))))
      `(sp-wrap-overlay-opening-pair ((t (:background ,.purple :foreground ,.bg-main))))
      `(sp-wrap-overlay-closing-pair ((t (:background ,.purple :foreground ,.bg-main))))
-     `(sp-wrap-overlay-face ((t (:background ,.bg-contrast))))
 
      ;; Better Jumper
      `(better-jumper-visited-face ((t (:background ,.focus-bg :foreground ,.purple))))
@@ -1012,36 +1011,6 @@
                (cons "DEBUG" (list :foreground .purple :weight 'bold))
                (cons "NOTE"  (list :foreground .blue :weight 'bold))
                (cons "DONE"  (list :foreground .green :weight 'bold)))))))
-
-(defun tale-themes--hooks-function (palette)
-  "apply special face properties using PALETTE."
-  (let-alist palette
-    ;; special fringes
-    (setq-local left-fringe-width 30
-                right-fringe-width 30
-                default-text-properties '(line-spacing 0 line-height 1)
-                truncate-lines t)
-
-    ;; update fringes in all windows showing this buffer
-    ;; setq-local only affects new windows, must update existing windows explicitly
-    (dolist (window (get-buffer-window-list (current-buffer) nil t))
-      (set-window-fringes window 30 30))
-
-    ;; add buffer-local hook to re-apply fringes when window state changes
-    ;; this catches cases like transient opening/closing that might reset fringes
-    (add-hook 'window-state-change-hook
-              (lambda ()
-                (when (eq (current-buffer) (window-buffer))
-                  (dolist (window (get-buffer-window-list (current-buffer) nil t))
-                    (set-window-fringes window 30 30))))
-              nil t)
-
-    (face-remap-add-relative 'fringe :background .bg-special)
-
-    ;; special background
-    (setq-local buffer-face-mode-face
-                `(:background ,.bg-special :foreground ,.fg-bright :height 0.9))
-    (buffer-face-mode 1)))
 
 (defgroup tale-themes-group nil
   "Customization for the Tale Themes."
@@ -1068,20 +1037,79 @@
   :type '(repeat symbol)
   :group 'tale-themes-group)
 
-(defun tale-themes--setup-hooks (theme-name palette)
-  "Set up autoload hooks with PALETTE colors.
-THEME-NAME is used to store cleanup functions in the appropriate variable."
-  (when load-file-name
-    (let ((hooks-function (lambda () (tale-themes--hooks-function palette))))
-      (dolist (hook tale-themes-special-modes)
-        (add-hook hook hooks-function)
-        ;; Store cleanup function
-        (when (boundp (intern (concat (symbol-name theme-name) "-theme--cleanup-functions")))
-          (push (lambda () (remove-hook hook hooks-function))
-                (symbol-value (intern (concat (symbol-name theme-name) "-theme--cleanup-functions"))))))
+(defvar-local tale-themes--special-buffer-p nil
+  "Whether a special buffer hook has run in this buffer.")
 
-      (add-to-list 'custom-theme-load-path
-                   (file-name-as-directory (file-name-directory load-file-name))))))
+(defvar-local tale-themes--special-buffer-settings nil
+  "Saved local variable bindings from before Tale styling.")
+
+(defvar-local tale-themes--special-remaps nil
+  "Face remapping cookies owned by Tale.")
+
+(defvar-local tale-themes--special-window-fringes nil
+  "Original fringe widths of windows styled by Tale.")
+
+(defun tale-themes--style-special-buffer ()
+  "Apply Tale styling once to the current buffer."
+  (setq tale-themes--special-buffer-p t)
+  (unless tale-themes--special-remaps
+    (dolist (variable '(left-fringe-width right-fringe-width
+                        default-text-properties truncate-lines))
+      (push (list variable (local-variable-p variable) (symbol-value variable))
+            tale-themes--special-buffer-settings))
+    (setq-local left-fringe-width 30
+                right-fringe-width 30
+                default-text-properties '(line-spacing 0 line-height 1)
+                truncate-lines t)
+    (setq tale-themes--special-remaps
+          (list (face-remap-add-relative 'default 'tale-themes-special-buffer)
+                (face-remap-add-relative 'fringe 'tale-themes-special-fringe)))
+    (add-hook 'change-major-mode-hook #'tale-themes--unstyle-special-buffer nil t)
+    (dolist (window (get-buffer-window-list (current-buffer) nil t))
+      (push (cons window (window-fringes window))
+            tale-themes--special-window-fringes)
+      (set-window-fringes window 30 30))))
+
+(defun tale-themes--unstyle-special-buffer ()
+  "Remove Tale's remaps and restore the buffer's previous layout."
+  (when tale-themes--special-remaps
+    (remove-hook 'change-major-mode-hook #'tale-themes--unstyle-special-buffer t)
+    (mapc #'face-remap-remove-relative tale-themes--special-remaps)
+    (pcase-dolist (`(,variable ,local-p ,value) tale-themes--special-buffer-settings)
+      (if local-p
+          (set variable value)
+        (kill-local-variable variable)))
+    (dolist (window (get-buffer-window-list (current-buffer) nil t))
+      (if-let* ((saved (assq window tale-themes--special-window-fringes)))
+          (apply #'set-window-fringes window (cdr saved))
+        (set-window-fringes window left-fringe-width right-fringe-width)))
+    (setq tale-themes--special-remaps nil
+          tale-themes--special-buffer-settings nil
+          tale-themes--special-window-fringes nil)))
+
+(defun tale-themes--sync-special-buffers (theme)
+  "Synchronize special buffer styling after a change to THEME."
+  (when (get theme 'tale-theme)
+    (let ((active (seq-some (lambda (enabled) (get enabled 'tale-theme))
+                            custom-enabled-themes)))
+      (dolist (hook tale-themes-special-modes)
+        (if active
+            (add-hook hook #'tale-themes--style-special-buffer)
+          (remove-hook hook #'tale-themes--style-special-buffer)))
+      (dolist (buffer (buffer-list))
+        (with-current-buffer buffer
+          (if active
+              (when (or tale-themes--special-buffer-p
+                        (seq-some
+                         (lambda (mode)
+                           (memq (intern-soft (concat (symbol-name mode) "-hook"))
+                                 tale-themes-special-modes))
+                         (derived-mode-all-parents major-mode)))
+                (tale-themes--style-special-buffer))
+            (tale-themes--unstyle-special-buffer)))))))
+
+(add-hook 'enable-theme-functions #'tale-themes--sync-special-buffers)
+(add-hook 'disable-theme-functions #'tale-themes--sync-special-buffers)
 
 ;; == UTILITY FUNCTIONS ==
 
@@ -1124,17 +1152,6 @@ THEME-NAME is used to store cleanup functions in the appropriate variable."
       (disable-theme current-theme))
     (load-theme next-theme t)
     (message "Switched to %s theme" next-theme)))
-
-;; Add symbol prefix to current vertico item
-(with-eval-after-load 'vertico
-  (defun consoli-config/vertico-format-candidate-with-prefix (orig-fun cand prefix suffix index start)
-    "Add a symbol prefix to the currently selected vertico candidate."
-    (let* ((result (funcall orig-fun cand prefix suffix index start))
-           (current-p (= vertico--index index))
-           (symbol (if current-p "❯" " ")))
-      (concat symbol result)))
-
-  (advice-add 'vertico--format-candidate :around #'consoli-config/vertico-format-candidate-with-prefix))
 
 (provide 'tale-themes-common)
 ;;; tale-themes-common.el ends here

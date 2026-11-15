@@ -40,9 +40,9 @@
          (visual-selection . "#4a3a5a")
          (inactive-selection . "#2a2a2a")
 
-         (success-muted . "#6b9b47")
-         (warning-muted . "#d4a574")
-         (error-muted . "#e74c3c")
+         (success-fg . "#7EC699")
+         (warning-fg . "#D4A574")
+         (error-fg . "#FF8FA3")
          (info-muted . "#7a8fb5")
 
          (diff-added-bg . "#0d3a1f")
@@ -56,8 +56,7 @@
          (completion-bg . "#1a1a1a"))))
 
   (tale-themes--create-theme 'dark-tale dark-palette)
-  (tale-themes--set-variables 'dark-tale dark-palette)
-  (tale-themes--setup-hooks 'dark-tale dark-palette))
+  (tale-themes--set-variables 'dark-tale dark-palette))
 
 ;;;###autoload
 (defun dark-tale-theme ()

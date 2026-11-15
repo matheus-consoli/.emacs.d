@@ -40,9 +40,9 @@
          (visual-selection . "#8b2635")
          (inactive-selection . "#3d2832")
 
-         (success-muted . "#4a5a4a")
-         (warning-muted . "#8b6914")
-         (error-muted . "#5d1a1a")
+         (success-fg . "#A4CBA4")
+         (warning-fg . "#E7C453")
+         (error-fg . "#F2A0A0")
          (info-muted . "#4a3d5a")
 
          (diff-added-bg . "#2d4a2d")
@@ -56,8 +56,7 @@
          (completion-bg . "#2d2327"))))
 
   (tale-themes--create-theme 'vampire-tale vampire-palette)
-  (tale-themes--set-variables 'vampire-tale vampire-palette)
-  (tale-themes--setup-hooks 'vampire-tale vampire-palette))
+  (tale-themes--set-variables 'vampire-tale vampire-palette))
 
 ;;;###autoload
 (defun vampire-tale-theme ()

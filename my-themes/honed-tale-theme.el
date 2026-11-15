@@ -40,9 +40,9 @@
          (visual-selection . "#4A4A50")
          (inactive-selection . "#303033")
 
-         (success-muted . "#6A9A7A")
-         (warning-muted . "#C0A478")
-         (error-muted . "#BA7070")
+         (success-fg . "#8ABA9A")
+         (warning-fg . "#C0A478")
+         (error-fg . "#CA8A8A")
          (info-muted . "#7A8A9A")
 
          (diff-added-bg . "#1A2A20")
@@ -56,8 +56,7 @@
          (completion-bg . "#252527"))))
 
   (tale-themes--create-theme 'honed-tale honed-palette)
-  (tale-themes--set-variables 'honed-tale honed-palette)
-  (tale-themes--setup-hooks 'honed-tale honed-palette))
+  (tale-themes--set-variables 'honed-tale honed-palette))
 
 ;;;###autoload
 (defun honed-tale-theme ()

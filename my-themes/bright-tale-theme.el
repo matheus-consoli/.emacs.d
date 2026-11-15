@@ -40,9 +40,9 @@
          (visual-selection . "#e0e7ff")
          (inactive-selection . "#e5e5e5")
 
-         (success-muted . "#059669")
-         (warning-muted . "#d97706")
-         (error-muted . "#dc2626")
+         (success-fg . "#166534")
+         (warning-fg . "#8a4b0e")
+         (error-fg . "#9f1d32")
          (info-muted . "#2563eb")
 
          (diff-added-bg . "#dcfce7")
@@ -56,8 +56,7 @@
          (completion-bg . "#f9fafb"))))
 
   (tale-themes--create-theme 'bright-tale bright-palette)
-  (tale-themes--set-variables 'bright-tale bright-palette)
-  (tale-themes--setup-hooks 'bright-tale bright-palette))
+  (tale-themes--set-variables 'bright-tale bright-palette))
 
 ;;;###autoload
 (defun bright-tale-theme ()

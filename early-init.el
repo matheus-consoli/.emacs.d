@@ -93,7 +93,7 @@
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (require 'font-config)
 
-;; Initialize font scaling early to prevent startup flicker
+;; Register font setup before startup creates the first graphical frame.
 (consoli-fonts/init)
 
 ;; from minimal-emacs.d

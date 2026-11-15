@@ -6,6 +6,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'org)
 
 (defgroup org-fringe-levels nil
@@ -44,35 +45,42 @@
     (push ov org-fringe-levels--overlays)
     ov))
 
+(defun org-fringe-levels--add-indicators (beg end)
+  "Add indicators for headings between BEG and END."
+  (save-match-data
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward "^\\*+ " end t)
+        (let ((level (1- (- (match-end 0) (match-beginning 0)))))
+          (org-fringe-levels--add-indicator (match-beginning 0) level))))))
+
 (defun org-fringe-levels--refresh ()
   "Refresh all fringe indicators in current buffer."
   (when (and org-fringe-levels-mode (derived-mode-p 'org-mode))
     (org-fringe-levels--clear-overlays)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^\\*+ " nil t)
-        (let ((level (1- (- (match-end 0) (match-beginning 0)))))
-          (org-fringe-levels--add-indicator (match-beginning 0) level))))))
+    (save-restriction
+      (widen)
+      (org-fringe-levels--add-indicators (point-min) (point-max)))))
 
-(defun org-fringe-levels--after-change (beg _end _len)
-  "Refresh indicators after buffer change at BEG."
+(defun org-fringe-levels--after-change (beg end _len)
+  "Refresh indicators on lines affected by a change from BEG to END."
   (when org-fringe-levels-mode
-    (save-excursion
-      (goto-char beg)
-      (let ((line-beg (line-beginning-position))
-            (line-end (line-end-position)))
-        ;; Remove overlays on this line
-        (dolist (ov org-fringe-levels--overlays)
-          (when (and (overlay-buffer ov)
-                     (<= line-beg (overlay-start ov))
-                     (<= (overlay-start ov) line-end))
-            (setq org-fringe-levels--overlays (delq ov org-fringe-levels--overlays))
-            (delete-overlay ov)))
-        ;; Add indicator if this is a heading
-        (goto-char line-beg)
-        (when (looking-at "^\\*+ ")
-          (let ((level (1- (- (match-end 0) (match-beginning 0)))))
-            (org-fringe-levels--add-indicator (match-beginning 0) level)))))))
+    (save-restriction
+      (widen)
+      (save-excursion
+        (goto-char beg)
+        (let ((line-beg (line-beginning-position))
+              (line-end (progn (goto-char end) (line-end-position))))
+          (setq org-fringe-levels--overlays
+                (cl-delete-if
+                 (lambda (overlay)
+                   (let ((start (overlay-start overlay)))
+                     (cond ((null start) t)
+                           ((<= line-beg start line-end)
+                            (delete-overlay overlay)
+                            t))))
+                 org-fringe-levels--overlays))
+          (org-fringe-levels--add-indicators line-beg line-end))))))
 
 (defun org-fringe-levels--enable ()
   "Enable fringe level indicators."

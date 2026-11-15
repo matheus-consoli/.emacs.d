@@ -47,9 +47,9 @@
          (inactive-selection . "#252527")  ; Inactive
 
          ;; Status colors
-         (success-muted . "#5FC0AC")    ; Success
-         (warning-muted . "#E89B5F")    ; Warning
-         (error-muted . "#F56476")      ; Error
+         (success-fg . "#5FC0AC")    ; Success
+         (warning-fg . "#E89B5F")    ; Warning
+         (error-fg . "#F56476")      ; Error
          (info-muted . "#6B9BD4")       ; Info
 
          ;; Diff colors
@@ -65,8 +65,7 @@
          (completion-bg . "#1A1A1C"))))  ; Completions
 
   (tale-themes--create-theme 'sophisticated-dark-tale sophisticated-dark-palette)
-  (tale-themes--set-variables 'sophisticated-dark-tale sophisticated-dark-palette)
-  (tale-themes--setup-hooks 'sophisticated-dark-tale sophisticated-dark-palette))
+  (tale-themes--set-variables 'sophisticated-dark-tale sophisticated-dark-palette))
 
 ;;;###autoload
 (defun sophisticated-dark-tale-theme ()

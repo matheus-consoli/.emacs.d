@@ -118,8 +118,40 @@
   (when (daemonp)
     (global-set-key (kbd "C-x C-c") #'delete-frame))
   (advice-add #'repeat-mode :around #'shut-up--advice)
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+  (require 'crm)
+  (if (boundp 'crm-prompt)
+      (setopt crm-prompt "[CRM%s] %p")
+    (advice-add #'completing-read-multiple :filter-args #'crm-indicator))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
+
+(defun consoli-config/completion-preview-obscured-p ()
+  "Return non-nil when Corfu or Copilot is showing a suggestion."
+  (or (and (bound-and-true-p copilot-mode)
+           (fboundp 'copilot--overlay-visible)
+           (copilot--overlay-visible))
+      (and (bound-and-true-p corfu-mode)
+           (bound-and-true-p corfu--candidates)
+           (bound-and-true-p corfu--frame)
+           (frame-live-p corfu--frame)
+           (eq (frame-parent corfu--frame) (selected-frame))
+           (frame-visible-p corfu--frame))))
+
+(defun consoli-config/hide-obscured-completion-preview (&rest _)
+  "Clear Completion Preview when another suggestion is displayed."
+  (when (and (bound-and-true-p completion-preview-mode)
+             (consoli-config/completion-preview-obscured-p))
+    (completion-preview-hide)))
+
+(with-eval-after-load 'completion-preview
+  (when (boundp 'completion-preview-inhibit-functions)
+    (add-hook 'completion-preview-inhibit-functions
+              #'consoli-config/completion-preview-obscured-p)
+    (with-eval-after-load 'corfu
+      (advice-add 'corfu--popup-show :after
+                  #'consoli-config/hide-obscured-completion-preview))
+    (with-eval-after-load 'copilot
+      (advice-add 'copilot--show-completion :after
+                  #'consoli-config/hide-obscured-completion-preview))))
 
 (use-package helpful
   :bind
@@ -142,6 +174,13 @@
 
   :config
   (require 'vertico-quick)
+  (defun consoli-config/vertico-format-candidate-with-prefix
+      (format-candidate candidate prefix suffix index start)
+    "Add a marker to the selected Vertico candidate."
+    (concat (if (= vertico--index index) "❯" " ")
+            (funcall format-candidate candidate prefix suffix index start)))
+  (advice-add 'vertico--format-candidate :around
+              #'consoli-config/vertico-format-candidate-with-prefix)
   (defun consoli-config/setup-vertico ()
     "Initialize Vertico completion system."
     (vertico-mode)
@@ -153,8 +192,6 @@
   :requires posframe
   :custom
   (vertico-posframe-poshandler 'consoli-config/vertico-posframe-conditional-echo-poshandler)
-  (vertico-posframe-font (consoli-fonts/get 'ui))
-  (vertico-posframe-border-width 10)
   (vertico-posframe-truncate-lines nil)
   (vertico-posframe-border-width 0)
   (vertico-posframe-parameters '((left-fringe . 12)
@@ -164,41 +201,45 @@
   :config
   (defun consoli-config/vertico-posframe-conditional-echo-poshandler (info)
     "Position posframe over echo area only when echo area is directly below the current window."
-    (let* ((window (plist-get info :parent-window))
-           (frame (window-frame window))
-           (frame-pixel-height  (frame-pixel-height frame))
-           (window-edges (window-pixel-edges window))
-           (window-bottom (nth 3 window-edges))
-           (window-left (nth 0 window-edges))
-           (window-right (nth 2 window-edges))
-           (echo-area-height (window-pixel-height (minibuffer-window frame)))
-           (echo-area-top (- frame-pixel-height echo-area-height))
-           ;; Check if echo area is directly below the window (within a few pixels tolerance)
-           (echo-below-window-p (<= (abs (- window-bottom echo-area-top)) 5))
-           (posframe-width (plist-get info :posframe-width)))
+    (if (not (display-graphic-p (window-frame (plist-get info :parent-window))))
+        (posframe-poshandler-frame-bottom-center info)
+      (let* ((window (plist-get info :parent-window))
+             (frame (window-frame window))
+             (frame-pixel-height  (frame-pixel-height frame))
+             (window-edges (window-pixel-edges window))
+             (window-bottom (nth 3 window-edges))
+             (window-left (nth 0 window-edges))
+             (window-right (nth 2 window-edges))
+             (echo-area-height (window-pixel-height (minibuffer-window frame)))
+             (echo-area-top (- frame-pixel-height echo-area-height))
+             ;; Check if echo area is directly below the window (within a few pixels tolerance)
+             (echo-below-window-p (<= (abs (- window-bottom echo-area-top)) 5))
+             (posframe-width (plist-get info :posframe-width)))
 
-      (if echo-below-window-p
-          ;; Position over echo area when it's below the window
-          (cons (+ window-left (/ (- (- window-right window-left) posframe-width) 2))
-                (- frame-pixel-height (+ 10 (* echo-area-height (+ 2 vertico-count)))))
-        ;; Fallback to normal bottom-center positioning
-        (posframe-poshandler-window-bottom-center info))))
+        (if echo-below-window-p
+            ;; Position over echo area when it's below the window
+            (cons (+ window-left (/ (- (- window-right window-left) posframe-width) 2))
+                  (- frame-pixel-height (+ 10 (* echo-area-height (+ 2 vertico-count)))))
+          ;; Fallback to normal bottom-center positioning
+          (posframe-poshandler-window-bottom-center info)))))
 
   (defun consoli-config/vertico-posframe-size (buffer)
     "Set posframe width to match current window, with fixed height adjusted for line-spacing."
-    (let* ((window (selected-window))
-           (window-edges (window-pixel-edges window))
-           (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
-           (char-width (frame-char-width))
-           (width-chars (/ window-width char-width))
-           ;; Adjust height by 1.3 to account for line-height
-           (base-height (+ 2 vertico-count))
-           (fixed-height (ceiling (* base-height 1.3))))
-      (list
-       :height fixed-height
-       :width (round width-chars)
-       :min-height fixed-height
-       :min-width (round width-chars))))
+    (if (not (display-graphic-p))
+        (vertico-posframe-get-size buffer)
+      (let* ((window (selected-window))
+             (window-edges (window-pixel-edges window))
+             (window-width (- (nth 2 window-edges) (nth 0 window-edges) (* 2 vertico-posframe-border-width)))
+             (char-width (frame-char-width))
+             (width-chars (/ window-width char-width))
+             ;; Adjust height by 1.3 to account for line-height
+             (base-height (+ 2 vertico-count))
+             (fixed-height (ceiling (* base-height 1.3))))
+        (list
+         :height fixed-height
+         :width (round width-chars)
+         :min-height fixed-height
+         :min-width (round width-chars)))))
 
   ;; Store original mode-line format per window
   (defvar consoli-config/original-mode-line-alist nil
@@ -234,9 +275,15 @@
 
   (defun consoli-config/vertico-posframe-set-line-spacing ()
     "Set line-height for vertico-posframe buffer to center text vertically."
-    (when (and vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
+    (when (and (display-graphic-p)
+               vertico-posframe--buffer (buffer-live-p vertico-posframe--buffer))
       (with-current-buffer vertico-posframe--buffer
         (setq-local default-text-properties '(line-height 1.3)))))
+
+  (defun consoli-config/vertico-posframe-tty-parameters ()
+    "Use terminal defaults for frame padding."
+    (unless (display-graphic-p)
+      (setq-local vertico-posframe-parameters nil)))
 
   (add-hook 'vertico-posframe-mode-hook
             (lambda ()
@@ -245,11 +292,13 @@
                     (add-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
                     (add-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
                     (add-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
+                    (add-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-tty-parameters)
                     (add-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing))
                 (progn
                   (remove-hook 'minibuffer-setup-hook #'consoli-config/hide-mode-line-for-vertico)
                   (remove-hook 'minibuffer-exit-hook #'consoli-config/restore-mode-line-for-vertico)
                   (remove-hook 'minibuffer-setup-hook #'consoli-config/refresh-vertico-posframe)
+                  (remove-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-tty-parameters)
                   (remove-hook 'minibuffer-setup-hook #'consoli-config/vertico-posframe-set-line-spacing)))))
 
   (setq vertico-posframe-size-function #'consoli-config/vertico-posframe-size)
@@ -294,20 +343,23 @@
   :config
   ;; Server programs
   (add-to-list 'eglot-server-programs
-               '(toml-ts-mode . '("taplo" "lsp" "stdio")))
-  (add-to-list 'eglot-server-programs
-               '(markdown-ts-mode . ,(alist-get 'markdown-mode eglot-server-programs)))
+               '(toml-ts-mode . ("taplo" "lsp" "stdio")))
+  (when-let* ((markdown-server (alist-get 'markdown-mode eglot-server-programs)))
+    (add-to-list 'eglot-server-programs
+                 (cons 'markdown-ts-mode markdown-server)))
   ;; (add-to-list 'eglot-server-programs
   ;;              '(lua-ts-mode . '("lua-language-server")))
 
   (defun format-on-eglot ()
-    (when (and (fboundp 'eglot-current-server)
-               (eglot-current-server))
+    (when (and (eglot-managed-p)
+               (eglot-server-capable :documentFormattingProvider))
       (eglot-format-buffer)))
 
   (add-hook 'eglot-managed-mode-hook
             (lambda ()
-              (add-hook 'before-save-hook #'format-on-eglot nil t)))
+              (if (eglot-managed-p)
+                  (add-hook 'before-save-hook #'format-on-eglot nil t)
+                (remove-hook 'before-save-hook #'format-on-eglot t))))
 
   ;; Completion integration
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
@@ -324,15 +376,6 @@
     (add-hook 'orderless-style-dispatchers #'consoli-config/eglot-orderless-dispatch nil 'local)
     (setq-local completion-at-point-functions
                 (list (cape-capf-buster #'eglot-completion-at-point))))
-
-  (defun consoli-config/eglot-auto-save-after-edit (&rest _)
-    "Auto-save buffers after workspace edit."
-    (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        (when (and buffer-file-name (buffer-modified-p))
-          (save-buffer)))))
-
-  (advice-add 'eglot--apply-workspace-edit :after #'consoli-config/eglot-auto-save-after-edit)
 
   :bind (:map eglot-mode-map
               ("C-c l r" . eglot-rename)
@@ -634,18 +677,26 @@ the icons, the total width remains constant."
 
   (defun consoli-config/corfu-set-line-spacing (buffer)
     "Set line-spacing and line-height for corfu popup buffer only."
-    (with-current-buffer buffer
-      (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15))))
+    (let ((graphic (display-graphic-p)))
+      (with-current-buffer buffer
+        (if graphic
+            (consoli-config/set-custom-text-properties)
+          (kill-local-variable 'default-text-properties)
+          (kill-local-variable 'line-spacing)))))
 
   (defun consoli-config/corfu-adjust-popup-height (orig-fun frame x y width height)
     "Adjust corfu popup height to account for line-spacing."
-    (funcall orig-fun frame x y width (ceiling (* height 1.35)))) ;; (+ line-spacing line-height 0.05)
+    (funcall orig-fun frame x y width
+             (if (display-graphic-p) (ceiling (* height 1.35)) height)))
 
   (advice-add 'corfu--make-frame :around #'consoli-config/corfu-adjust-popup-height))
 
 (defun consoli-config/set-custom-text-properties ()
-  "Modern line spacing for current buffer."
-  (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15)))
+  "Add padding around the current buffer's lines."
+  (if (>= emacs-major-version 31)
+      (setq-local line-spacing '(0.075 . 0.075)
+                  default-text-properties '(line-height 1.15))
+    (setq-local default-text-properties '(line-spacing 0.15 line-height 1.15))))
 
 (dolist (hook '(text-mode-hook
                 git-commit-mode-hook))
@@ -692,10 +743,6 @@ the icons, the total width remains constant."
     (consoli-config/set-custom-text-properties)
     ;; Setup completion at point
     (consoli-config/cape-setup-prog)
-    ;; Set programming font
-    (face-remap-add-relative 'default
-                             :family (consoli-fonts/get 'programming)
-                             :height (consoli-fonts/size 'programming))
     ;; Infer indentation style
     (consoli-config/infer-indentation-style))
 
@@ -1042,16 +1089,12 @@ targets."
   (vterm-buffer-name-string "vterm: %s")
   (vterm-kill-buffer-on-exit t)
   (vterm-copy-exclude-prompt t)
-  :config
+  :init
   (defun consoli-config/vterm-setup ()
     "Complete setup for vterm mode."
     ;; Disable some modes that don't work well with vterm
     (toggle-truncate-lines)
     (hl-line-mode -1)
-    ;; Set font
-    (face-remap-add-relative 'default
-                             :family (consoli-fonts/get 'programming)
-                             :height (consoli-fonts/size 'programming))
     ;; Hide modeline
     (consoli-config/hide-modeline))
 
@@ -1143,6 +1186,7 @@ targets."
 
   (defun consoli-config/focus-terminal-window ()
     "Focus the terminal window if visible."
+    (interactive)
     (when (consoli-config/terminal-window-visible-p)
       (select-window consoli-config/terminal-window)))
 
@@ -1358,67 +1402,46 @@ targets."
 ;; Theme configuration
 (defvar consoli-themes
   '((gui . honed-tale)
+    (gui-light . cloud-tale)
     (cli . bright-tale))
   "Theme configuration for different display types.")
 
+(defun consoli-config/gui-theme (appearance)
+  "Return the GUI theme for desktop APPEARANCE."
+  (alist-get (if (eq appearance 'light) 'gui-light 'gui) consoli-themes))
+
 (defun consoli-config/apply-theme ()
-  "Apply appropriate theme based on display type."
+  "Choose the session theme at startup, using the GUI default for a daemon."
   (condition-case err
-      (if (display-graphic-p)
-          (load-theme (alist-get 'gui consoli-themes) t)
-        (load-theme (alist-get 'cli consoli-themes) t))
+      (load-theme (if (or (daemonp) (display-graphic-p))
+                      (consoli-config/gui-theme (and (featurep 'pgtk)
+                                                     (bound-and-true-p toolkit-theme)))
+                    (alist-get 'cli consoli-themes))
+                  t)
     (error (message "Failed to load theme: %s" err))))
+
+(defun consoli-config/follow-desktop-theme (appearance)
+  "Update the active GUI Tale palette for desktop APPEARANCE."
+  (let ((current (car custom-enabled-themes))
+        (next (consoli-config/gui-theme appearance)))
+    (when (and (memq current (list (alist-get 'gui consoli-themes)
+                                   (alist-get 'gui-light consoli-themes)))
+               (not (eq current next)))
+      (load-theme next t)
+      (disable-theme current))))
 
 ;; Initialize theme system
 (setopt custom-theme-directory (expand-file-name "my-themes" user-emacs-directory))
 (add-to-list 'custom-theme-load-path custom-theme-directory)
 
-;; Apply theme on startup and new frames
+;; Custom themes apply to every frame in the session.
 (consoli-config/apply-theme)
-(add-hook 'after-make-frame-functions
-          (lambda (frame)
-            (select-frame frame)
-            (consoli-config/apply-theme)))
+(when (and (featurep 'pgtk) (boundp 'toolkit-theme-set-functions))
+  (add-hook 'toolkit-theme-set-functions #'consoli-config/follow-desktop-theme))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; FONT & FACE CONFIGURATION
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Default UI font
-(set-face-attribute 'default nil
-                    :family (consoli-fonts/get 'ui)
-                    :height (consoli-fonts/size 'ui))
-
-;; Smaller font for transient menus
-(add-hook 'transient-setup-buffer-hook
-          (lambda ()
-            (face-remap-add-relative 'default
-                                     :family (consoli-fonts/get 'ui)
-                                     :height (consoli-fonts/size 'small))))
-
-;; Mode line fonts
-(set-face-attribute 'mode-line nil
-                    :family (consoli-fonts/get 'modeline)
-                    :height (consoli-fonts/size 'modeline))
-
-(set-face-attribute 'mode-line-active nil
-                    :family (consoli-fonts/get 'modeline)
-                    :height (consoli-fonts/size 'modeline))
-
-(set-face-attribute 'mode-line-inactive nil
-                    :family (consoli-fonts/get 'modeline)
-                    :height (consoli-fonts/size 'modeline))
-
-;; Programming-specific face customizations
-(set-face-attribute 'font-lock-comment-face nil
-                    :family (consoli-fonts/get 'programming)
-                    :slant 'italic
-                    :height (consoli-fonts/size 'programming))
-
-;; Tab bar font
-(set-face-attribute 'tab-bar nil
-                    :family (consoli-fonts/get 'alt-mono)
-                    :height (consoli-fonts/size 'tab-bar))
 
 ;; Region selection
 (set-face-attribute 'region nil :extend nil)
@@ -1702,7 +1725,6 @@ targets."
   :hook (after-init . centaur-tabs-mode)
   :config
   (centaur-tabs-headline-match)
-  (centaur-tabs-change-fonts (consoli-fonts/get 'alt-mono) (consoli-fonts/size 'centaur-tabs))
   (consoli-config/setup-centaur-hooks)
   :init
   (defun centaur-tabs-hide-tab (x)
@@ -1849,12 +1871,9 @@ targets."
     (advice-add fn :around #'shut-up--advice))
   (put 'quit 'error-message "")
 
-  (get-buffer-create " *Echo Area 0*")
-  (with-current-buffer " *Echo Area 0*"
-    (face-remap-add-relative 'default `(:inherit mode-line :height ,(consoli-fonts/size 'echo-area) :box nil)))
-  (get-buffer-create " *Echo Area 1*")
-  (with-current-buffer " *Echo Area 1*"
-    (face-remap-add-relative 'default `(:inherit mode-line :height ,(consoli-fonts/size 'echo-area) :box nil))))
+  (dolist (name '(" *Echo Area 0*" " *Echo Area 1*"))
+    (with-current-buffer (get-buffer-create name)
+      (face-remap-add-relative 'default 'consoli-fonts/echo-area))))
 
 (add-hook 'after-init-hook #'consoli-config/setup-echo-area)
 
@@ -1864,7 +1883,10 @@ targets."
 
 (defun consoli-config/hide-modeline ()
   "Hide the mode-line in the current buffer."
-  (setq-local mode-line-format nil))
+  (if (fboundp 'mode-line-invisible-mode)
+      (unless (bound-and-true-p mode-line-invisible-mode)
+        (mode-line-invisible-mode 1))
+    (setq-local mode-line-format nil)))
 
 (dolist (hook '(aidermacs-comint-mode-hook
                 aidermacs-vterm-mode-hook
@@ -1955,8 +1977,7 @@ may not be efficient."
                        (push '("[-]" . "" ) prettify-symbols-alist)
                        (prettify-symbols-mode)))
          (org-mode . rasmus/org-prettify-symbols)
-         (org-after-todo-statistics . org-summary-todo)
-         (org-checkbox-statistics . my/org-checkbox-todo))
+         (org-after-todo-statistics . org-summary-todo))
   :custom
   ;; Basic org settings
   (org-adapt-indentation nil)
@@ -1986,22 +2007,10 @@ may not be efficient."
   (org-verbatim ((t (:inherit (shadow fixed-pitch)))))
   (org-column ((t (:background unspecified))))
   (org-column-title ((t (:background unspecified))))
-  ;; Variable-pitch and other styling
-  (variable-pitch ((t (:family ,(consoli-fonts/get 'org)))))
-  (fixed-pitch ((t (:family ,(consoli-fonts/get 'alt-mono)))))
+  ;; Other styling
   (font-lock-doc-face ((t (:inherit font-lock-string-face))))
   (org-ellipsis ((t (:inherit default :box nil :underline nil :weight ultra-bold))))
   :config
-  ;; Set dynamic font sizes (always applied, respecting scaling preference)
-  (set-face-attribute 'variable-pitch nil
-                      :family (consoli-fonts/get 'org)
-                      :height (consoli-fonts/size 'org))
-  (set-face-attribute 'fixed-pitch nil
-                      :family (consoli-fonts/get 'alt-mono)
-                      :height (consoli-fonts/size 'programming))
-  (set-face-attribute 'font-lock-doc-face nil
-                      :height (consoli-fonts/size 'programming))
-
   ;; Add language modes
   (add-to-list 'org-src-lang-modes (cons "rust" 'rust-ts))
   (add-to-list 'org-src-lang-modes (cons "go" 'go-ts))
@@ -2307,12 +2316,26 @@ may not be efficient."
 
 ;; (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil :underline nil :weight 'ultra-bold)
 
-(use-package treesit-auto
-  :hook (after-init . global-treesit-auto-mode)
-  :custom
-  (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all))
+(when (boundp 'treesit-enabled-modes)
+  (setopt treesit-enabled-modes t
+          treesit-auto-install-grammar 'ask))
+
+(unless (boundp 'treesit-enabled-modes)
+  (use-package treesit-auto
+    :hook (after-init . global-treesit-auto-mode)
+    :custom
+    (treesit-auto-install 'prompt)
+    :config
+    (treesit-auto-add-to-auto-mode-alist 'all))
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode)))
+
+(defun consoli-config/enable-external-grammar (mode recipe)
+  "Ensure the grammar in RECIPE when entering external Tree-sitter MODE."
+  (add-to-list 'treesit-language-source-alist recipe)
+  (when (fboundp 'treesit-ensure-installed)
+    (advice-add mode :before
+                (lambda (&rest _) (treesit-ensure-installed (car recipe))))))
 
 (defun indent-between-pair (&rest _ignored)
   (newline)
@@ -2755,9 +2778,6 @@ may not be efficient."
 ;;  lsp-rust-analyzer-rustc-source "./Cargo.toml"
 ;;  lsp-rust-analyzer-proc-macro-enable t)
 
-(add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-(add-to-list 'major-mode-remap-alist '(lua-mode . lua-ts-mode))
-
 (defun consoli-config/python-eglot-setup ()
   (setq-local eglot-workspace-configuration
               '((:pylsp . (:configurationSources ["flake8"]
@@ -2777,10 +2797,11 @@ may not be efficient."
                                                                                          :cache_config t)))))))
 
 (use-package hyprlang-ts-mode
-  :defer t
+  :mode ("/hypr/.*\\.conf\\'" . hyprlang-ts-mode)
   :config
-  (add-to-list 'treesit-language-source-alist
-               '(hyprlang "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"))
+  (consoli-config/enable-external-grammar
+   'hyprlang-ts-mode
+   '(hyprlang "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"))
   :custom
   (hyprlang-ts-mode-indent-offset 4))
 
@@ -2788,30 +2809,39 @@ may not be efficient."
   :demand t
   :after json-mode)
 
+(unless (>= emacs-major-version 31)
+  (straight-use-package 'markdown-ts-mode)
+  (straight-use-package 'markdown-mode))
+
 (use-package markdown-ts-mode
+  :straight nil
   :mode ("\\.md\\'" . markdown-ts-mode)
-  :defer t
-  :config
-  (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
-  (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src"))
-
+  :init
   (defun my/toggle-markdown-mode ()
-    "toggle between markdown-view-mode and markdown-ts-mode."
+    "Toggle between editing and viewing Markdown."
     (interactive)
-    (if (eq major-mode 'markdown-view-mode)
-        (markdown-ts-mode)
-      (markdown-view-mode)))
+    (cond
+     ((memq major-mode '(markdown-view-mode markdown-ts-view-mode))
+      (markdown-ts-mode)
+      (read-only-mode -1))
+     ((fboundp 'markdown-ts-view-mode)
+      (markdown-ts-view-mode))
+     (t (markdown-view-mode))))
 
-  (add-hook 'markdown-view-mode-hook
-            (lambda ()
-              (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
-              (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode)))
+  (defun consoli-config/markdown-toggle-key ()
+    (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode))
 
-  (add-hook 'markdown-ts-mode-hook
-            (lambda ()
-              (read-only-mode -1)
-              (message "Use `C-x C-q` to toggle between `markdown-view-mode` and `markdown-ts-mode`")
-              (local-set-key (kbd "C-x C-q") #'my/toggle-markdown-mode))))
+  (add-hook 'markdown-view-mode-hook #'consoli-config/markdown-toggle-key)
+  (add-hook 'markdown-ts-view-mode-hook #'consoli-config/markdown-toggle-key)
+  (add-hook 'markdown-ts-mode-hook #'consoli-config/markdown-toggle-key)
+  :config
+  (when (< emacs-major-version 31)
+    (add-to-list 'treesit-language-source-alist
+                 '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                            "split_parser" "tree-sitter-markdown/src"))
+    (add-to-list 'treesit-language-source-alist
+                 '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                                   "split_parser" "tree-sitter-markdown-inline/src"))))
 
 (use-package roc-ts-mode
   :mode ("\\.roc\\'" . roc-ts-mode)
@@ -2819,7 +2849,10 @@ may not be efficient."
   (require 'eglot)
   (add-to-list 'eglot-server-programs
                '(roc-ts-mode . ("/home/consoli/projects/languages/roc_nightly-linux_arm64-2026-09-03-62fcb65/roc"  "experimental-lsp")))
-  (add-hook 'roc-ts-mode-hook #'eglot-ensure))
+  (add-hook 'roc-ts-mode-hook #'eglot-ensure)
+  :config
+  (when-let* ((recipe (assq 'roc treesit-language-source-alist)))
+    (consoli-config/enable-external-grammar 'roc-ts-mode recipe)))
 
 
 (use-package yaml-mode)
@@ -2828,7 +2861,10 @@ may not be efficient."
   :hook ((yaml-mode . yasml-pro-ts-mode)))
 
 (use-package just-ts-mode
-  :defer t)
+  :mode ("/[Jj]ustfile\\'" . just-ts-mode)
+  :config
+  (consoli-config/enable-external-grammar
+   'just-ts-mode just-ts-mode-treesit-language-source))
 
 (use-package unison-ts-mode
   :straight (:host github :repo "fmguerreiro/unison-ts-mode")

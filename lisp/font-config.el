@@ -6,6 +6,9 @@
 
 ;;; Code:
 
+(require 'face-remap)
+(require 'seq)
+
 (defgroup consoli-fonts nil
   "Font configuration."
   :group 'faces
@@ -21,17 +24,16 @@
     (alt-mono    . ("Victor Mono" "Myna")))
   "Font families with fallback preferences.")
 
-(defun consoli-fonts/--available-p (family)
-  "Check if FAMILY is available."
-  (and (display-graphic-p)
-       family
-       (member family (font-family-list))))
-
-(defun consoli-fonts/get (category)
-  "Get first available font for CATEGORY, or monospace."
-  (or (seq-find #'consoli-fonts/--available-p
+(defun consoli-fonts/--family (category available)
+  "Choose the preferred font for CATEGORY from AVAILABLE families."
+  (or (seq-find (lambda (family) (member family available))
                 (alist-get category consoli-fonts/families))
       "monospace"))
+
+(defun consoli-fonts/get (category &optional frame)
+  "Get the preferred family for CATEGORY on FRAME."
+  (consoli-fonts/--family
+   category (when (display-graphic-p frame) (font-family-list frame))))
 
 ;;; Font Sizing
 
@@ -62,168 +64,152 @@
     (comment . 0.9))
   "Font size ratios relative to base size.")
 
-(defun consoli-fonts/--ppi (&optional frame)
-  "Calculate diagonal PPI for FRAME. Falls back to 96."
-  (let* ((frame (or frame (selected-frame)))
-         (px-w (float (display-pixel-width frame)))
-         (px-h (float (display-pixel-height frame)))
-         (mm-w (display-mm-width frame))
-         (mm-h (display-mm-height frame)))
-    (if (and mm-w mm-h (> mm-w 0) (> mm-h 0))
-        (let ((diag-px (sqrt (+ (* px-w px-w) (* px-h px-h))))
-              (diag-mm (sqrt (+ (* (float mm-w) (float mm-w))
-                                (* (float mm-h) (float mm-h))))))
-          (/ diag-px (/ diag-mm 25.4)))
+(defun consoli-fonts/--ppi (frame)
+  "Return the dominant monitor's PPI for FRAME, or 96 when unknown."
+  (let* ((monitor (and (display-graphic-p frame)
+                       (frame-monitor-attributes frame)))
+         (geometry (alist-get 'geometry monitor))
+         (width (nth 2 geometry))
+         (height (nth 3 geometry))
+         (mm-size (alist-get 'mm-size monitor))
+         (mm-width (car mm-size))
+         (mm-height (cadr mm-size)))
+    (if (and width height mm-width mm-height
+             (> width 0) (> height 0) (> mm-width 0) (> mm-height 0))
+        (* 25.4 (sqrt (/ (+ (* width width) (* height height))
+                         (float (+ (* mm-width mm-width) (* mm-height mm-height))))))
       96.0)))
 
-(defun consoli-fonts/--ppi-scale (&optional frame)
-  "Font scale based on PPI. High PPI needs larger fonts."
-  (let ((ppi (consoli-fonts/--ppi frame)))
-    (cond
-     ((< ppi 100) 1.0)
-     ((< ppi 140) (+ 1.0 (* 0.001 (- ppi 100))))
-     ((< ppi 200) (+ 1.04 (* 0.001 (- ppi 140))))
-     (t (min 1.2 (+ 1.1 (* 0.001 (- ppi 200))))))))
+(defun consoli-fonts/--scale (frame)
+  "Return the automatic and manual scaling multiplier for FRAME."
+  (* consoli-fonts/user-scale
+     (if consoli-fonts/scaling-enabled
+         (min 1.2 (+ 1.0 (* 0.001 (max 0 (- (consoli-fonts/--ppi frame) 100)))))
+       1.0)))
 
-(defun consoli-fonts/--frame-scale (&optional frame)
-  "Adjustment for frame coverage of display (for tiling WMs)."
-  (let* ((frame (or frame (selected-frame)))
-         (f-area (* (float (frame-pixel-width frame))
-                    (float (frame-pixel-height frame))))
-         (d-area (* (float (display-pixel-width frame))
-                    (float (display-pixel-height frame))))
-         (coverage (if (> d-area 0) (/ f-area d-area) 1.0)))
-    (cond
-     ((< coverage 0.2) 0.95)
-     ((< coverage 0.35) 0.98)
-     (t 1.0))))
+(defun consoli-fonts/--height (context scaled-base)
+  "Return the face height for CONTEXT given SCALED-BASE in tenths of a point."
+  (max 70 (min 200 (round (* scaled-base
+                            (alist-get context consoli-fonts/context-ratios 1.0))))))
 
 (defun consoli-fonts/size (context &optional frame)
-  "Calculate font size for CONTEXT and FRAME."
-  (if (not consoli-fonts/scaling-enabled)
-      (max 60 (round (* consoli-fonts/base-size
-                        (alist-get context consoli-fonts/context-ratios 1.0))))
-    (let* ((base consoli-fonts/base-size)
-           (ctx-ratio (alist-get context consoli-fonts/context-ratios 1.0))
-           (ppi-s (consoli-fonts/--ppi-scale frame))
-           (frm-s (consoli-fonts/--frame-scale frame))
-           (usr-s consoli-fonts/user-scale)
-           (result (round (* base ctx-ratio ppi-s frm-s usr-s))))
-      (max 70 (min 200 result)))))
+  "Calculate the face height for CONTEXT on FRAME."
+  (consoli-fonts/--height context (* consoli-fonts/base-size (consoli-fonts/--scale frame))))
 
 ;;; Font Application
 
-(defvar consoli-fonts/--last-frame-size nil
-  "Last frame size for change detection.")
+(defface consoli-fonts/programming '((t nil))
+  "Font for source buffers and Vterm."
+  :group 'consoli-fonts)
 
-(defvar consoli-fonts/--update-timer nil
-  "Timer for debounced font updates.")
+(defface consoli-fonts/transient '((t nil))
+  "Font for transient menus."
+  :group 'consoli-fonts)
 
-(defun consoli-fonts/--frame-size-changed-p (&optional frame)
-  "Check if frame size changed significantly (>15%)."
-  (let* ((frame (or frame (selected-frame)))
-         (current-area (* (frame-pixel-width frame) (frame-pixel-height frame)))
-         (last-area (when consoli-fonts/--last-frame-size
-                      (* (car consoli-fonts/--last-frame-size)
-                         (cdr consoli-fonts/--last-frame-size)))))
-    (or (null last-area)
-        (> (abs (- current-area last-area))
-           (* 0.15 last-area)))))
+(defface consoli-fonts/echo-area '((t (:inherit mode-line :box nil)))
+  "Font for the echo area."
+  :group 'consoli-fonts)
 
-(defun consoli-fonts/apply-to-frame (&optional frame)
-  "Apply fonts to FRAME and update all faces."
-  (when (display-graphic-p frame)
-    (let ((ui-size (consoli-fonts/size 'ui frame))
-          (prog-size (consoli-fonts/size 'programming frame))
-          (org-size (consoli-fonts/size 'org frame))
-          (modeline-size (consoli-fonts/size 'modeline frame))
-          (tab-bar-size (consoli-fonts/size 'tab-bar frame))
-          (centaur-tabs-size (consoli-fonts/size 'centaur-tabs frame))
-          (small-size (consoli-fonts/size 'small frame))
-          (comment-size (consoli-fonts/size 'comment frame)))
+(defconst consoli-fonts/--faces
+  '((default ui ui)
+    (consoli-fonts/programming programming programming)
+    (consoli-fonts/transient ui small)
+    (consoli-fonts/echo-area modeline echo-area)
+    (mode-line modeline modeline)
+    (mode-line-active modeline modeline)
+    (mode-line-inactive modeline modeline)
+    (variable-pitch org org)
+    (fixed-pitch alt-mono programming)
+    (font-lock-doc-face nil programming)
+    (font-lock-comment-face programming comment)
+    (font-lock-comment-delimiter-face nil comment)
+    (tab-bar alt-mono tab-bar)
+    (centaur-tabs-selected alt-mono centaur-tabs)
+    (centaur-tabs-selected-modified alt-mono centaur-tabs)
+    (centaur-tabs-unselected alt-mono centaur-tabs)
+    (centaur-tabs-unselected-modified alt-mono centaur-tabs))
+  "Faces with their family and size categories.")
 
-      (when frame
-        (set-frame-parameter frame 'font
-                             (format "%s-%d" (consoli-fonts/get 'ui) (/ ui-size 10))))
+(defun consoli-fonts/apply-to-frame (&optional frame force)
+  "Apply fonts to graphical FRAME, defaulting to the selected frame.
+With FORCE, recompute font settings even at the same scale."
+  (let ((frame (or frame (selected-frame))))
+    (when (and (frame-live-p frame) (display-graphic-p frame))
+      (let ((scaled-base (* consoli-fonts/base-size (consoli-fonts/--scale frame))))
+        (when (or force (not (equal scaled-base (frame-parameter frame 'consoli-font-scaled-base))))
+          (let ((available (font-family-list frame)))
+            (pcase-dolist (`(,face ,family ,context) consoli-fonts/--faces)
+              (when (facep face)
+                (let ((height (consoli-fonts/--height context scaled-base)))
+                  (if family
+                      (set-face-attribute face frame
+                                          :family (consoli-fonts/--family family available)
+                                          :height height)
+                    (set-face-attribute face frame :height height)))))
+            (set-frame-parameter frame 'consoli-font-scaled-base scaled-base)))))))
 
-      (when (featurep 'org)
-        (set-face-attribute 'variable-pitch nil
-                            :family (consoli-fonts/get 'org)
-                            :height org-size)
-        (set-face-attribute 'fixed-pitch nil
-                            :family (consoli-fonts/get 'alt-mono)
-                            :height modeline-size)
-        (set-face-attribute 'font-lock-doc-face nil
-                            :height prog-size))
+(defun consoli-fonts/--refresh-frames (&optional _theme)
+  "Apply the current font preferences to all live graphical frames."
+  (dolist (frame (frame-list))
+    (consoli-fonts/apply-to-frame frame t)))
 
-      (when (featurep 'tab-bar)
-        (set-face-attribute 'tab-bar nil
-                            :family (consoli-fonts/get 'alt-mono)
-                            :height tab-bar-size))
+(defun consoli-fonts/--remap-default (face)
+  "Add FACE to the current buffer's default face remaps once."
+  (unless (memq face (alist-get 'default face-remapping-alist))
+    (face-remap-add-relative 'default face)))
 
-      (when (featurep 'centaur-tabs)
-        (centaur-tabs-change-fonts (consoli-fonts/get 'alt-mono) centaur-tabs-size))
+(defun consoli-fonts/use-programming-font ()
+  "Use the programming font in the current buffer."
+  (consoli-fonts/--remap-default 'consoli-fonts/programming))
 
-      (when (featurep 'vterm)
-        (set-face-attribute 'vterm-color-default nil
-                            :family (consoli-fonts/get 'programming)
-                            :height small-size))
-
-      (set-face-attribute 'font-lock-comment-face nil :height comment-size)
-      (set-face-attribute 'font-lock-comment-delimiter-face nil :height comment-size)
-
-      (setq consoli-fonts/--last-frame-size
-            (cons (frame-pixel-width frame) (frame-pixel-height frame))))))
-
-(defun consoli-fonts/--on-resize (&optional frame)
-  "Handle frame resize with debouncing."
-  (when (and consoli-fonts/scaling-enabled
-             (consoli-fonts/--frame-size-changed-p frame))
-    (when (timerp consoli-fonts/--update-timer)
-      (cancel-timer consoli-fonts/--update-timer))
-    (setq consoli-fonts/--update-timer
-          (run-with-timer 0.3 nil
-                          (lambda ()
-                            (consoli-fonts/apply-to-frame frame)
-                            (setq consoli-fonts/--update-timer nil))))))
+(defun consoli-fonts/--use-transient-font ()
+  "Use the transient font in the current menu buffer."
+  (consoli-fonts/--remap-default 'consoli-fonts/transient))
 
 (defun consoli-fonts/init ()
-  "Initialize font system. Call from early-init.el."
-  (when (display-graphic-p)
-    (let ((ui-size (consoli-fonts/size 'ui)))
-      (add-to-list 'default-frame-alist
-                   `(font . ,(format "%s-%d" (consoli-fonts/get 'ui) (/ ui-size 10)))))
-    (add-hook 'window-size-change-functions #'consoli-fonts/--on-resize)
-    (setq consoli-fonts/--last-frame-size
-          (cons (frame-pixel-width) (frame-pixel-height)))))
+  "Register font updates for startup, new frames and monitor changes."
+  (add-hook 'after-init-hook #'consoli-fonts/--refresh-frames t)
+  (add-hook 'after-make-frame-functions #'consoli-fonts/apply-to-frame t)
+  (add-hook 'move-frame-functions #'consoli-fonts/apply-to-frame)
+  (add-hook 'window-size-change-functions #'consoli-fonts/apply-to-frame)
+  ;; Theme changes recalculate faces and can clear frame-local attributes.
+  (add-hook 'enable-theme-functions #'consoli-fonts/--refresh-frames t)
+  (add-hook 'disable-theme-functions #'consoli-fonts/--refresh-frames t)
+  (add-hook 'prog-mode-hook #'consoli-fonts/use-programming-font)
+  (add-hook 'vterm-mode-hook #'consoli-fonts/use-programming-font)
+  (add-hook 'transient-setup-buffer-hook #'consoli-fonts/--use-transient-font)
+  (with-eval-after-load 'centaur-tabs
+    (consoli-fonts/--refresh-frames)))
 
-;;; Interactive
+;;; Interactive commands
 
 (defun consoli-fonts/adjust-scale (factor)
-  "Set user scaling FACTOR."
+  "Set the manual font scaling multiplier to FACTOR."
   (interactive "nFont scaling factor (1.0 = normal): ")
+  (unless (> factor 0)
+    (user-error "Font scaling factor must be positive"))
   (setq consoli-fonts/user-scale factor)
-  (consoli-fonts/apply-to-frame)
-  (message "Font scale: %.2f" factor))
+  (consoli-fonts/--refresh-frames)
+  (message "Font scale %.2f" factor))
 
 (defun consoli-fonts/toggle-scaling ()
-  "Toggle dynamic font scaling."
+  "Toggle automatic monitor scaling and update the current frames."
   (interactive)
   (setq consoli-fonts/scaling-enabled (not consoli-fonts/scaling-enabled))
-  (message "Font scaling %s" (if consoli-fonts/scaling-enabled "enabled" "disabled")))
+  (consoli-fonts/--refresh-frames)
+  (message "Automatic font scaling %s" (if consoli-fonts/scaling-enabled "enabled" "disabled")))
 
 (defun consoli-fonts/info ()
-  "Show font configuration summary."
+  "Show the applied fonts on the selected frame."
   (interactive)
-  (let* ((f (selected-frame))
-         (ppi (consoli-fonts/--ppi f))
-         (ppi-s (consoli-fonts/--ppi-scale f))
-         (frm-s (consoli-fonts/--frame-scale f)))
-    (message "PPI: %.0f (×%.2f) | Frame: ×%.2f | User: ×%.1f | UI: %dpt | Prog: %dpt | Org: %dpt"
-             ppi ppi-s frm-s consoli-fonts/user-scale
-             (/ (consoli-fonts/size 'ui f) 10)
-             (/ (consoli-fonts/size 'programming f) 10)
-             (/ (consoli-fonts/size 'org f) 10))))
+  (if (display-graphic-p)
+      (message "PPI %.0f | Scale ×%.2f | UI %.1f pt | Programming %.1f pt | Org %.1f pt"
+               (consoli-fonts/--ppi (selected-frame))
+               (consoli-fonts/--scale (selected-frame))
+               (/ (face-attribute 'default :height) 10.0)
+               (/ (face-attribute 'consoli-fonts/programming :height nil 'default) 10.0)
+               (/ (face-attribute 'variable-pitch :height nil 'default) 10.0))
+    (message "The terminal controls its font size and family")))
 
 (provide 'font-config)
 ;;; font-config.el ends here

@@ -47,9 +47,9 @@
          (inactive-selection . "#E5E5E7")  ; Inactive selections
 
          ;; Status colors
-         (success-muted . "#2A9D8F")    ; Success states
-         (warning-muted . "#D4803D")    ; Warnings
-         (error-muted . "#E63946")      ; Errors
+         (success-fg . "#19665D")    ; Success states
+         (warning-fg . "#844111")    ; Warnings
+         (error-fg . "#A51D37")      ; Errors
          (info-muted . "#457B9D")       ; Info messages
 
          ;; Diff colors
@@ -65,8 +65,7 @@
          (completion-bg . "#FAFAFA"))))  ; Completion popup background
 
   (tale-themes--create-theme 'sophisticated-light-tale sophisticated-light-palette)
-  (tale-themes--set-variables 'sophisticated-light-tale sophisticated-light-palette)
-  (tale-themes--setup-hooks 'sophisticated-light-tale sophisticated-light-palette))
+  (tale-themes--set-variables 'sophisticated-light-tale sophisticated-light-palette))
 
 ;;;###autoload
 (defun sophisticated-light-tale-theme ()

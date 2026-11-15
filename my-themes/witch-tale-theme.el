@@ -40,9 +40,9 @@
          (visual-selection . "#3a2f4a")
          (inactive-selection . "#2f3a2f")
 
-         (success-muted . "#7fb069")
-         (warning-muted . "#d4a574")
-         (error-muted . "#f85149")
+         (success-fg . "#9ACC83")
+         (warning-fg . "#D4A574")
+         (error-fg . "#FF877E")
          (info-muted . "#58a6ff")
 
          (diff-added-bg . "#0f3a1f")
@@ -56,8 +56,7 @@
          (completion-bg . "#21262d"))))
 
   (tale-themes--create-theme 'witch-tale witch-palette)
-  (tale-themes--set-variables 'witch-tale witch-palette)
-  (tale-themes--setup-hooks 'witch-tale witch-palette))
+  (tale-themes--set-variables 'witch-tale witch-palette))
 
 ;;;###autoload
 (defun witch-tale-theme ()
