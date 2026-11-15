@@ -176,6 +176,7 @@
 ;; end of code taken from minimal-emacs.d
 
 ;; Bootstrap straight.el
+(setq straight-check-for-modifications '(check-on-save find-when-checking))
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name

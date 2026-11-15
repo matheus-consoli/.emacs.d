@@ -35,16 +35,16 @@
   :demand t
   :custom
   (compile-angel-verbose nil)
+  (compile-angel-optimize-file-name-handlers nil)
   :config
-  (setq
-   compile-angel-excluded-files (append '("/.mc-lists.el" ;; multiple-cursors
-                                          "/init.el"
-                                          "/early-init.el")
-                                        compile-angel-excluded-files)
-
-   compile-angel-excluded-files-regexps (append '("/my-themes/*.el"
-                                                  "/lisp/*.el")
-                                                compile-angel-excluded-files-regexps))
+  (dolist (suffix '("/.mc-lists.el" "/init.el" "/early-init.el"))
+    (add-to-list 'compile-angel-excluded-path-suffixes suffix))
+  ;; Use the compiled libraries supplied by Emacs for compressed sources.
+  (add-to-list 'compile-angel-excluded-path-regexps "\\.el\\.gz\\'")
+  (add-to-list 'compile-angel-excluded-path-regexps
+               (concat "^" (regexp-quote (file-name-as-directory
+                                          (expand-file-name user-emacs-directory)))
+                       "\\(?:my-themes\\|lisp\\)/"))
 
   (compile-angel-on-load-mode))
 
@@ -2123,6 +2123,9 @@ may not be efficient."
 (use-package sqlite3
   :defer t)
 
+(with-eval-after-load 'org
+  (setq org-modules (remq 'ol-gnus org-modules)))
+
 (require 'org-fold)
 
 (use-package org-roam
@@ -2846,9 +2849,9 @@ may not be efficient."
 (use-package roc-ts-mode
   :mode ("\\.roc\\'" . roc-ts-mode)
   :init
-  (require 'eglot)
-  (add-to-list 'eglot-server-programs
-               '(roc-ts-mode . ("/home/consoli/projects/languages/roc_nightly-linux_arm64-2026-09-03-62fcb65/roc"  "experimental-lsp")))
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '(roc-ts-mode . ("/home/consoli/projects/languages/roc_nightly-linux_arm64-2026-09-03-62fcb65/roc" "experimental-lsp"))))
   (add-hook 'roc-ts-mode-hook #'eglot-ensure)
   :config
   (when-let* ((recipe (assq 'roc treesit-language-source-alist)))
