@@ -15,7 +15,6 @@
          (bg-contrast . "#E5E5E7")      ; Subtle contrast areas
          (bg-code . "#EDEDEF")          ; Code block backgrounds
          (bg-dim . "#DCDCDE")           ; Dimmed areas (inactive windows)
-         (bg-inactive-sel . "#E0E0E2")  ; Inactive selections
          (bg-selection . "#D6D6D8")     ; General selections
          (bg-special . "#F8F8FA")       ; Special buffers (terminals, help)
 
@@ -30,13 +29,13 @@
 
          ;; Semantic colors - Swiss Modern with WCAG AA compliance
          (purple . "#7C3AED")           ; Violet - constants (5.23:1)
-         (lavender . "#9061F9")         ; Light violet - variables
-         (magenta . "#E63946")          ; Racing Red - keywords/logic (4.85:1)
-         (rose . "#D63F4B")             ; Light red - parameters
-         (green . "#2A9D8F")            ; Pine Green - strings (4.52:1)
-         (teal . "#2A8A7F")             ; Teal - constructors/fields
-         (yellow . "#D4803D")           ; Burnt orange - warnings/macros (4.61:1)
-         (blue . "#457B9D")             ; Steel Blue - functions/types (4.98:1)
+         (lavender . "#7F49F8")         ; Light violet - variables
+         (magenta . "#C91927")          ; Racing red - keywords (5.28:1)
+         (rose . "#D22E3B")             ; Light red - parameters
+         (green . "#217C71")            ; Pine green - accents (4.61:1)
+         (teal . "#267C72")             ; Teal - constructors/fields
+         (yellow . "#965521")           ; Burnt orange - strings (5.33:1)
+         (blue . "#427596")             ; Steel blue - types (4.57:1)
 
          ;; UI interaction colors
          (focus-bg . "#D0D0D2")         ; Focused elements
@@ -44,13 +43,11 @@
          (primary-selection . "#C8D5E3")   ; Primary selection (blue tint)
          (secondary-selection . "#D8D0E3") ; Secondary selection (purple tint)
          (visual-selection . "#C8D5E3")    ; Visual mode selection
-         (inactive-selection . "#E5E5E7")  ; Inactive selections
 
          ;; Status colors
          (success-fg . "#19665D")    ; Success states
          (warning-fg . "#844111")    ; Warnings
          (error-fg . "#A51D37")      ; Errors
-         (info-muted . "#457B9D")       ; Info messages
 
          ;; Diff colors
          (diff-added-bg . "#D4F0EC")    ; Light pine green background

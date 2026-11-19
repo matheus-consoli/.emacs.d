@@ -7,7 +7,9 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'face-remap)
+(require 'seq)
 
 (defface tale-themes-special-buffer '((t (:height 0.9)))
   "Default face remapping for special buffers."
@@ -74,11 +76,7 @@
      `(isearch-fail ((t (:background ,.diff-removed-bg :foreground ,.error-fg))))
      `(query-replace ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
      `(match ((t (:background ,.diff-added-bg :foreground ,.success-fg :weight bold))))
-     `(isearch-overlay ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
-     `(lazy-highlight-overlay ((t (:background ,.bg-dim :box (:line-width -1 :color ,.purple)))))
-     `(match-overlay ((t (:background ,.bg-selection :foreground ,.green))))
      `(rectangle-preview ((t (:background ,.primary-selection))))
-     `(region-inactive ((t (:background ,.inactive-selection))))
      `(evil-ex-lazy-highlight ((t (:background ,.visual-selection :foreground ,.fg-bright))))
 
      ;; Specific minibuffer-related faces
@@ -104,7 +102,6 @@
      `(mode-line-highlight ((t (:background ,.hover-bg :foreground ,.fg-main))))
      `(mode-line-buffer-id ((t (:foreground ,.purple :weight bold))))
      `(mode-line-emphasis ((t (:foreground ,.green :weight bold))))
-     `(mode-line-inactive-buffer-id ((t (:foreground ,.grey-subtle))))
 
      ;; == FONT LOCK & SYNTAX HIGHLIGHTING ==
      `(font-lock-builtin-face ((t (:foreground ,.magenta :slant italic))))
@@ -126,24 +123,13 @@
      ;; == TREE-SITTER SUPPORT ==
      `(font-lock-function-call-face ((t (:foreground ,.purple))))
      `(font-lock-variable-use-face ((t (:foreground ,.lavender))))
+     `(font-lock-property-name-face ((t (:foreground ,.teal))))
      `(font-lock-property-use-face ((t (:foreground ,.blue))))
-     `(treesit-font-lock-number-face ((t (:foreground ,.purple :weight bold))))
-     `(treesit-font-lock-operator-face ((t (:foreground ,.magenta))))
-     `(treesit-font-lock-bracket-face ((t (:foreground ,.grey-border))))
-     `(treesit-font-lock-delimiter-face ((t (:foreground ,.grey-border))))
-     `(treesit-font-lock-escape-face ((t (:foreground ,.yellow :weight bold))))
-     `(treesit-font-lock-constructor-face ((t (:foreground ,.teal :weight bold))))
-     `(treesit-font-lock-class-face ((t (:foreground ,.blue :weight bold))))
-     `(treesit-font-lock-interface-face ((t (:foreground ,.teal :slant italic))))
-     `(treesit-font-lock-enum-face ((t (:foreground ,.magenta :weight bold))))
-     `(treesit-font-lock-struct-face ((t (:foreground ,.blue))))
-     `(treesit-font-lock-namespace-face ((t (:foreground ,.lavender :weight bold))))
-     `(treesit-font-lock-module-face ((t (:foreground ,.purple :underline t))))
-     `(treesit-font-lock-macro-face ((t (:foreground ,.yellow :weight bold :slant italic))))
-     `(treesit-font-lock-attribute-face ((t (:foreground ,.grey-docstring :slant italic))))
-     `(treesit-font-lock-parameter-face ((t (:foreground ,.rose))))
-     `(treesit-font-lock-field-face ((t (:foreground ,.teal))))
-     `(treesit-font-lock-method-face ((t (:foreground ,.purple :slant italic))))
+     `(font-lock-number-face ((t (:foreground ,.purple :weight bold))))
+     `(font-lock-operator-face ((t (:foreground ,.magenta))))
+     `(font-lock-bracket-face ((t (:foreground ,.grey-subtle))))
+     `(font-lock-delimiter-face ((t (:foreground ,.grey-subtle))))
+     `(font-lock-escape-face ((t (:foreground ,.yellow :weight bold))))
 
      ;; Whitespace
      `(whitespace-space ((t (:foreground ,.grey-border))))
@@ -163,7 +149,6 @@
      `(tab-bar-tab-group-current ((t (:background ,.bg-alt :foreground ,.purple))))
      `(tab-bar-tab-group-inactive ((t (:background ,.bg-contrast :foreground ,.grey-subtle))))
 
-     ;; THIRD PARTY PACKAGES
      ;; web-mode
      `(web-mode-string-face ((t (:foreground ,.yellow))))
      `(web-mode-html-tag-face ((t (:foreground ,.magenta))))
@@ -215,17 +200,16 @@
      `(org-scheduled-today ((t (:foreground ,.yellow :weight bold))))
      `(org-scheduled-previously ((t (:foreground ,.magenta :weight bold))))
      `(org-upcoming-deadline ((t (:foreground ,.yellow :slant italic))))
-     `(org-deadline-announce ((t (:foreground ,.magenta :weight bold))))
+     `(org-imminent-deadline ((t (:foreground ,.magenta :weight bold))))
      `(org-time-grid ((t (:foreground ,.grey-border))))
      `(org-warning ((t (:foreground ,.error-fg :weight bold))))
 
-     `(org-superstar-leading-bullet-face ((t (:foreground ,.grey-subtle))))
-     `(org-superstar-item-bullet-face ((t (:foreground ,.purple))))
+     `(org-superstar-leading ((t (:foreground ,.grey-subtle))))
+     `(org-superstar-item ((t (:foreground ,.purple))))
 
      ;; Org-Roam
-     `(org-roam-node-highlight-face ((t (:background ,.focus-bg :foreground ,.lavender :weight bold))))
-     `(org-roam-link ((t (:foreground ,.purple :underline t :weight bold))))
-     `(org-roam-backlinks-highlight ((t (:background ,.bg-selection :foreground ,.fg-bright))))
+     `(org-roam-preview-heading-selection ((t (:background ,.focus-bg :foreground ,.lavender :weight bold))))
+     `(org-roam-preview-heading-highlight ((t (:background ,.bg-selection :foreground ,.fg-bright))))
      `(org-roam-title ((t (:foreground ,.lavender :weight bold :height 1.2))))
 
      ;; Org-Modern
@@ -278,18 +262,21 @@
      `(magit-signature-expired ((t (:foreground ,.grey-subtle))))
      `(magit-signature-revoked ((t (:foreground ,.magenta :strike-through t))))
 
-     ;; Magit Todos Integration
-     `(magit-todos-keyword-face ((t (:foreground ,.yellow :weight bold))))
-     `(magit-todos-item-face ((t (:foreground ,.fg-main))))
-
-     ;; Conventional Commit
-     `(conventional-commit-type-face ((t (:foreground ,.magenta :weight bold))))
-     `(conventional-commit-scope-face ((t (:foreground ,.yellow :slant italic))))
-     `(conventional-commit-breaking-change-face ((t (:foreground ,.error-fg :weight bold :underline t))))
-
+     ;; Diffs and merge conflicts
      `(diff-added ((t (:background ,.diff-added-bg :foreground ,.diff-added-fg))))
      `(diff-removed ((t (:background ,.diff-removed-bg :foreground ,.diff-removed-fg))))
      `(diff-changed ((t (:background ,.diff-changed-bg :foreground ,.diff-changed-fg))))
+     `(diff-refine-added ((t (:background ,.green :foreground ,.bg-main :weight bold))))
+     `(diff-refine-removed ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
+     `(diff-refine-changed ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
+
+     `(smerge-upper ((t (:background ,.diff-removed-bg :extend t))))
+     `(smerge-lower ((t (:background ,.diff-added-bg :extend t))))
+     `(smerge-base ((t (:background ,.diff-changed-bg :extend t))))
+     `(smerge-markers ((t (:background ,.bg-selection :foreground ,.fg-main :weight bold :extend t))))
+     `(smerge-refined-added ((t (:inherit diff-refine-added))))
+     `(smerge-refined-removed ((t (:inherit diff-refine-removed))))
+     `(smerge-refined-changed ((t (:inherit diff-refine-changed))))
      `(diff-hl-insert ((t (:foreground ,.diff-added-fg :background ,.diff-added-bg))))
      `(diff-hl-delete ((t (:foreground ,.diff-removed-fg :background ,.diff-removed-bg))))
      `(diff-hl-change ((t (:foreground ,.diff-changed-fg :background ,.diff-changed-bg))))
@@ -299,8 +286,14 @@
      `(ediff-fine-diff-A ((t (:background ,.magenta :foreground ,.bg-main))))
      `(ediff-fine-diff-B ((t (:background ,.green :foreground ,.bg-main))))
      `(ediff-fine-diff-C ((t (:background ,.yellow :foreground ,.bg-main))))
-     `(ediff-even-diff-face ((t (:inherit default))))
-     `(ediff-odd-diff-face ((t (:background ,.bg-code))))
+     `(ediff-even-diff-A ((t (:inherit default))))
+     `(ediff-even-diff-B ((t (:inherit default))))
+     `(ediff-even-diff-C ((t (:inherit default))))
+     `(ediff-even-diff-Ancestor ((t (:inherit default))))
+     `(ediff-odd-diff-A ((t (:background ,.bg-code))))
+     `(ediff-odd-diff-B ((t (:background ,.bg-code))))
+     `(ediff-odd-diff-C ((t (:background ,.bg-code))))
+     `(ediff-odd-diff-Ancestor ((t (:background ,.bg-code))))
 
      `(git-gutter:added ((t (:foreground ,.diff-added-fg))))
      `(git-gutter:deleted ((t (:foreground ,.diff-removed-fg))))
@@ -330,7 +323,6 @@
      `(eshell-ls-directory ((t (:foreground ,.purple))))
      `(eshell-ls-executable ((t (:foreground ,.green))))
      `(eshell-ls-symlink ((t (:foreground ,.yellow))))
-     `(ielm-prompt ((t (:foreground ,.teal :weight bold))))
 
      ;; Terminal colors
      `(term-color-black ((t (:foreground ,.fg-main :background ,.bg-main))))
@@ -361,7 +353,6 @@
      `(ansi-color-bright-white ((t (:foreground ,.fg-popup :background ,.fg-popup))))
 
      ;; Vterm faces
-     `(vterm-color-default ((t (:foreground ,.fg-bright :background ,.bg-special))))
      `(vterm-color-black ((t (:foreground ,.bg-contrast :background ,.bg-contrast))))
      `(vterm-color-red ((t (:foreground ,.magenta :background ,.magenta))))
      `(vterm-color-green ((t (:foreground ,.green :background ,.green))))
@@ -379,13 +370,6 @@
      `(vterm-color-bright-cyan ((t (:foreground ,.teal :background ,.teal))))
      `(vterm-color-bright-white ((t (:foreground ,.fg-popup :background ,.fg-popup))))
 
-     ;; VTerm Features
-     `(vterm-prompt-face ((t (:foreground ,.purple :weight bold))))
-     `(vterm-directory-face ((t (:foreground ,.blue :weight bold))))
-     `(vterm-command-face ((t (:foreground ,.green))))
-     `(vterm-output-face ((t (:foreground ,.fg-main))))
-     `(vterm-error-face ((t (:foreground ,.magenta :weight bold))))
-
      ;; Which-key
      `(which-key-key-face ((t (:foreground ,.purple))))
      `(which-key-separator-face ((t (:foreground ,.grey-subtle))))
@@ -402,14 +386,12 @@
 
      ;; Bookmarks
      `(bookmark-face ((t (:foreground ,.purple :background ,.bg-contrast))))
-     `(bookmark-menu-heading ((t (:foreground ,.purple :weight bold))))
      `(bookmark-menu-bookmark ((t (:foreground ,.magenta))))
 
      ;; Quick-peek faces
      `(quick-peek-background-face ((t (:background ,.bg-popup))))
      `(quick-peek-border-face ((t (:background ,.grey-border))))
      `(quick-peek-padding-face ((t (:background ,.bg-popup))))
-     `(quick-peek-header-face ((t (:background ,.bg-alt :foreground ,.fg-bright :height 1.1))))
 
      ;; == COMPILATION AND GREP FACES ==
      `(compilation-error ((t (:foreground ,.magenta :weight bold))))
@@ -420,11 +402,6 @@
      `(compilation-mode-line-exit ((t (:foreground ,.green :weight bold))))
      `(compilation-mode-line-fail ((t (:foreground ,.magenta :weight bold))))
      `(compilation-mode-line-run ((t (:foreground ,.yellow :weight bold))))
-
-     `(grep-context-face ((t (:foreground ,.grey-subtle))))
-     `(grep-error-face ((t (:foreground ,.magenta :weight bold))))
-     `(grep-hit-face ((t (:foreground ,.purple :weight bold))))
-     `(grep-match-face ((t (:background ,.bg-selection :foreground ,.fg-bright))))
 
      ;; Flycheck etc.
      `(flycheck-error ((t (:underline (:style wave :color ,.magenta)))))
@@ -451,31 +428,12 @@
      `(flycheck-color-mode-line-warning-face ((t (:foreground ,.yellow :weight bold))))
      `(flycheck-color-mode-line-info-face ((t (:foreground ,.purple :weight bold))))
      `(flycheck-color-mode-line-running-face ((t (:foreground ,.grey-subtle :weight bold))))
-     `(flycheck-color-mode-line-success-face ((t (:foreground ,.green :weight bold))))
      `(flycheck-posframe-face ((t (:foreground ,.fg-bright))))
      `(flycheck-posframe-background-face ((t (:background ,.bg-popup))))
      `(flycheck-posframe-error-face ((t (:foreground ,.magenta :weight bold))))
      `(flycheck-posframe-warning-face ((t (:foreground ,.yellow :weight bold))))
      `(flycheck-posframe-info-face ((t (:foreground ,.purple :weight bold))))
-     `(flycheck-posframe-border-face ((t (:foreground ,.grey-border))))
-     `(flycheck-error-list-header ((t (:background ,.bg-alt :foreground ,.fg-bright :weight bold))))
-     `(flycheck-error-list-separator ((t (:foreground ,.grey-border))))
-     `(flycheck-error-list-checkername-face ((t (:foreground ,.purple))))
-     `(flycheck-inline-message ((t (:inherit default :slant italic))))
-     `(flycheck-inline-suggestion ((t (:foreground ,.green :slant italic))))
-     `(flycheck-inline-explanation ((t (:foreground ,.grey-subtle :slant italic))))
-     `(flycheck-checker-disabled-face ((t (:foreground ,.grey-subtle :strike-through t))))
-     `(flycheck-checker-running-face ((t (:foreground ,.yellow :slant italic))))
-     `(flycheck-checker-success-face ((t (:foreground ,.green :weight bold))))
-     `(flycheck-checker-error-face ((t (:foreground ,.magenta :weight bold))))
-     `(flycheck-checker-warning-face ((t (:foreground ,.yellow :weight bold))))
-     `(flycheck-checker-info-face ((t (:foreground ,.purple :weight bold))))
-     `(flycheck-error-overlay ((t (:underline (:style wave :color ,.magenta) :background ,.bg-contrast))))
-     `(flycheck-warning-overlay ((t (:underline (:style wave :color ,.yellow) :background ,.bg-contrast))))
-     `(flycheck-info-overlay ((t (:underline (:style wave :color ,.purple) :background ,.bg-contrast))))
-     `(flycheck-overlay-error ((t :background ,.diff-removed-bg :foreground ,.error-fg :height 0.9 :weight normal)))
-     `(flycheck-overlay-warning ((t :background ,.diff-changed-bg :foreground ,.warning-fg :height 0.9 :weight normal)))
-     `(flycheck-overlay-info ((t :background ,.info-muted :foreground ,.bg-inactive-sel :height 0.9 :weight normal)))
+     `(flycheck-error-list-group-header ((t (:background ,.bg-alt :foreground ,.fg-bright :weight bold))))
 
      ;; == FLYMAKE FACES ==
      `(flymake-error ((t (:underline (:style wave :color ,.magenta)))))
@@ -486,26 +444,15 @@
      `(flymake-note-echo ((t (:foreground ,.blue :weight bold))))
 
      ;; Overlays
-     `(overlay ((t (:background ,.bg-contrast))))
-     `(pos-tip-overlay ((t (:background ,.bg-popup :foreground ,.fg-main))))
-     `(eldoc-highlight-function-argument-overlay ((t (:foreground ,.purple :weight bold))))
      `(eldoc-box-border ((t (:background ,.bg-popup))))
      `(eldoc-box-body ((t (:background ,.bg-popup :foreground ,.fg-main))))
      `(eldoc-highlight-function-argument ((t (:foreground ,.purple :weight bold))))
-     `(mc/cursor-overlay ((t (:background ,.purple :foreground ,.bg-main))))
-     `(mc/cursor-bar-overlay ((t (:background ,.purple :height 1))))
-     `(rectangle-overlay ((t (:background ,.bg-selection :foreground ,.fg-bright))))
-     `(semantic-highlight-func-overlay ((t (:background ,.bg-selection))))
-     `(semantic-tag-overlay ((t (:background ,.bg-contrast :box t))))
+     `(mc/cursor-bar-face ((t (:background ,.purple :height 1))))
+     `(semantic-highlight-func-current-tag-face ((t (:background ,.bg-selection))))
      `(highlight-changes ((t (:foreground ,.yellow :background ,.bg-contrast :underline t))))
      `(highlight-changes-delete ((t (:foreground ,.magenta :background ,.bg-contrast :strike-through t))))
-     `(transient-mark-overlay ((t (:background ,.bg-selection))))
-     `(secondary-selection-overlay ((t (:background ,.bg-dim :foreground ,.fg-bright))))
-     `(avy-overlay-lead-face ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
-     `(avy-overlay-background-face ((t (:background ,.bg-code))))
      `(pulse-highlight-face ((t (:background ,.secondary-selection))))
      `(pulse-highlight-start-face ((t (:background ,.visual-selection))))
-     `(multiple-cursors-cursor ((t (:background ,.magenta :foreground ,.bg-main))))
      `(highlight-symbol-face ((t (:background ,.focus-bg :foreground ,.lavender))))
 
      ;; Blamer
@@ -521,7 +468,6 @@
      `(centaur-tabs-close-selected ((t (:inherit centaur-tabs-selected :foreground ,.fg-bright))))
      `(centaur-tabs-close-unselected ((t (:inherit centaur-tabs-unselected :foreground ,.grey-subtle))))
      `(centaur-tabs-default ((t (:background ,.bg-main :foreground ,.fg-main :height 0.9))))
-     `(centaur-tabs-group-face ((t (:foreground ,.purple))))
      `(centaur-tabs-modified-marker-selected ((t (:inherit centaur-tabs-selected :foreground ,.magenta :italic t))))
      `(centaur-tabs-modified-marker-unselected ((t (:inherit centaur-tabs-unselected :foreground ,.magenta :italic t))))
      `(centaur-tabs-name-mouse-face ((t (:foreground ,.fg-bright :bold t))))
@@ -529,7 +475,6 @@
      `(centaur-tabs-selected-modified ((t (:background ,.bg-alt :foreground ,.yellow))))
      `(centaur-tabs-unselected ((t (:background ,.bg-contrast :foreground ,.grey-subtle))))
      `(centaur-tabs-unselected-modified ((t (:background ,.bg-contrast :foreground ,.yellow))))
-     `(centaur-tabs-bar ((t (:background ,.bg-main))))
      `(tab-line ((t (:background ,.bg-dim))))
 
      ;; LSP mode
@@ -545,7 +490,6 @@
      `(lsp-headerline-breadcrumb-symbols-face ((t (:foreground ,.yellow))))
      `(lsp-modeline-code-actions-face ((t (:foreground ,.yellow))))
      `(lsp-ui-doc-background ((t (:background ,.bg-popup))))
-     `(lsp-ui-doc-border ((t (:background ,.grey-border))))
      `(lsp-ui-doc-header ((t (:background ,.bg-alt :foreground ,.fg-bright))))
      `(lsp-ui-peek-filename ((t (:foreground ,.purple))))
      `(lsp-ui-peek-footer ((t (:background ,.bg-alt))))
@@ -569,7 +513,11 @@
      `(dap-ui-pending-breakpoint-face ((t (:foreground ,.yellow))))
      `(dap-ui-marker-face ((t (:background ,.bg-selection))))
      `(dap-ui-compile-errline ((t (:foreground ,.magenta))))
-     `(dap-ui-compile-warnline ((t (:foreground ,.yellow))))
+
+     ;; Dape
+     `(dape-source-line-face ((t (:background ,.focus-bg :extend t))))
+     `(dape-breakpoint-face ((t (:foreground ,.error-fg :weight bold))))
+     `(dape-breakpoint-until-face ((t (:foreground ,.warning-fg :weight bold))))
 
      ;; Corfu, Vertico, and friends
      `(corfu-default ((t (:background ,.bg-popup :foreground ,.fg-popup :height 0.9))))
@@ -579,14 +527,8 @@
      `(corfu-deprecated ((t (:foreground ,.grey-subtle :strike-through t))))
      `(corfu-annotations ((t (:foreground ,.grey-subtle :slant italic))))
      `(corfu-echo ((t (:foreground ,.grey-subtle :slant italic))))
-     `(corfu-metadata-face ((t (:foreground ,.grey-subtle))))
-     `(corfu-documentation-face ((t (:foreground ,.grey-subtle))))
-     `(corfu-quick-face ((t (:foreground ,.yellow))))
-     `(corfu-quick1-face ((t (:foreground ,.purple))))
-     `(corfu-quick2-face ((t (:foreground ,.magenta))))
      `(corfu-quick1 ((t (:foreground ,.purple :weight bold))))
      `(corfu-quick2 ((t (:foreground ,.magenta :weight bold))))
-     `(corfu-quick3 ((t (:foreground ,.yellow :weight bold))))
 
      ;; Vertico
      `(vertico-current ((t (:background ,.bg-alt))))
@@ -595,7 +537,6 @@
      `(vertico-multiline ((t (:foreground ,.grey-subtle :slant italic))))
      `(vertico-quick1 ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.purple)))))
      `(vertico-quick2 ((t (:foreground ,.magenta :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.magenta)))))
-     `(vertico-quick3 ((t (:foreground ,.yellow :background ,.bg-contrast :weight bold :box (:line-width 1 :color ,.yellow)))))
      `(vertico-posframe-border ((t (:background ,.bg-popup :foreground ,.grey-border))))
      `(vertico-posframe ((t (:background ,.bg-popup))))
 
@@ -618,14 +559,11 @@
      `(marginalia-documentation ((t (:foreground ,.grey-subtle :slant italic :height 0.9))))
      `(marginalia-function ((t (:foreground ,.purple :weight normal))))
      `(marginalia-mode ((t (:foreground ,.magenta :slant italic))))
-     `(marginalia-variable ((t (:foreground ,.lavender))))
+     `(marginalia-value ((t (:foreground ,.lavender))))
      `(marginalia-version ((t (:foreground ,.green :weight bold))))
 
      ;; Nerd Icons Integration
      `(nerd-icons-completion-dir-face ((t (:foreground ,.purple))))
-     `(nerd-icons-completion-file-face ((t (:foreground ,.fg-main))))
-     `(nerd-icons-corfu-dir-face ((t (:foreground ,.purple))))
-     `(nerd-icons-corfu-file-face ((t (:foreground ,.fg-main))))
 
      `(orderless-match-face-0 ((t (:foreground ,.purple :weight bold))))
      `(orderless-match-face-1 ((t (:foreground ,.magenta :weight bold))))
@@ -658,12 +596,7 @@
      `(treemacs-fringe-indicator-face ((t (:foreground ,.purple))))
      `(treemacs-header-button-face ((t (:foreground ,.grey-subtle))))
      `(treemacs-marked-file-face ((t (:foreground ,.yellow :weight bold))))
-     `(treemacs-file-extension-face ((t (:foreground ,.fg-main))))
-     `(treemacs-modeline-selected-face ((t (:foreground ,.purple :weight bold))))
-     `(treemacs-modeline-active-face ((t (:foreground ,.fg-bright))))
      `(treemacs-git-commit-diff-face ((t (:foreground ,.magenta))))
-     `(treemacs-git-push-face ((t (:foreground ,.green))))
-     `(treemacs-git-pull-face ((t (:foreground ,.yellow))))
 
      ;; doom-modeline
      `(doom-modeline-bar ((t (:background ,.bg-alt :foreground ,.fg-bright))))
@@ -672,15 +605,14 @@
      `(doom-modeline-buffer-minor-mode ((t (:foreground ,.grey-subtle))))
      `(doom-modeline-buffer-modified ((t (:foreground ,.magenta :weight bold))))
      `(doom-modeline-buffer-path ((t (:foreground ,.purple))))
-     `(doom-modeline-buffer-timemachine ((t (:foreground ,.yellow))))
      `(doom-modeline-debug ((t (:foreground ,.yellow))))
-     `(doom-modeline-error ((t (:foreground ,.magenta))))
+     `(doom-modeline-urgent ((t (:foreground ,.magenta))))
      `(doom-modeline-evil-emacs-state ((t (:foreground ,.magenta))))
      `(doom-modeline-evil-insert-state ((t (:foreground ,.green))))
      `(doom-modeline-evil-motion-state ((t (:foreground ,.grey-subtle))))
      `(doom-modeline-evil-normal-state ((t (:foreground ,.purple))))
      `(doom-modeline-evil-visual-state ((t (:foreground ,.yellow))))
-     `(doom-modeline-inactive-bar ((t (:background ,.bg-contrast :foreground ,.fg-bright))))
+     `(doom-modeline-bar-inactive ((t (:background ,.bg-contrast :foreground ,.fg-bright))))
      `(doom-modeline-info ((t (:foreground ,.green))))
      `(doom-modeline-lsp-error ((t (:foreground ,.magenta))))
      `(doom-modeline-lsp-success ((t (:foreground ,.green))))
@@ -688,12 +620,10 @@
      `(doom-modeline-persp-name ((t (:foreground ,.purple))))
      `(doom-modeline-project-dir ((t (:foreground ,.yellow :weight bold))))
      `(doom-modeline-project-parent-dir ((t (:foreground ,.grey-subtle))))
-     `(doom-modeline-project-root ((t (:foreground ,.purple))))
-     `(doom-modeline-repl-error ((t (:foreground ,.magenta))))
+     `(doom-modeline-project-root-dir ((t (:foreground ,.purple))))
      `(doom-modeline-repl-success ((t (:foreground ,.green))))
      `(doom-modeline-repl-warning ((t (:foreground ,.yellow))))
      `(doom-modeline-warning ((t (:foreground ,.yellow))))
-     `(doom-modeline-workspace-number ((t (:foreground ,.magenta))))
 
      ;; mood line
      `(mood-line-buffer-name ((t (:foreground ,.fg-bright :weight light))))
@@ -701,10 +631,7 @@
      `(mood-line-buffer-status-read-only ((t (:foreground ,.yellow))))
      `(mood-line-buffer-status-narrowed ((t (:foreground ,.purple))))
      `(mood-line-major-mode ((t (:foreground ,.lavender :weight light))))
-     `(mood-line-minor-mode ((t (:foreground ,.grey-subtle))))
-     `(mood-line-process ((t (:foreground ,.teal :slant italic))))
-     `(mood-line-client ((t (:foreground ,.blue :weight bold))))
-     `(mood-line-frame ((t (:foreground ,.purple))))
+     `(mood-line-frame-status-client ((t (:foreground ,.blue :weight bold))))
      `(mood-line-status-neutral ((t (:foreground ,.grey-docstring))))
      `(mood-line-status-info ((t (:foreground ,.teal :weight semi-bold))))
      `(mood-line-status-success ((t (:foreground ,.green :weight bold))))
@@ -712,10 +639,6 @@
      `(mood-line-status-error ((t (:foreground ,.magenta :weight bold))))
      `(mood-line-encoding ((t (:foreground ,.grey-subtle :weight light))))
      `(mood-line-unimportant ((t (:foreground ,.grey-subtle :weight light))))
-     `(mood-line-segment-modal ((t (:foreground ,.purple :weight light))))
-     `(mood-line-segment-buffer ((t (:foreground ,.fg-bright))))
-     `(mood-line-segment-position ((t (:foreground ,.blue))))
-     `(mood-line-segment-misc ((t (:foreground ,.grey-docstring :weight light))))
 
      ;; Line numbers
      `(line-number ((((class color) (min-colors 16))
@@ -726,12 +649,6 @@
                                   (:foreground ,.purple :background ,.bg-main
                                    :box (:line-width (-1 . 4) :color ,.bg-main)))
                                  (t (:inherit default :weight bold :inverse-video t))))
-     ;;`(line-number-major-tick ((t (:foreground ,.yellow :background ,.bg-main :weight bold))))
-     ;;`(line-number-minor-tick ((t (:foreground ,.grey-subtle :background ,.bg-main :weight normal :box (:line-width (-1 . 3))))))
-     ;;`(linum ((t (:foreground ,.grey-subtle :background ,.bg-main :slant normal :height 0.9))))
-     ;;`(linum-relative-current-face ((t (:foreground ,.purple :background ,.bg-contrast :weight bold :height 1.0))))
-     ;;`(line-number-current-line-hl ((t (:foreground ,.purple :background ,.bg-selection :weight bold :height 1.0))))
-     ;;`(line-number-relative ((t (:foreground ,.grey-subtle :background ,.bg-main :height 0.9))))
 
      ;; Parentheses
      `(show-paren-match ((t (:foreground ,.green :weight bold))))
@@ -739,7 +656,7 @@
      `(show-paren-mismatch ((t (:background ,.diff-removed-bg :foreground ,.fg-popup :weight bold :strike-through t))))
      `(sp-pair-overlay-face ((t (:background ,.bg-contrast))))
      `(sp-show-pair-match-face ((t (:foreground ,.visual-selection :weight ultra-bold))))
-     `(sp-show-pair-mismatch-face ((t (:background ,.magenta :foreground ,.fg-bright :weight bold))))
+     `(sp-show-pair-mismatch-face ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
      `(sp-wrap-overlay-face ((t (:background ,.bg-contrast))))
      `(sp-wrap-tag-overlay-face ((t (:background ,.bg-contrast))))
      `(rainbow-delimiters-depth-1-face ((t (:foreground ,.magenta))))
@@ -755,21 +672,20 @@
      `(rainbow-delimiters-mismatched-face ((t (:background ,.diff-removed-bg :foreground ,.fg-bright :strike-through t))))
 
      ;; Sideline packages
-     `(sideline-flycheck-error-face ((t (:foreground ,.magenta))))
-     `(sideline-flycheck-warning-face ((t (:foreground ,.yellow))))
-     `(sideline-flycheck-info-face ((t (:foreground ,.purple))))
-     `(sideline-lsp-face ((t (:foreground ,.hint-fg))))
+     `(sideline-flycheck-error ((t (:foreground ,.magenta))))
+     `(sideline-flycheck-warning ((t (:foreground ,.yellow))))
+     `(sideline-flycheck-info ((t (:foreground ,.purple))))
 
      ;; Avy
-     `(avy-highlight-face ((t (:foreground ,.magenta :weight bold))))
-
-     ;; Treesit-jump
-     `(treesit-jump-hl-line-flash-face ((t (:background ,.visual-selection))))
+     `(avy-lead-face ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
+     `(avy-lead-face-0 ((t (:background ,.blue :foreground ,.bg-main :weight bold))))
+     `(avy-lead-face-1 ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
+     `(avy-lead-face-2 ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
+     `(avy-background-face ((t (:foreground ,.grey-subtle))))
 
      ;; Embark
-     `(embark-target-face ((t (:foreground ,.purple :weight bold))))
-     `(embark-keybinding-face ((t (:foreground ,.yellow))))
-     `(embark-collect-match-face ((t (:background ,.focus-bg))))
+     `(embark-target ((t (:foreground ,.purple :weight bold))))
+     `(embark-keybinding ((t (:foreground ,.yellow))))
 
      ;; Breadcrumb package faces
      `(breadcrumb-face ((t (:foreground ,.grey-subtle :height 0.9 :weight light
@@ -784,100 +700,54 @@
                                                      :box (:line-width (2 . 8) :color ,.bg-alt)))))
      `(breadcrumb-project-leaf-face ((t (:foreground ,.fg-popup :height 0.85 :weight semi-bold
                                                      :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-separator ((t (:foreground ,.grey-border :height 0.8
-                                             :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-function-face ((t (:foreground ,.purple :weight bold
-                                                 :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-class-face ((t (:foreground ,.blue :weight bold
-                                              :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-method-face ((t (:foreground ,.magenta :slant italic
-                                               :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-variable-face ((t (:foreground ,.lavender
-                                                 :box (:line-width (2 . 8) :color ,.bg-alt)))))
-     `(breadcrumb-property-face ((t (:foreground ,.teal
-                                                 :box (:line-width (2 . 8) :color ,.bg-alt)))))
 
      ;; Misc Packages
      `(yas-field-highlight-face ((t (:background ,.bg-selection))))
-     `(yas-snippet-field ((t (:background ,.focus-bg :foreground ,.purple :box (:line-width -1 :color ,.purple)))))
 
      `(consult-preview-line ((t (:background ,.bg-contrast))))
-     `(consult-highlight-match-face ((t (:foreground ,.purple :weight bold))))
+     `(consult-highlight-match ((t (:foreground ,.purple :weight bold))))
      `(consult-file ((t (:foreground ,.fg-main))))
      `(consult-line-number ((t (:foreground ,.grey-subtle :inherit nil))))
      `(consult-line-number-prefix ((t (:box nil))))
-     `(consult-separator ((t (:foreground ,.grey-border))))
-     `(consult-async-separator ((t (:foreground ,.purple))))
+     `(consult-async-split ((t (:foreground ,.purple))))
      `(consult-narrow-indicator ((t (:foreground ,.purple :weight bold))))
      `(consult-bookmark ((t (:foreground ,.magenta))))
 
-     `(copilot-ghost-text-face ((t (:foreground ,.grey-border :slant italic))))
-     `(copilot-highlight-face ((t (:background ,.focus-bg))))
-
-     `(aidermacs-diff-face-added ((t (:inherit diff-added))))
-     `(aidermacs-diff-face-removed ((t (:inherit diff-removed))))
-     `(aidermacs-diff-face-changed ((t (:inherit diff-changed))))
-     `(aidermacs-chat-prompt-face ((t (:foreground ,.purple :weight bold))))
-     `(aidermacs-chat-user-prompt-face ((t (:foreground ,.teal :weight bold))))
-     `(aidermacs-chat-response-face ((t (:foreground ,.fg-main))))
-     `(aidermacs-chat-model-face ((t (:foreground ,.yellow :slant italic))))
-     `(aidermacs-architect-mode-line-face ((t (:foreground ,.teal :weight bold))))
+     `(copilot-overlay-face ((t (:foreground ,.grey-subtle :slant italic))))
 
      `(hl-todo ((t (:foreground ,.yellow :weight bold))))
-     `(hl-fixme ((t (:foreground ,.magenta :weight bold))))
-     `(hl-note ((t (:foreground ,.blue :weight bold))))
-     `(hl-done ((t (:foreground ,.green :weight bold))))
 
-     `(deft-current-line-face ((t (:background ,.bg-contrast))))
-     `(deft-file-face ((t (:foreground ,.purple))))
      `(deft-title-face ((t (:foreground ,.fg-main :weight bold))))
      `(deft-summary-face ((t (:foreground ,.grey-subtle :slant italic))))
 
-     `(forge-topic-title-face ((t (:foreground ,.fg-main :weight bold))))
-     `(forge-pr-author-face ((t (:foreground ,.purple))))
-     `(forge-label-face ((t (:background ,.bg-selection :foreground ,.fg-main :box (:line-width -1 :color ,.bg-selection :style released-button) :height 0.9))))
+     `(forge-topic-header-line ((t (:foreground ,.fg-main :weight bold))))
+     `(forge-post-author ((t (:foreground ,.purple))))
+     `(forge-topic-label ((t (:background ,.bg-selection :foreground ,.fg-main :box (:line-width -1 :color ,.bg-selection :style released-button) :height 0.9))))
 
-     `(github-review-comment-face ((t (:background ,.bg-contrast))))
-     `(github-review-suggestion-face ((t (:background ,.diff-changed-bg :foreground ,.diff-changed-fg))))
-
-     `(expand-region ((t (:background ,.visual-selection))))
-     `(er--highlight-face ((t (:background ,.visual-selection))))
      `(symbol-overlay-default-face ((t (:background ,.focus-bg))))
-     `(symbol-overlay-current-face ((t (:background ,.purple :foreground ,.bg-main))))
-     `(treesitter-context-face ((t (:background ,.bg-code :foreground ,.grey-subtle :height 0.9))))
-     `(treesit-fold-face ((t (:foreground ,.grey-border))))
-     `(cognitive-complexity-highlight-face ((t (:background ,.diff-changed-bg :foreground ,.warning-fg))))
 
      ;; == VISUAL-REGEXP FACES ==
      `(vr/match-0 ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
      `(vr/match-1 ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
-     `(vr/match-2 ((t (:background ,.green :foreground ,.bg-main :weight bold))))
-     `(vr/match-3 ((t (:background ,.yellow :foreground ,.bg-main :weight bold))))
-     `(vr/match-4 ((t (:background ,.blue :foreground ,.bg-main :weight bold))))
-     `(vr/match-5 ((t (:background ,.teal :foreground ,.bg-main :weight bold))))
-     `(vr/match-6 ((t (:background ,.rose :foreground ,.bg-main :weight bold))))
-     `(vr/match-7 ((t (:background ,.lavender :foreground ,.bg-main :weight bold))))
-     `(vr/match-8 ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
-     `(vr/match-9 ((t (:background ,.magenta :foreground ,.bg-main :weight bold))))
      `(vr/group-0 ((t (:background ,.bg-selection :foreground ,.purple :weight bold :box (:line-width 1 :color ,.purple)))))
      `(vr/group-1 ((t (:background ,.bg-selection :foreground ,.magenta :weight bold :box (:line-width 1 :color ,.magenta)))))
      `(vr/group-2 ((t (:background ,.bg-selection :foreground ,.green :weight bold :box (:line-width 1 :color ,.green)))))
-     `(better-jumper-marker-face ((t (:foreground ,.rose :underline t))))
-     `(consoli-config-rust-macro-face ((t (:inherit font-lock-function-call-face :foreground ,.magenta :slant italic :weight bold :underline (:style line :color ,.magenta)))))
+
+     ;; Rust, Jinx, undo-tree, and Ibuffer
+     `(consoli-config-rust-macro-face ((t (:foreground ,.yellow :weight bold :underline (:style line :color ,.yellow)))))
+     `(consoli-config-rust-unwrap-face ((t (:inherit error))))
+     `(consoli-config-rust-debug-face ((t (:foreground ,.lavender :slant italic))))
+     `(consoli-config-rust-propagation-face ((t (:foreground ,.teal :weight bold))))
+     `(consoli-config-rust-unsafe-face ((t (:inherit warning :weight bold))))
      `(consoli-config-rust-attribute-face ((t (:inherit font-lock-preprocessor-face :foreground ,.lavender :slant italic))))
-     `(jinx-correcting-face ((t (:underline (:style wave :color ,.yellow)))))
-     `(jinx-suggestion-face ((t (:foreground ,.green :weight bold))))
+     `(jinx-misspelled ((t (:underline (:style wave :color ,.yellow)))))
      `(undo-tree-visualizer-current-face ((t (:foreground ,.green :weight bold))))
      `(undo-tree-visualizer-active-branch-face ((t (:foreground ,.purple))))
      `(undo-tree-visualizer-register-face ((t (:foreground ,.yellow))))
-     `(undo-fu-session ((t (:foreground ,.green :background ,.bg-contrast :slant italic))))
-     `(annotate-highlight-face ((t (:underline (:style line :color ,.purple)))))
-     `(annotate-annotation-text-face ((t (:foreground ,.grey-subtle :slant italic :height 0.9))))
-     `(ibuffer-current-buffer-face ((t (:background ,.bg-contrast :weight bold))))
-     `(ibuffer-marked-face ((t (:foreground ,.magenta :weight bold))))
-     `(ibuffer-deletion-face ((t (:foreground ,.magenta :weight bold :strike-through t))))
-     `(ibuffer-filter-group-name-face ((t (:foreground ,.purple :weight bold))))
-     `(ibuffer-title-face ((t (:foreground ,.yellow :weight bold))))
+     `(ibuffer-marked ((t (:foreground ,.magenta :weight bold))))
+     `(ibuffer-deletion ((t (:foreground ,.magenta :weight bold :strike-through t))))
+     `(ibuffer-filter-group-name ((t (:foreground ,.purple :weight bold))))
+     `(ibuffer-title ((t (:foreground ,.yellow :weight bold))))
 
      ;; == GNUS FACES ==
      `(gnus-group-mail-1 ((t (:foreground ,.purple :weight bold))))
@@ -896,17 +766,15 @@
      `(gnus-summary-normal-unread ((t (:foreground ,.fg-bright :weight bold))))
      `(gnus-summary-normal-read ((t (:foreground ,.grey-subtle))))
      `(gnus-summary-cancelled ((t (:foreground ,.magenta :strike-through t))))
-     `(message-cited-text ((t (:foreground ,.blue :slant italic))))
+     `(message-cited-text-1 ((t (:foreground ,.blue :slant italic))))
      `(message-header-name ((t (:foreground ,.purple :weight bold))))
      `(message-header-subject ((t (:foreground ,.yellow :weight bold))))
      `(message-header-to ((t (:foreground ,.fg-main :weight bold))))
      `(message-separator ((t (:foreground ,.grey-border))))
 
      ;; Dashboard faces
-     `(dashboard-banner ((t (:foreground ,.purple))))
+     `(dashboard-text-banner ((t (:foreground ,.purple))))
      `(dashboard-heading ((t (:foreground ,.yellow :bold t))))
-     `(dashboard-project-title ((t (:foreground ,.blue :bold t))))
-     `(dashboard-item-highlight ((t (:background ,.focus-bg))))
 
      ;; Eglot diagnostic faces
      `(eglot-highlight-symbol-face ((t (:background ,.focus-bg))))
@@ -917,8 +785,9 @@
      `(eglot-inlay-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
      `(eglot-type-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
      `(eglot-parameter-hint-face ((t (:foreground ,.hint-fg :background unspecified :slant italic :height 0.9))))
-     ;; Eglot code actions (appears in modeline and overlays)
+     ;; Code actions in bundled Eglot and the newer refactor package.
      `(eglot-code-action-indicator-face ((t (:foreground ,.yellow :background ,.bg-main))))
+     `(refactor-indicator-face ((t (:foreground ,.yellow :background ,.bg-main))))
 
      ;; == CALENDAR AND DATE FACES ==
      `(calendar-today ((t (:foreground ,.yellow :weight bold :underline t))))
@@ -930,49 +799,8 @@
      `(diary-anniversary ((t (:foreground ,.magenta :weight bold))))
      `(diary-time ((t (:foreground ,.grey-docstring))))
 
-     ;; == BOOKMARK FACES ==
-     `(bookmark-menu-file-name ((t (:foreground ,.blue))))
-     `(bookmark-menu-annotation ((t (:foreground ,.grey-docstring :slant italic))))
-
      ;; Multimedia faces
-     `(pdf-view-link ((t (:foreground ,.blue :underline t))))
      `(emms-playlist-selected-face ((t (:background ,.bg-selection :foreground ,.fg-bright :weight bold))))
-
-     ;; Modern Package Enhancements
-     ;; Eglot Booster
-     `(eglot-booster-mode-line ((t (:foreground ,.green :weight bold))))
-
-     ;; Claude Code IDE
-     `(claude-code-ide-header ((t (:foreground ,.purple :weight bold))))
-     `(claude-code-ide-prompt ((t (:foreground ,.yellow :weight bold))))
-     `(claude-code-ide-response ((t (:foreground ,.fg-main))))
-     `(claude-code-ide-error ((t (:foreground ,.magenta :weight bold))))
-
-     ;; Treesit-Auto
-     `(treesit-auto-install-progress ((t (:foreground ,.blue :slant italic))))
-     `(treesit-auto-install-success ((t (:foreground ,.green :weight bold))))
-     `(treesit-auto-install-error ((t (:foreground ,.magenta :weight bold))))
-
-     ;; Tabspaces
-     `(tabspaces-active-tab ((t (:background ,.bg-selection :foreground ,.purple :weight bold))))
-     `(tabspaces-inactive-tab ((t (:background ,.bg-contrast :foreground ,.grey-subtle))))
-     `(tabspaces-workspace-indicator ((t (:foreground ,.yellow :weight bold))))
-
-     ;; Project Tab Groups
-     `(project-tab-group-current ((t (:foreground ,.purple :weight bold))))
-     `(project-tab-group-inactive ((t (:foreground ,.grey-subtle))))
-
-     ;; Clipetty (terminal clipboard)
-     `(clipetty-success ((t (:foreground ,.green :weight bold))))
-     `(clipetty-error ((t (:foreground ,.magenta :weight bold))))
-
-     ;; Exec Path From Shell
-     `(exec-path-from-shell-info ((t (:foreground ,.blue :slant italic))))
-     `(exec-path-from-shell-warn ((t (:foreground ,.yellow :weight bold))))
-
-     ;; Additional Modern Enhancements
-     ;; Drag Stuff
-     `(drag-stuff-preview-face ((t (:background ,.bg-selection :foreground ,.fg-bright))))
 
      ;; Multiple Cursors Enhanced
      `(mc/cursor-face ((t (:background ,.purple :foreground ,.bg-main :weight bold))))
@@ -991,9 +819,6 @@
      ;; Smartparens Enhanced
      `(sp-wrap-overlay-opening-pair ((t (:background ,.purple :foreground ,.bg-main))))
      `(sp-wrap-overlay-closing-pair ((t (:background ,.purple :foreground ,.bg-main))))
-
-     ;; Better Jumper
-     `(better-jumper-visited-face ((t (:background ,.focus-bg :foreground ,.purple))))
 
      ;; Treesit-Fold
      `(treesit-fold-replacement-face ((t (:foreground ,.grey-border :box (:line-width 1 :color ,.grey-border)))))
@@ -1017,28 +842,11 @@
   :group 'faces
   :prefix "tale-themes-")
 
-(defcustom tale-themes-special-modes
-  '(aidermacs-comint-mode-hook
-    aidermacs-vterm-mode-hook
-    vterm-mode-hook
-    compilation-mode-hook
-    git-commit-mode-hook
-    magit-mode-hook
-    magit-refresh-buffer-hook
-    magit-post-refresh-hook
-    magit-post-stage-hook
-    magit-post-unstage-hook
-    magit-post-commit-hook
-    messages-buffer-mode-hook
-    message-mode-hook
-    special-mode-hook
-    transient-setup-buffer-hook)
-  "Modes to setup special customization."
-  :type '(repeat symbol)
-  :group 'tale-themes-group)
+(defvar tale-themes--installed-hooks nil
+  "Alist of special buffer hooks and the functions Tale installed on them.")
 
-(defvar-local tale-themes--special-buffer-p nil
-  "Whether a special buffer hook has run in this buffer.")
+(defvar-local tale-themes--buffer-hooks nil
+  "Configured hooks that have run in this buffer's current major mode.")
 
 (defvar-local tale-themes--special-buffer-settings nil
   "Saved local variable bindings from before Tale styling.")
@@ -1051,7 +859,6 @@
 
 (defun tale-themes--style-special-buffer ()
   "Apply Tale styling once to the current buffer."
-  (setq tale-themes--special-buffer-p t)
   (unless tale-themes--special-remaps
     (dolist (variable '(left-fringe-width right-fringe-width
                         default-text-properties truncate-lines))
@@ -1087,26 +894,60 @@
           tale-themes--special-buffer-settings nil
           tale-themes--special-window-fringes nil)))
 
+(defun tale-themes--update-special-buffers (hooks)
+  "Reconcile installed hooks and styled buffers with configured HOOKS."
+  (let ((wanted (and (seq-some (lambda (theme) (get theme 'tale-theme))
+                               custom-enabled-themes)
+                     hooks)))
+    (dolist (entry tale-themes--installed-hooks)
+      (unless (memq (car entry) wanted)
+        (remove-hook (car entry) (cdr entry))
+        (setq tale-themes--installed-hooks (delq entry tale-themes--installed-hooks))))
+    (dolist (hook wanted)
+      (unless (assq hook tale-themes--installed-hooks)
+        (let ((handler (lambda ()
+                         (cl-pushnew hook tale-themes--buffer-hooks)
+                         (tale-themes--style-special-buffer))))
+          (add-hook hook handler)
+          (push (cons hook handler) tale-themes--installed-hooks))))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (if (and wanted
+                 (or (seq-intersection tale-themes--buffer-hooks wanted)
+                     (seq-some (lambda (mode)
+                                 (memq (intern-soft (concat (symbol-name mode) "-hook"))
+                                       wanted))
+                               (derived-mode-all-parents major-mode))))
+            (tale-themes--style-special-buffer)
+          (tale-themes--unstyle-special-buffer))))))
+
+(defcustom tale-themes-special-modes
+  '(aidermacs-comint-mode-hook
+    aidermacs-vterm-mode-hook
+    vterm-mode-hook
+    compilation-mode-hook
+    git-commit-mode-hook
+    magit-mode-hook
+    magit-refresh-buffer-hook
+    magit-post-refresh-hook
+    magit-post-stage-hook
+    magit-post-unstage-hook
+    magit-post-commit-hook
+    messages-buffer-mode-hook
+    message-mode-hook
+    special-mode-hook
+    transient-setup-buffer-hook)
+  "Hooks that apply Tale styling to the current buffer."
+  :set (lambda (option hooks)
+         (set-default option hooks)
+         (tale-themes--update-special-buffers hooks))
+  :type '(repeat symbol)
+  :group 'tale-themes-group)
+
 (defun tale-themes--sync-special-buffers (theme)
   "Synchronize special buffer styling after a change to THEME."
   (when (get theme 'tale-theme)
-    (let ((active (seq-some (lambda (enabled) (get enabled 'tale-theme))
-                            custom-enabled-themes)))
-      (dolist (hook tale-themes-special-modes)
-        (if active
-            (add-hook hook #'tale-themes--style-special-buffer)
-          (remove-hook hook #'tale-themes--style-special-buffer)))
-      (dolist (buffer (buffer-list))
-        (with-current-buffer buffer
-          (if active
-              (when (or tale-themes--special-buffer-p
-                        (seq-some
-                         (lambda (mode)
-                           (memq (intern-soft (concat (symbol-name mode) "-hook"))
-                                 tale-themes-special-modes))
-                         (derived-mode-all-parents major-mode)))
-                (tale-themes--style-special-buffer))
-            (tale-themes--unstyle-special-buffer)))))))
+    (tale-themes--update-special-buffers tale-themes-special-modes)))
 
 (add-hook 'enable-theme-functions #'tale-themes--sync-special-buffers)
 (add-hook 'disable-theme-functions #'tale-themes--sync-special-buffers)
@@ -1116,36 +957,33 @@
 (defun tale-themes-reload-current-theme ()
   "Reload the currently active Tale theme."
   (interactive)
-  (when-let ((current-theme (car custom-enabled-themes)))
-    (when (string-match-p "tale" (symbol-name current-theme))
+  (when-let* ((current-theme (car custom-enabled-themes)))
+    (when (get current-theme 'tale-theme)
       (disable-theme current-theme)
       (load-theme current-theme t)
       (message "Reloaded %s theme" current-theme))))
 
+(defconst tale-themes--variants
+  '(dark-tale bright-tale witch-tale vampire-tale
+    honed-tale cloud-tale sophisticated-dark-tale sophisticated-light-tale)
+  "Tale themes in cycling order.")
+
 (defun tale-themes-switch-variant ()
-  "Switch between Tale theme variants."
+  "Cycle through the Tale themes, starting with dark-tale."
   (interactive)
   (let* ((current-theme (car custom-enabled-themes))
-         (next-theme (if current-theme
-                         (let ((current-name (symbol-name current-theme)))
-                           (cond
-                            ((string-match-p "dark-tale" current-name) 'bright-tale)
-                            ((string-match-p "bright-tale" current-name) 'witch-tale)
-                            ((string-match-p "witch-tale" current-name) 'vampire-tale)
-                            ((string-match-p "vampire-tale" current-name) 'dark-tale)
-                            (t 'dark-tale)))
-                       'dark-tale)))
+         (next-theme (or (cadr (memq current-theme tale-themes--variants))
+                         (car tale-themes--variants))))
+    (load-theme next-theme t)
     (when current-theme
       (disable-theme current-theme))
-    (load-theme next-theme t)
     (message "Switched to %s theme" next-theme)))
 
 (defun tale-themes-toggle-dark-light ()
   "Toggle between dark-tale and bright-tale themes."
   (interactive)
   (let* ((current-theme (car custom-enabled-themes))
-         (next-theme (if (and current-theme
-                              (string-match-p "bright-tale" (symbol-name current-theme)))
+         (next-theme (if (eq current-theme 'bright-tale)
                          'dark-tale
                        'bright-tale)))
     (when current-theme

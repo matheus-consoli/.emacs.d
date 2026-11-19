@@ -11,7 +11,6 @@
          (bg-contrast . "#303033")
          (bg-code . "#252527")
          (bg-dim . "#28282A")
-         (bg-inactive-sel . "#353538")
          (bg-selection . "#3A3A3D")
          (bg-special . "#202022")
 
@@ -38,12 +37,10 @@
          (primary-selection . "#2A2A2D")
          (secondary-selection . "#3A3A40")
          (visual-selection . "#4A4A50")
-         (inactive-selection . "#303033")
 
          (success-fg . "#8ABA9A")
          (warning-fg . "#C0A478")
          (error-fg . "#CA8A8A")
-         (info-muted . "#7A8A9A")
 
          (diff-added-bg . "#1A2A20")
          (diff-added-fg . "#8ABA9A")

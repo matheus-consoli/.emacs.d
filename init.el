@@ -399,7 +399,7 @@
 (use-package consult-eglot
   :after (consult eglot)
   :bind (:map eglot-mode-map
-              ("C-c l s" . consult-eglot-symbols)
+              ;; ("C-c l s" . consult-eglot-symbols)
               ("C-c l i" . consult-imenu)
               ("C-c l e" . consult-flycheck)))
 
@@ -464,11 +464,11 @@
   :hook (eglot-managed-mode . eldoc-box-hover-mode))
 
 (use-package dape
-  :hook
-  (kill-emacs . dape-breakpoint-save)
-  (after-init . dape-breakpoint-load)
-  :custom
-  (dape-breakpoint-global-mode +1)
+  :commands (dape dape-breakpoint-toggle dape-breakpoint-global-mode)
+  :config
+  (dape-breakpoint-load)
+  (dape-breakpoint-global-mode 1)
+  (add-hook 'kill-emacs-hook #'dape-breakpoint-save)
   (add-hook 'dape-display-source-hook #'pulse-momentary-highlight-one-line)
   ;; kill compile buffer on build success
   (add-hook 'dape-compile-hook #'kill-buffer))
@@ -517,12 +517,6 @@
               ("C-c l h o" . eglot-cthier-request-outgoing-call-hierarchy)
               ("C-c l h S" . eglot-cthier-request-supertype-call-hierarchy)
               ("C-c l h s" . eglot-cthier-request-subtype-call-hierarchy)))
-
-(use-package eglot-semtok
-  :straight (:host codeberg :repo "harald/eglot-supplements" :files ("eglot-semtok.el"))
-  :hook
-  (eglot-connect-hook . eglot-semtok-on-connected)
-  (rust-ts-mode . eglot-semtok-font-lock-init))
 
 (use-package sideline-eglot
   :defer t
@@ -769,9 +763,65 @@ the icons, the total width remains constant."
 ;; Marginalia - completion annotations
 (use-package marginalia
   :custom
-  (marginalia-align 'right)
-  (marginalia-align-offset -10)
-  :hook (after-init . marginalia-mode))
+  (marginalia-align 'left)
+  (marginalia-align-offset 5)
+  (marginalia-separator (propertize "  " 'consoli-marginalia-separator t))
+  :hook (after-init . marginalia-mode)
+  :config
+  (defun consoli-config/annotate-theme (candidate)
+    "Annotate theme CANDIDATE with its description and path."
+    (when-let* ((file (gethash (concat candidate "-theme")
+                              (marginalia--library-cache))))
+      (marginalia--fields
+       ((marginalia--library-doc file)
+        :face 'marginalia-documentation)
+       ((marginalia--abbreviate-file-name (file-name-directory file))
+        :face 'marginalia-file-name))))
+  (setf (alist-get 'theme marginalia-annotators)
+        '(consoli-config/annotate-theme marginalia-annotate-theme builtin none))
+  (defun consoli-config/marginalia-fields (annotation start)
+    "Split ANNOTATION into Marginalia fields starting at START."
+    (let ((end (length annotation))
+          fields)
+      (while (< start end)
+        (let ((separator (or (text-property-any start end 'consoli-marginalia-separator t annotation)
+                             end)))
+          (push (substring annotation start separator) fields)
+          (setq start (+ separator (length marginalia-separator)))))
+      (nreverse fields)))
+
+  (defun consoli-config/align-marginalia-columns (rows)
+    "Align annotation fields across the Marginalia ROWS being displayed."
+    (let ((widths (make-hash-table :test 'eql))
+          (spacing (string-width marginalia-separator))
+          plans)
+      (dolist (row rows)
+        (let* ((annotation (nth 2 row))
+               (anchor (text-property-any 0 (length annotation) 'marginalia--align t annotation)))
+          (when anchor
+            (pcase (get-text-property anchor 'display annotation)
+              (`(space :align-to (+ left ,column))
+               (let* ((start (+ 1 anchor (length marginalia-separator)))
+                      (fields (and (get-text-property (1+ anchor) 'consoli-marginalia-separator annotation)
+                                   (consoli-config/marginalia-fields annotation start))))
+                 (when (cdr fields)
+                   (push (list row (substring annotation 0 start) column fields) plans)
+                   (cl-loop for remaining on fields for field = (car remaining) for index from 0
+                            do (puthash index (max (gethash index widths 0)
+                                                   (string-width (string-trim-right field)))
+                                        widths)))))))))
+      (pcase-dolist (`(,row ,prefix ,column ,fields) plans)
+        (cl-loop with position = (+ column spacing)
+                 for remaining on fields for field = (car remaining) for index from 0
+                 for separator = (if (zerop index) prefix
+                                   (propertize " " 'display `(space :align-to (+ left ,position))))
+                 collect (concat separator (if (cdr remaining)
+                                                 (string-trim-right field)
+                                               field)) into pieces
+                 do (cl-incf position (+ (gethash index widths) spacing))
+                 finally (setf (nth 2 row) (apply #'concat pieces)))))
+    rows)
+  (advice-add 'marginalia--align :filter-return #'consoli-config/align-marginalia-columns))
 
 (use-package which-key
   :config
@@ -974,6 +1024,7 @@ targets."
          ("M-g m" . consult-mark)
          ("M-g k" . consult-global-mark)
          ("M-g i" . consult-imenu)
+         ("M-g F" . consoli-config/consult-functions)
          ("M-g I" . consult-imenu-multi)
          ;; M-s bindings in `search-map'
          ("M-s d" . consult-find)                  ;; Alternative: consult-fd
@@ -1073,6 +1124,23 @@ targets."
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
   )
+
+(defun consoli-config/consult-functions ()
+  "Search functions and methods in the current Tree-sitter buffer."
+  (interactive)
+  (require 'consult-imenu)
+  (unless (and (bound-and-true-p treesit-simple-imenu-settings)
+               (treesit-parser-list))
+    (user-error "This buffer has no Tree-sitter Imenu index"))
+  (let ((treesit-simple-imenu-settings
+         (seq-filter (lambda (setting)
+                       (member (car setting) '("Fn" "Function" "Functions" "Method" "Methods")))
+                     treesit-simple-imenu-settings))
+        (imenu-create-index-function #'treesit-simple-imenu)
+        (consult-imenu--cache nil))
+    (unless treesit-simple-imenu-settings
+      (user-error "This mode does not define a function group"))
+    (consult-imenu)))
 
 (use-package consult-flycheck
   :defer t
@@ -1401,7 +1469,7 @@ targets."
 
 ;; Theme configuration
 (defvar consoli-themes
-  '((gui . honed-tale)
+  '((gui . dark-tale)
     (gui-light . cloud-tale)
     (cli . bright-tale))
   "Theme configuration for different display types.")
@@ -2319,6 +2387,13 @@ may not be efficient."
 
 ;; (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil :underline nil :weight 'ultra-bold)
 
+(defun consoli-config/treesit-italic-keywords ()
+  "Use italic keywords in buffers with an active Tree-sitter parser."
+  (when (and (fboundp 'treesit-parser-list) (treesit-parser-list))
+    (face-remap-add-relative 'font-lock-keyword-face :slant 'italic)))
+
+(add-hook 'after-change-major-mode-hook #'consoli-config/treesit-italic-keywords)
+
 (when (boundp 'treesit-enabled-modes)
   (setopt treesit-enabled-modes t
           treesit-auto-install-grammar 'ask))
@@ -2340,11 +2415,26 @@ may not be efficient."
     (advice-add mode :before
                 (lambda (&rest _) (treesit-ensure-installed (car recipe))))))
 
-(defun indent-between-pair (&rest _ignored)
-  (newline)
-  (indent-according-to-mode)
-  (forward-line -1)
-  (indent-according-to-mode))
+(defun consoli-config/newline-between-pair (&optional arg)
+  "Insert an indented newline, expanding an empty delimiter pair.
+With ARG, pass the prefix argument to `indent-new-comment-line'."
+  (interactive "*P")
+  (let* ((opening (char-before))
+         (closing (char-after))
+         (split (and (not arg) (not (use-region-p))
+                     opening closing
+                     (not (nth 8 (syntax-ppss)))
+                     (or (and (eq (char-syntax opening) ?\()
+                              (eq (matching-paren opening) closing))
+                         (and (derived-mode-p 'rust-ts-mode)
+                              (eq opening ?<) (eq closing ?>))))))
+    (indent-new-comment-line arg)
+    (when split
+      (save-excursion
+        (newline-and-indent))
+      (indent-according-to-mode))))
+
+(define-key prog-mode-map (kbd "RET") #'consoli-config/newline-between-pair)
 
 (use-package smartparens
   :hook (after-init . smartparens-global-mode)
@@ -2375,19 +2465,13 @@ may not be efficient."
   :config
   ;; Rust-specific pairs
   (sp-with-modes '(rust-ts-mode)
-    (sp-local-pair "<" ">" :post-handlers '((indent-between-pair "RET")))
+    (sp-local-pair "<" ">")
     (sp-local-pair "'" nil :actions nil))
 
   ;; Org-mode pairs
   (sp-with-modes '(org-mode)
     (sp-local-pair "~" "~")
-    (sp-local-pair "=" "="))
-
-  ;; Programming mode pairs with better indentation
-  (sp-with-modes '(prog-mode)
-    (sp-local-pair "{" nil :post-handlers '((indent-between-pair "RET")))
-    (sp-local-pair "[" nil :post-handlers '((indent-between-pair "RET")))
-    (sp-local-pair "(" nil :post-handlers '((indent-between-pair "RET")))))
+    (sp-local-pair "=" "=")))
 
 (show-paren-mode 1)
 (setopt show-paren-style 'expression)
@@ -2707,62 +2791,10 @@ may not be efficient."
   "Complete setup for rust-ts-mode."
   ;; Setup eglot for Rust
   (consoli-config/rust-eglot-setup)
-  ;; Setup syntax highlighting
+  (require 'consoli-rust-faces)
   (consoli-config/rust-ts-mode-highlighting))
 
 (add-hook 'rust-ts-mode-hook #'consoli-config/rust-ts-mode-setup)
-
-(defface consoli-config-rust-unwrap-face
-  '((t (:inherit error
-                 :weight bold
-                 :foreground "#AD3E3E")))
-  "Face for Rust .unwrap() calls")
-
-(defface consoli-config-rust-macro-face
-  '((t (:inherit font-lock-function-call-face
-                 :slant italic
-                 :width expanded
-                 :underline t)))
-  "Face for Rust todo! macro calls")
-
-(defface consoli-config-rust-attribute-face
-  '((t (:inherit font-lock-preprocessor-face
-                 :weight light
-                 :width expanded
-                 :slant oblique
-                 :foreground "#7e57c2")))
-  "Face for Rust attribute items")
-
-(defun consoli-config/rust-ts-mode-highlighting ()
-  "Apply custom tree-sitter highlights for Rust mode."
-  (setq-local
-   treesit-font-lock-settings
-   (append
-    treesit-font-lock-settings
-    ;; Highlight .unwrap() calls
-    (treesit-font-lock-rules
-     :language 'rust
-     :feature 'unwrap-call
-     :override t
-     '(((field_expression
-         field: (field_identifier) @consoli-config-rust-unwrap-face)
-        (:match "^unwrap$" @consoli-config-rust-unwrap-face))))
-
-    ;; Highlight todo!() macro
-    (treesit-font-lock-rules
-     :language 'rust
-     :feature 'todo-macro
-     :override t
-     '(((macro_invocation
-         (identifier) @consoli-config-rust-macro-face)
-        (:match "^todo$" @consoli-config-rust-macro-face))))
-
-    ;; Highlight #[attribute] items
-    (treesit-font-lock-rules
-     :language 'rust
-     :feature 'attribute-items
-     :override t
-     '((attribute_item) @consoli-config-rust-attribute-face)))))
 
 (use-package cargo-transient
   :defer t
@@ -2838,13 +2870,7 @@ may not be efficient."
   (add-hook 'markdown-ts-view-mode-hook #'consoli-config/markdown-toggle-key)
   (add-hook 'markdown-ts-mode-hook #'consoli-config/markdown-toggle-key)
   :config
-  (when (< emacs-major-version 31)
-    (add-to-list 'treesit-language-source-alist
-                 '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                            "split_parser" "tree-sitter-markdown/src"))
-    (add-to-list 'treesit-language-source-alist
-                 '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                                   "split_parser" "tree-sitter-markdown-inline/src"))))
+  (require 'markdown-ts-mode-x))
 
 (use-package roc-ts-mode
   :mode ("\\.roc\\'" . roc-ts-mode)
@@ -2875,6 +2901,35 @@ may not be efficient."
   :config
   (add-to-list 'eglot-server-programs
                '((unison-ts-mode unisonlang-mode) "127.0.0.1" 5757)))
+
+(defconst consoli-config/opam-setup-file
+  (expand-file-name "opam-user-setup.el" user-emacs-directory))
+
+(defun consoli-config/load-opam ()
+  "Load the OPAM environment and editor tools on demand."
+  (interactive)
+  ;; The generated setup configures a session-wide switch and load path.
+  (let ((default-directory (expand-file-name "~/")))
+    (require 'opam-user-setup consoli-config/opam-setup-file t)))
+
+(use-package tuareg
+  :mode (("\\.\\(?:mlp?\\|eliom\\)\\'" . tuareg-mode)
+         ("\\.\\(?:mli\\|eliomi\\)\\'" . tuareg-interface-mode))
+  :interpreter ("ocaml" . tuareg-mode)
+  :config
+  (consoli-config/load-opam))
+
+(defun consoli-config/dune-mode ()
+  "Load OPAM's Dune mode and enable it in this buffer."
+  (interactive)
+  (consoli-config/load-opam)
+  (unless (require 'dune nil t)
+    (user-error "Dune's Emacs library is missing from the OPAM switch"))
+  (dune-mode))
+
+(add-to-list 'auto-mode-alist
+             '("\\(?:\\`\\|/\\)dune\\(?:\\.inc\\|-project\\|-workspace\\)?\\'"
+               . consoli-config/dune-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; EDITING BEHAVIOR
@@ -3180,3 +3235,8 @@ may not be efficient."
 (provide 'init)
 
 ;;; init.el ends here
+;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
+(autoload 'opam-update-env consoli-config/opam-setup-file
+  "Update the environment to follow the current OPAM switch." t)
+(autoload 'utop consoli-config/opam-setup-file "Start the OCaml toplevel." t)
+;; ## end of OPAM user-setup addition for emacs / base ## keep this line

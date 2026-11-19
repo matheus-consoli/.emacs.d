@@ -65,6 +65,7 @@ transient/
 !init.el
 !early-init.el
 !my-themes/*
+!my-themes/tests/*.el
 !lisp/*
 
 .lsp-session-v1

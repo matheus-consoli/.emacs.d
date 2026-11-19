@@ -19,7 +19,7 @@
 (defconst consoli-fonts/families
   '((ui          . ("SF Mono" "Atkinson Hyperlegible Mono"))
     (programming . ("Dank Mono" "Victor Mono" "Myna"))
-    (org         . ("Monaspace Radon Frozen" "Margem Rounded Test" "Maple Mono"))
+    (org         . ("iA Writer Duo S" "Monaspace Radon Frozen" "Margem Rounded Test" "Maple Mono"))
     (modeline    . ("Reddit Mono" "SF Mono"))
     (alt-mono    . ("Victor Mono" "Myna")))
   "Font families with fallback preferences.")

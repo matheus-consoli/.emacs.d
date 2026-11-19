@@ -11,7 +11,6 @@
          (bg-contrast . "#21262d")
          (bg-code . "#242a30")
          (bg-dim . "#2d333a")
-         (bg-inactive-sel . "#343a41")
          (bg-selection . "#3a4147")
          (bg-special . "#161b22")
 
@@ -22,7 +21,7 @@
          (grey-subtle . "#7d8590")
          (grey-border . "#484f58")
          (grey-docstring . "#8b949e")
-         (grey-comment-blue . "#6e7681")
+         (grey-comment-blue . "#757d89")
 
          (purple . "#a5d6a7")
          (lavender . "#b39ddb")
@@ -38,12 +37,10 @@
          (primary-selection . "#1f2d1f")
          (secondary-selection . "#2a3f3a")
          (visual-selection . "#3a2f4a")
-         (inactive-selection . "#2f3a2f")
 
          (success-fg . "#9ACC83")
          (warning-fg . "#D4A574")
          (error-fg . "#FF877E")
-         (info-muted . "#58a6ff")
 
          (diff-added-bg . "#0f3a1f")
          (diff-added-fg . "#7fb069")

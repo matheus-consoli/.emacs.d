@@ -11,7 +11,6 @@
          (bg-contrast . "#E5E3DE")
          (bg-code . "#EFEDE8")
          (bg-dim . "#E8E6E1")
-         (bg-inactive-sel . "#E0DED9")
          (bg-selection . "#D8D6D1")
          (bg-special . "#F0EEE9")
 
@@ -22,15 +21,15 @@
          (grey-subtle . "#6E6E70")
          (grey-border . "#C8C6C1")
          (grey-docstring . "#5A5A5C")
-         (grey-comment-blue . "#8C746F")
+         (grey-comment-blue . "#816B67")
 
          (purple . "#7A5C7D")
-         (lavender . "#8A6C8D")
+         (lavender . "#836686")
          (magenta . "#9A6070")
          (rose . "#A05060")
-         (green . "#547A6A")
-         (teal . "#4A7A7A")
-         (yellow . "#B09468")
+         (green . "#527768")
+         (teal . "#487777")
+         (yellow . "#78613F")
          (blue . "#5A6A8A")
 
          (focus-bg . "#E5E3DE")
@@ -38,12 +37,10 @@
          (primary-selection . "#E8E6E1")
          (secondary-selection . "#DDD8D0")
          (visual-selection . "#D5D0C8")
-         (inactive-selection . "#E0DED9")
 
          (success-fg . "#3A6A4A")
          (warning-fg . "#76572D")
          (error-fg . "#8A4A4A")
-         (info-muted . "#5A6A8A")
 
          (diff-added-bg . "#E8F0E8")
          (diff-added-fg . "#3A6A4A")

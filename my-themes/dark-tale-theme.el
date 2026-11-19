@@ -11,7 +11,6 @@
          (bg-contrast . "#121212")
          (bg-code . "#161616")
          (bg-dim . "#1a1a1a")
-         (bg-inactive-sel . "#2a2a2a")
          (bg-selection . "#2d2d2d")
          (bg-special . "#0a0a0a")
 
@@ -38,12 +37,10 @@
          (primary-selection . "#1a1a1a")
          (secondary-selection . "#2a3a3a")
          (visual-selection . "#4a3a5a")
-         (inactive-selection . "#2a2a2a")
 
          (success-fg . "#7EC699")
          (warning-fg . "#D4A574")
          (error-fg . "#FF8FA3")
-         (info-muted . "#7a8fb5")
 
          (diff-added-bg . "#0d3a1f")
          (diff-added-fg . "#7ec699")

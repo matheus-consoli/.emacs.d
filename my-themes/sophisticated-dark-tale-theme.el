@@ -15,7 +15,6 @@
          (bg-contrast . "#1F1F21")      ; Contrast areas
          (bg-code . "#161618")          ; Code blocks
          (bg-dim . "#0A0A0C")           ; Dimmed areas
-         (bg-inactive-sel . "#252527")  ; Inactive selections
          (bg-selection . "#2A2A2C")     ; General selections
          (bg-special . "#101012")       ; Special buffers
 
@@ -44,13 +43,11 @@
          (primary-selection . "#2A3A4A")   ; Blue-tinted selection
          (secondary-selection . "#3A2A4A") ; Purple-tinted selection
          (visual-selection . "#2A3A4A")    ; Visual mode
-         (inactive-selection . "#252527")  ; Inactive
 
          ;; Status colors
          (success-fg . "#5FC0AC")    ; Success
          (warning-fg . "#E89B5F")    ; Warning
          (error-fg . "#F56476")      ; Error
-         (info-muted . "#6B9BD4")       ; Info
 
          ;; Diff colors
          (diff-added-bg . "#1A3A34")    ; Dark pine background
