@@ -2754,6 +2754,13 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
 (use-package rust-ts-mode
   :defer t)
 
+(use-package lean4-mode
+  :straight (lean4-mode :type git :host github
+                        :repo "leanprover-community/lean4-mode"
+                        :files ("*.el" "data"))
+  :commands lean4-mode
+  :mode ("\\.lean\\'" . lean4-mode))
+
 (defun consoli-config/rust-eglot-setup ()
   "Set up rust-analyzer initialization options for Eglot."
   (setq-local eglot-workspace-configuration
