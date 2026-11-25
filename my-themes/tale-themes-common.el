@@ -87,6 +87,7 @@
 
      ;; Basic faces
      `(escape-glyph ((t (:foreground ,.yellow))))
+     '(glyphless-char ((((type tty)) (:inherit escape-glyph :underline nil))))
      `(homoglyph ((t (:foreground ,.yellow))))
      `(nobreak-hyphen ((t (:foreground ,.yellow))))
      `(nobreak-space ((t (:foreground ,.yellow :underline t))))

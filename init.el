@@ -78,6 +78,7 @@
   (read-extended-command-predicate #'command-completion-default-include-p)
 
   ;; Minibuffer settings
+  (resize-mini-windows nil)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
 
@@ -2941,7 +2942,22 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
               tab-width 4)
 
 ;; Scrolling behavior
-(setq-default scroll-preserve-screen-position 'always
+(require 'mwheel)
+
+(defun consoli-config/terminal-wheel-scroll (scroll event &optional arg)
+  "Use unaccelerated line scrolling for wheel events on text terminals."
+  (let ((target (posn-window (event-start event))))
+    (if (display-graphic-p (if (windowp target) (window-frame target) target))
+        (funcall scroll event arg)
+      (let ((mouse-wheel-scroll-amount (cons 1 (seq-filter #'consp mouse-wheel-scroll-amount)))
+            (mouse-wheel-progressive-speed nil)
+            (mwheel-scroll-up-function #'scroll-up)
+            (mwheel-scroll-down-function #'scroll-down))
+        (funcall scroll event arg)))))
+
+(advice-add 'mwheel-scroll :around #'consoli-config/terminal-wheel-scroll)
+
+(setq-default scroll-preserve-screen-position nil
               scroll-conservatively 101
               fast-but-imprecise-scrolling t
               redisplay-dont-pause 1
@@ -2950,9 +2966,9 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
 (use-package scroll-restore
   :hook (after-init . scroll-restore-mode)
   :custom
-  ((scroll-restore-handle-cursor t)
-   (scroll-restore-restore-jump-back t)
-   (scroll-restore-cursor-type nil))
+  (scroll-restore-handle-cursor 'type)
+  (scroll-restore-jump-back t)
+  (scroll-restore-cursor-type nil)
   :bind ("<Scroll_Lock>" . scroll-restore-mode))
 
 
@@ -3019,7 +3035,9 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
 (use-package jinx
   :hook (emacs-startup . global-jinx-mode)
   :config
-  (setq jinx-languages "en_UK en_US pt_BR")
+  (setq jinx-languages "en_GB en_US pt_BR")
+  (require 'consoli-auto-correct)
+  (add-hook 'jinx-mode-hook #'consoli-auto-correct-setup)
 
   ;; `M-$` correct the word at point
   :bind ([remap ispell-word] . jinx-correct)
@@ -3032,16 +3050,14 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
 (setq-default pulse-delay 0.03
               pulse-iterations 13)
 
-;; Pulse region on region-based operations
-(dolist (fn '(kill-ring-save sp-copy-sexp sp-backward-copy-sexp
-                             kill-region
-                             sp-wrap-round sp-wrap-square sp-wrap-curly))
-  (advice-add fn :before #'consoli-config/pulse-current-region))
+(require 'consoli-pulse)
 
-;; Pulse sexp on sexp-based operations
-(dolist (fn '(sp-kill-sexp sp-backward-kill-sexp sp-kill-hybrid-sexp
-                           sp-transpose-sexp sp-unwrap-sexp sp-backward-unwrap-sexp))
+;; Retain the structural feedback for explicit Smartparens kills and unwraps.
+(dolist (fn '(sp-kill-hybrid-sexp sp-unwrap-sexp sp-backward-unwrap-sexp))
   (advice-add fn :before #'consoli-config/pulse-sexp-at-point))
+(advice-add 'sp-kill-sexp :before
+            (lambda (&optional _arg copy)
+              (unless copy (consoli-config/pulse-sexp-at-point))))
 
 (use-package undo-tree
   :hook (after-init . global-undo-tree-mode)
@@ -3188,19 +3204,6 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
     (indent-according-to-mode)
     (goto-char current-point)
     (forward-char)))
-
-(defun consoli-config/pulse-current-region (&rest _)
-  "Pulse the current implicit or active region."
-  (cond
-   ;; Active region exists
-   (mark-active
-    (pulse-momentary-highlight-region (region-beginning) (region-end)))
-   ;; Mark exists but no active region
-   ((and (mark t) (not (= (mark t) (point))))
-    (pulse-momentary-highlight-region (mark t) (point)))
-   ;; Fallback: pulse current line
-   (t
-    (pulse-momentary-highlight-one-line (point)))))
 
 (defun consoli-config/pulse-sexp-at-point (&rest _)
   "Pulse the sexp that smartparens will operate on."
