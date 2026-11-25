@@ -1,6 +1,6 @@
 ;;; consoli-auto-correct.el --- Correct the last word on space with Jinx -*- lexical-binding: t; -*-
 
-(require 'cl-lib)
+(require 'dash)
 (require 'jinx)
 
 (declare-function jinx--mod-suggest "ext:jinx-mod.c")
@@ -75,7 +75,7 @@
 (defun consoli-auto-correct--suggestion (word)
   "Return the first spelling candidate Jinx offers for WORD."
   ;; Jinx lists dictionaries in order, then session words, then save actions.
-  (or (cl-loop for dict in jinx--dicts thereis (car (jinx--mod-suggest dict word)))
+  (or (-some (lambda (dict) (car (jinx--mod-suggest dict word))) jinx--dicts)
       (car (jinx--session-suggestions word))))
 
 (defun consoli-auto-correct--replace (overlay original suggestion space)
@@ -107,9 +107,9 @@
         ;; Check the whole token so Jinx can recognize URLs and other exclusions.
         (font-lock-ensure start end)
         (jinx--check-region start end)
-        (when-let* ((overlay (cl-find-if
-                              (lambda (ov) (= (overlay-end ov) end))
-                              (jinx--get-overlays start end t)))
+        (when-let* ((overlay (-first
+                             (lambda (ov) (= (overlay-end ov) end))
+                             (jinx--get-overlays start end t)))
                     (beg (overlay-start overlay))
                     (allowed (save-excursion (goto-char beg) (consoli-auto-correct-context-p)))
                     (original (buffer-substring-no-properties beg end))
@@ -120,10 +120,10 @@
   "Enable correction only when Jinx loaded every requested language exactly."
   (if (and jinx-mode (derived-mode-p 'prog-mode 'text-mode)
            jinx--dicts
-           (let ((loaded (mapcar (lambda (dict) (car (jinx--mod-describe dict)))
-                                 jinx--dicts)))
-             (cl-every (lambda (lang) (member lang loaded))
-                       (split-string jinx-languages))))
+           (let ((loaded (-map (lambda (dict) (car (jinx--mod-describe dict)))
+                               jinx--dicts)))
+             (-all? (lambda (lang) (member lang loaded))
+                    (split-string jinx-languages))))
       (add-hook 'post-self-insert-hook #'consoli-auto-correct--at-space nil t)
     (remove-hook 'post-self-insert-hook #'consoli-auto-correct--at-space t))
   (setq consoli-auto-correct--pending nil))

@@ -2,7 +2,7 @@
 
 (require 'treesit)
 (require 'font-lock)
-(require 'seq)
+(require 'dash)
 
 (defface consoli-config-rust-unwrap-face '((t (:inherit error)))
   "Face for panic-prone method calls and panic!."
@@ -36,7 +36,7 @@
         (let* ((faces (get-text-property beg 'face))
                (next (next-single-property-change beg 'face nil end))
                (special (and (consp faces)
-                             (seq-find (lambda (f) (memq f consoli-rust--faces)) faces))))
+                             (-first (lambda (f) (memq f consoli-rust--faces)) faces))))
           (when (and special (not (eq special (car faces))))
             (put-text-property beg next 'face (cons special (remq special faces))))
           (setq beg next))))))
@@ -44,7 +44,7 @@
 (defun consoli-config/rust-ts-mode-highlighting ()
   "Enable targeted Rust syntax faces at Tree-sitter highlighting level four."
   (when (and treesit-primary-parser
-             (not (memq 'consoli-rust (apply #'append treesit-font-lock-feature-list))))
+             (not (memq 'consoli-rust (-flatten-n 1 treesit-font-lock-feature-list))))
     (setq-local treesit-font-lock-settings
                 (append treesit-font-lock-settings
                         (treesit-font-lock-rules

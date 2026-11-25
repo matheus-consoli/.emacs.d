@@ -23,6 +23,10 @@
 (straight-use-package 'use-package)
 (setq use-package-compute-statistics nil)
 
+;; Shared list utilities used by this configuration and local libraries.
+(use-package dash
+  :demand t)
+
 (straight-use-package
  '(org
    :type git
@@ -1134,9 +1138,9 @@ targets."
                (treesit-parser-list))
     (user-error "This buffer has no Tree-sitter Imenu index"))
   (let ((treesit-simple-imenu-settings
-         (seq-filter (lambda (setting)
-                       (member (car setting) '("Fn" "Function" "Functions" "Method" "Methods")))
-                     treesit-simple-imenu-settings))
+         (-filter (lambda (setting)
+                    (member (car setting) '("Fn" "Function" "Functions" "Method" "Methods")))
+                  treesit-simple-imenu-settings))
         (imenu-create-index-function #'treesit-simple-imenu)
         (consult-imenu--cache nil))
     (unless treesit-simple-imenu-settings
@@ -1193,8 +1197,8 @@ targets."
 
   (defun consoli-config/get-project-terminals (project-root)
     "Get list of live terminal buffers for PROJECT-ROOT."
-    (seq-filter #'buffer-live-p
-                (gethash project-root consoli-config/project-terminals '())))
+    (-filter #'buffer-live-p
+             (gethash project-root consoli-config/project-terminals '())))
 
   (defun consoli-config/add-project-terminal (project-root buffer)
     "Add BUFFER to PROJECT-ROOT's terminal list."
@@ -1209,7 +1213,7 @@ targets."
   (defun consoli-config/cleanup-dead-terminals ()
     "Remove dead buffers from project terminals tracking."
     (maphash (lambda (project-root terminals)
-               (let ((live-terminals (seq-filter #'buffer-live-p terminals)))
+               (let ((live-terminals (-filter #'buffer-live-p terminals)))
                  (if live-terminals
                      (puthash project-root live-terminals consoli-config/project-terminals)
                    (remhash project-root consoli-config/project-terminals))))
@@ -1295,7 +1299,7 @@ targets."
             (switch-to-buffer (car terminals)))))
 
        (t
-        (let* ((terminal-names (mapcar #'buffer-name terminals))
+        (let* ((terminal-names (-map #'buffer-name terminals))
                (choice (completing-read "Switch to terminal: " terminal-names nil t)))
           (let ((terminal-window (consoli-config/get-or-create-terminal-window)))
             (with-selected-window terminal-window
@@ -1989,13 +1993,10 @@ targets."
               (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
               (cl-pushnew new-cell found :test #'equal)))))
       (setq prettify-symbols-alist
-            (cl-set-difference prettify-symbols-alist
-                               (cl-set-difference
-                                (cl-remove-if-not
-                                 (lambda (elm)
-                                   (eq (cdr elm) rasmus/ob-header-symbol))
-                                 prettify-symbols-alist)
-                                found :test #'equal)))
+            (-remove (lambda (entry)
+                       (and (eq (cdr entry) rasmus/ob-header-symbol)
+                            (not (member entry found))))
+                     prettify-symbols-alist))
       ;; Clean up old font-lock-keywords.
       (font-lock-remove-keywords nil prettify-symbols--keywords)
       (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
@@ -2021,15 +2022,14 @@ may not be efficient."
 
 (defun rasmus/org-prettify-symbols ()
   (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-        (cl-reduce 'append
-                   (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                           `(("#+begin_src" . ?)
-                             ("#+end_src"   . ?)
-                             ("#+header:" . ,rasmus/ob-header-symbol)
-                             ("#+begin_quote" . ?)
-                             ("#+end_quote" . ?)
-                             ("#+begin_comment" . ?)
-                             ("#+end_comment" . ?)))))
+        (-mapcat (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                 `(("#+begin_src" . ?)
+                   ("#+end_src"   . ?)
+                   ("#+header:" . ,rasmus/ob-header-symbol)
+                   ("#+begin_quote" . ?)
+                   ("#+end_quote" . ?)
+                   ("#+begin_comment" . ?)
+                   ("#+end_comment" . ?))))
   (turn-on-prettify-symbols-mode)
   (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
 
@@ -2323,15 +2323,14 @@ may not be efficient."
 (with-eval-after-load 'org
   (defun rasmus/org-prettify-symbols ()
     (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-          (cl-reduce 'append
-                     (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                             `(("#+begin_src" . ?)
-                               ("#+end_src"   . ?)
-                               ("#+header:" . ,rasmus/ob-header-symbol)
-                               ("#+begin_quote" . ?)
-                               ("#+end_quote" . ?)
-                               ("#+begin_comment" . ?)
-                               ("#+end_comment" . ?)))))
+          (-mapcat (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                   `(("#+begin_src" . ?)
+                     ("#+end_src"   . ?)
+                     ("#+header:" . ,rasmus/ob-header-symbol)
+                     ("#+begin_quote" . ?)
+                     ("#+end_quote" . ?)
+                     ("#+begin_comment" . ?)
+                     ("#+end_comment" . ?))))
     (turn-on-prettify-symbols-mode)
     (add-hook 'post-command-hook 'rasmus/org-prettify-src t t)))
 
@@ -2956,7 +2955,7 @@ With ARG, pass the prefix argument to `indent-new-comment-line'."
   (let ((target (posn-window (event-start event))))
     (if (display-graphic-p (if (windowp target) (window-frame target) target))
         (funcall scroll event arg)
-      (let ((mouse-wheel-scroll-amount (cons 1 (seq-filter #'consp mouse-wheel-scroll-amount)))
+      (let ((mouse-wheel-scroll-amount (cons 1 (-filter #'consp mouse-wheel-scroll-amount)))
             (mouse-wheel-progressive-speed nil)
             (mwheel-scroll-up-function #'scroll-up)
             (mwheel-scroll-down-function #'scroll-down))

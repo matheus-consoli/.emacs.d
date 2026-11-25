@@ -9,7 +9,7 @@
 
 (require 'cl-lib)
 (require 'face-remap)
-(require 'seq)
+(require 'dash)
 
 (defface tale-themes-special-buffer '((t (:height 0.9)))
   "Default face remapping for special buffers."
@@ -897,8 +897,8 @@
 
 (defun tale-themes--update-special-buffers (hooks)
   "Reconcile installed hooks and styled buffers with configured HOOKS."
-  (let ((wanted (and (seq-some (lambda (theme) (get theme 'tale-theme))
-                               custom-enabled-themes)
+  (let ((wanted (and (-some (lambda (theme) (get theme 'tale-theme))
+                           custom-enabled-themes)
                      hooks)))
     (dolist (entry tale-themes--installed-hooks)
       (unless (memq (car entry) wanted)
@@ -914,11 +914,11 @@
     (dolist (buffer (buffer-list))
       (with-current-buffer buffer
         (if (and wanted
-                 (or (seq-intersection tale-themes--buffer-hooks wanted)
-                     (seq-some (lambda (mode)
-                                 (memq (intern-soft (concat (symbol-name mode) "-hook"))
-                                       wanted))
-                               (derived-mode-all-parents major-mode))))
+                 (or (-intersection tale-themes--buffer-hooks wanted)
+                     (-some (lambda (mode)
+                              (memq (intern-soft (concat (symbol-name mode) "-hook"))
+                                    wanted))
+                            (derived-mode-all-parents major-mode))))
             (tale-themes--style-special-buffer)
           (tale-themes--unstyle-special-buffer))))))
 

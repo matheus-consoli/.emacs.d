@@ -1,7 +1,7 @@
 ;;; consoli-pulse.el --- Feedback for editing and navigation -*- lexical-binding: t; -*-
 
 (require 'pulse)
-(require 'seq)
+(require 'dash)
 
 (defvar consoli-pulse--companions nil
   "Overlays sharing the lifetime and face of the current Emacs pulse.")
@@ -14,7 +14,7 @@
 
 (defun consoli-pulse--ranges (ranges)
   "Pulse nonempty RANGES together, including disjoint spans."
-  (let ((spans (seq-filter (lambda (span) (/= (car span) (cdr span))) ranges)))
+  (let ((spans (-filter (lambda (span) (/= (car span) (cdr span))) ranges)))
     (when spans
       (pulse-momentary-highlight-region (caar spans) (cdar spans))
       (when-let* ((primary pulse-momentary-overlay)

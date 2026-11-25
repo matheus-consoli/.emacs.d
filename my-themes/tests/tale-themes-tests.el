@@ -1,7 +1,7 @@
 ;;; tale-themes-tests.el --- Tale theme regression tests -*- lexical-binding: t; -*-
 
 ;; From the configuration root:
-;; emacs -Q --batch -L my-themes -l my-themes/tests/tale-themes-tests.el -f ert-run-tests-batch-and-exit
+;; emacs -Q --batch -L straight/build/dash -L my-themes -l my-themes/tests/tale-themes-tests.el -f ert-run-tests-batch-and-exit
 
 (require 'ert)
 (require 'color)
